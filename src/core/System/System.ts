@@ -1,6 +1,6 @@
 import { Message, MessageQueue } from '../MessageQueue';
 
-abstract class System<T> {
+abstract class System {
     private initialized: boolean;
     private entityMap: any;
     private messageQueue: MessageQueue;
@@ -23,7 +23,7 @@ abstract class System<T> {
         this.messageQueue.addSystem(this);
 
         this.dispatchLocal = messageQueue.add;
-        this.dispatchRemote = room.relayMessageQueue;
+   //     this.dispatchRemote = room.relayMessageQueue;
 
         this.interfaceManager = interfaceManager;
         this.initialized = true;

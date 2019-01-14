@@ -21,8 +21,7 @@
   },
   "author": "visgotti",
   "license": "MIT",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.12.15",
