@@ -1,3 +1,4 @@
+/*
 import { Server } from '../../src/core/Process';
 import { MockSystem1, MockSystem2, MockSystem3 } from '../mocks';
 
@@ -12,3 +13,4 @@ export class MockServer extends Server {
         this.initializeSystem(new MockSystem3());
     }
 }
+    */

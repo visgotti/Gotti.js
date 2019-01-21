@@ -1,6 +1,7 @@
+
 import { MessageQueue } from '../../src/core/MessageQueue';
 
-import { MockSystem1, MockSystem2, MockSystem3, MockSystemNames, Messages } from '../mocks'
+import { createDummyClientSystem, system_names, Messages } from '../mocks';
 
 import * as assert from 'assert';
 import * as mocha from 'mocha';
@@ -14,19 +15,20 @@ describe('MessageQueue', function() {
     let mockSystem2;
     let mockSystem3;
 
-    let mockSystem1_onMessageSpy;
-    let mockSystem2_onMessageSpy;
-    let mockSystem3_onMessageSpy;
+    let mockSystem1_onLocalMessageSpy;
+    let mockSystem2_onLocalMessageSpy;
+    let mockSystem3_onLocalMessageSpy;
 
     before('Creates a message queue, mock systems with spies, and validates mock messages.', (done) => {
         messageQueue = new MessageQueue();
-        mockSystem1 = new MockSystem1();
-        mockSystem2 = new MockSystem2();
-        mockSystem3 = new MockSystem3();
 
-        mockSystem1_onMessageSpy = sinon.spy(mockSystem1, 'onMessage');
-        mockSystem2_onMessageSpy = sinon.spy(mockSystem2, 'onMessage');
-        mockSystem3_onMessageSpy = sinon.spy(mockSystem3, 'onMessage');
+        mockSystem1 = createDummyClientSystem(system_names[0]);
+        mockSystem2 = createDummyClientSystem(system_names[1]);
+        mockSystem3 = createDummyClientSystem(system_names[2]);
+
+        mockSystem1_onLocalMessageSpy = sinon.spy(mockSystem1, 'onLocalMessage');
+        mockSystem2_onLocalMessageSpy = sinon.spy(mockSystem2, 'onLocalMessage');
+        mockSystem3_onLocalMessageSpy = sinon.spy(mockSystem3, 'onLocalMessage');
 
         for(let i = 0; i < Messages.length; i++) {
             const { type, data, to, from } = Messages[i];
@@ -42,7 +44,7 @@ describe('MessageQueue', function() {
     describe('messageQueue.addSystem', () => {
         it('messageQueue.systems has correct values', (done) => {
             messageQueue.addSystem(mockSystem1);
-            assert.strictEqual(messageQueue.systems.hasOwnProperty(MockSystemNames[0]), true);
+            assert.strictEqual(messageQueue.systems.hasOwnProperty(system_names[0]), true);
             assert.strictEqual(Object.keys(messageQueue.systems).length, 1);
             done();
         });
@@ -50,9 +52,9 @@ describe('MessageQueue', function() {
             messageQueue.addSystem(mockSystem2);
             messageQueue.addSystem(mockSystem3);
 
-            assert.strictEqual(messageQueue.systems.hasOwnProperty(MockSystemNames[0]), true);
-            assert.strictEqual(messageQueue.systems.hasOwnProperty(MockSystemNames[1]), true);
-            assert.strictEqual(messageQueue.systems.hasOwnProperty(MockSystemNames[2]), true);
+            assert.strictEqual(messageQueue.systems.hasOwnProperty(system_names[0]), true);
+            assert.strictEqual(messageQueue.systems.hasOwnProperty(system_names[1]), true);
+            assert.strictEqual(messageQueue.systems.hasOwnProperty(system_names[2]), true);
             assert.strictEqual(Object.keys(messageQueue.systems).length, 3);
             done();
         });
@@ -174,10 +176,10 @@ describe('MessageQueue', function() {
             }
             done();
         });
-        it('called the onMessage function of each system when dispatched to.', (done) => {
-            sinon.assert.calledOnce(mockSystem1_onMessageSpy);
-            sinon.assert.calledOnce(mockSystem2_onMessageSpy);
-            sinon.assert.calledOnce(mockSystem3_onMessageSpy);
+        it('called the onLocalMessage function of each system when dispatched to.', (done) => {
+            sinon.assert.calledOnce(mockSystem1_onLocalMessageSpy);
+            sinon.assert.calledOnce(mockSystem2_onLocalMessageSpy);
+            sinon.assert.calledOnce(mockSystem3_onLocalMessageSpy);
             done();
         });
     });

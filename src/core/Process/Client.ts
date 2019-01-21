@@ -1,21 +1,20 @@
 import { Process, PROCESS_ENV } from './Process';
+import { WebClient } from '../WebClient';
 
-
-export class Client extends Process<Client> {
-    private room: any;
-    constructor(room) {
+export abstract class ClientProcess extends Process<ClientProcess> {
+    protected client: WebClient;
+    constructor(client: WebClient) {
         super(PROCESS_ENV.CLIENT);
-        this.room = room;
+        this.client = client;
+        this.systemInitializer = this.initializerFactory(this);
 //   this.room.onMessageQueueRelay.add(this.onMessageQueueRelay.bind(this))
+    }
 
-    }
-    public initialize() {
-       // this.initializeSystem();
-    }
+    public initialize() {}
 
     public startSystem(systemName) {
         this._startSystem(systemName);
-    };
+    }
 
     public startAllSystems() {
         this._startAllSystems();
@@ -23,7 +22,7 @@ export class Client extends Process<Client> {
 
     public stopSystem(systemName) {
         this._stopSystem(systemName);
-    };
+    }
 
     public stopAllSystems() {
         this._stopAllSystems();

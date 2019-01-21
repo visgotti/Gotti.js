@@ -1,11 +1,7 @@
-import ClientSystem from './ClientSystem';
-//import ServerSystem from './ServerSystem';
-
-import { WebClient } from '../WebClient';
-
-export const server = function server (process) : (system: any) => void  {
-    return (system: any) => {
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.server = function server(process) {
+    return (system) => {
     };
     /*
     const createdSystems = new Set();
@@ -20,15 +16,13 @@ export const server = function server (process) : (system: any) => void  {
     }
     */
 };
-
-export const client = function client (process) :  (system: ClientSystem) => void  {
+exports.client = function client(process) {
     const createdSystems = new Set();
     const { entityManager, gameState, messageQueue, client, interfaceManager } = process;
-
-    return (system: ClientSystem) => {
-        if(createdSystems.has(system.name)) {
+    return (system) => {
+        if (createdSystems.has(system.name)) {
             throw `Tried initializing duplicate system name: ${system.name} change of one of the instances.`;
         }
         system.initialize(entityManager, gameState, messageQueue, client, interfaceManager);
-    }
+    };
 };

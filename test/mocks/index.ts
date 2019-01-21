@@ -1,4 +1,8 @@
-export { MockSystem1, MockSystem2, MockSystem3, MockSystemNames } from './MockSystems';
-export { MockClient as Client } from './ClientProcess';
-export { MockServer as Server } from './ServerProcess';
-export { Messages } from './MockMessages';
+
+
+export const system_names = ['MOCK_SYSTEM_1', 'MOCK_SYSTEM_2', 'MOCK_SYSTEM_3'];
+
+export { Messages } from './client/messages';
+
+export { createDummyClientSystem } from './client/createDummySystem';
+export { createDummyClientProcess } from './client/createDummyProcess';

@@ -1,44 +1,32 @@
 import { Message, MessageQueue } from '../MessageQueue';
 
 abstract class System {
-    private initialized: boolean;
-    private entityMap: any;
-    private messageQueue: MessageQueue;
-    private gameState: any;
-    private interfaceManager?: any;
+    protected initialized: boolean;
+    protected entityMap: any;
+    protected messageQueue: MessageQueue;
+    protected gameState: any;
 
-    private dispatchLocal: Function;
-    private dispatchRemote: Function;
+    protected dispatchLocal: Function;
+    protected dispatchRemote: Function;
 
     readonly name: string;
     constructor(name: string) {
         this.name = name;
     }
 
-    public initialize(entityMap: any, gameState: any, messageQueue: MessageQueue, room: any, interfaceManager?) {
-        this.entityMap = entityMap;
-        this.gameState = gameState;
-
-        this.messageQueue = messageQueue;
-        this.messageQueue.addSystem(this);
-
-        this.dispatchLocal = messageQueue.add;
-   //     this.dispatchRemote = room.relayMessageQueue;
-
-        this.interfaceManager = interfaceManager;
-        this.initialized = true;
-
-        this.onInit();
-    }
+    // if its a local message on server side it triggers onLocalServerMessage, if its a local
+    // message on client it triggers onLocalClientMessage;
+    public abstract onLocalMessage(message: Message) : void;
+    public abstract onRemoteMessage(message: Message): void;
 
     public abstract update (delta) : void;
-    public abstract onMessage(message: Message) : void;
     public abstract clear() : void;
 
     // optional
     public onInit() {};
     public onStop() {};
     public onStart() {};
+    public onGameDataUpdate() {};
 }
 
 export default System;
