@@ -155,10 +155,10 @@ describe('Client Process with globals', function() {
         const system = (clientProcess.systems[system_names[0]]);
 
         assert.ok(system);
-        assert.ok(system.foo);
-        assert.strictEqual(system.foo, 'bar');
-        assert.ok(system.bar);
-        assert.strictEqual(system.bar(), 'baz');
+        assert.ok(system.globals.foo);
+        assert.strictEqual(system.globals.foo, 'bar');
+        assert.ok(system.globals.bar);
+        assert.strictEqual(system.globals.bar(), 'baz');
 
         assert.ok(system.messageQueue);
         assert.ok(system.client);
