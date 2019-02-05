@@ -3,12 +3,12 @@ import { Client as WebClient } from '../WebClient/Client';
 import { Message, MessageQueue } from '../MessageQueue';
 
 abstract class ClientSystem extends System {
-    readonly name: string;
+    readonly name: string | number;
     private client: WebClient;
 
     private dispatchToServer: (message: Message) => void;
 
-    constructor(name: string) {
+    constructor(name: string | number) {
         super(name);
         this.onRemoteMessage = this.onServerMessage.bind(this);
     }

@@ -1,9 +1,11 @@
 {
-  "name": "gotti.js",
-  "version": "0.0.2",
+  "name": "gotti",
+  "version": "0.0.31",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
   "description": "Full stack scalable javascript and html5 game engine.",
   "scripts": {
-    "build": "tsc",
+    "prepublish": "tsc -d",
     "test": "nyc mocha --recursive --require ts-node/register 'test/**/*.test.ts' --exit"
   },
   "nyc": {

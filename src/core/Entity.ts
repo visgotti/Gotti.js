@@ -2,7 +2,8 @@ export abstract class Entity {
     public id: string;
     public type: string;
     public components: any;
-    public functionsFromComponent: any;
+    public propertiesFromComponent: {[componentName: string]: any };
+    public attributes: {[name: string]: any} = {};
 
     constructor(id, type){
         // Generate a pseudo random ID
@@ -13,7 +14,7 @@ export abstract class Entity {
         this.components = {};
 
         // this is a map of all the functions received from the component
-        this.functionsFromComponent = {};
+        this.propertiesFromComponent = {};
 
         return this;
     }
@@ -30,16 +31,32 @@ export abstract class Entity {
             throw `Entity ${this.id} trying to add ${component.name} twice `;
         }
         this.components[component.name] = component;
-        this.functionsFromComponent[component.name] = component.componentFunctions;
+        this.propertiesFromComponent[component.name] = component.componentProperties;
 
-        for(var i = 0; i < component.componentFunctions.length; i++) {
-            let funcName = component.componentFunctions[i];
-            if(this[funcName] !== undefined){
-                throw (`Duplicated function ${funcName} names in component ${component.name} attached to an entity.`);
+        for(var i = 0; i < component.componentProperties.length; i++) {
+            let propertyName = component.componentProperties[i];
+            if(this[propertyName] !== undefined){
+                throw (`Duplicated property ${propertyName} names in component ${component.name} attached to an entity. Component properties must be unique`);
             }
-            this[funcName] = component[funcName].bind(component);
+            if(component[propertyName] instanceof Function) {
+                this[propertyName] = component[propertyName].bind(component);
+            } else {
+                this[propertyName] = component[propertyName];
+            }
         }
+
+        // attach setAttribute to component
+        component.setAttribute = this.setAttribute.bind(this);
+
         return this;
+    }
+
+    private setAttribute(key: string, value: any) {
+        this.attributes[key] = value;
+    }
+
+    public getAttributes() {
+        return this.attributes;
     }
 
     // checks if the compnentName is referenced in the entity.
@@ -56,11 +73,11 @@ export abstract class Entity {
 
         delete this.components[componentName];
 
-        for(var i = 0; i < this.functionsFromComponent[componentName].length; i++) {
-            delete this[this.functionsFromComponent[componentName][i]];
+        for(var i = 0; i < this.propertiesFromComponent[componentName].length; i++) {
+            delete this[this.propertiesFromComponent[componentName][i]];
         }
 
-        delete this.functionsFromComponent[componentName];
+        delete this.propertiesFromComponent[componentName];
 
         component.onRemoved(this);
     }

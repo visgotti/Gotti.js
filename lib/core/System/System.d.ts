@@ -1,7 +1,7 @@
 import { Message, MessageQueue } from '../MessageQueue';
 declare abstract class System {
     protected initialized: boolean;
-    abstract onRemoteMessage(message: Message): any;
+    onRemoteMessage(message: Message): void;
     protected messageQueue: MessageQueue;
     protected gameState: any;
     protected dispatchLocal: Function;

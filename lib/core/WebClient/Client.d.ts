@@ -24,7 +24,6 @@ export declare class Client {
     messageQueue: MessageQueue;
     getGateData(): Promise<{}>;
     requestGame(gameType: any, gameRegion: any, auth?: any): void;
-    authenticateGate(url: string, options?: any): void;
     close(): void;
     /**
      * Gate

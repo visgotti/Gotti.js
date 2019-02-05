@@ -9,8 +9,9 @@ import ServerSystem from '../System/ClientSystem';
 interface ISystem {
     new (...args: Array<any>): ClientSystem | ServerSystem;
 }
-declare type SystemLookup = {
+declare type SystemLookup<T extends string | number> = {
     [systemName: string]: System;
+    [systemName: number]: System;
 };
 export declare abstract class Process<T> {
     messageQueue: MessageQueue;
@@ -21,11 +22,11 @@ export declare abstract class Process<T> {
     protected systemInitializer: (System: any) => void;
     systemInitializedOrder: Map<string | number, number>;
     private systemDecorator;
-    systems: SystemLookup;
-    systemNames: Array<string>;
-    startedSystemsLookup: Set<string>;
+    systems: SystemLookup<string | number>;
+    systemNames: Array<string | number>;
+    startedSystemsLookup: Set<string | number>;
     startedSystems: Array<System>;
-    stoppedSystems: Set<string>;
+    stoppedSystems: Set<string | number>;
     constructor(processEnv: PROCESS_ENV);
     protected addSystem(SystemConstructor: ISystem, ...args: Array<any>): void;
     protected _stopAllSystems(): void;

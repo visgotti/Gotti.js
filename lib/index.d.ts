@@ -6,4 +6,4 @@ export { ServerProcess } from './core/Process/Server';
 export { ClientProcess } from './core/Process/Client';
 export { Entity } from './core/Entity';
 export { Component } from './core/Component';
-export { WebClient } from './core/WebClient';
+export { Client } from './core/WebClient/Client';

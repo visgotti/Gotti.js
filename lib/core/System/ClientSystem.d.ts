@@ -1,10 +1,10 @@
 import System from "./System";
 import { Message } from '../MessageQueue';
 declare abstract class ClientSystem extends System {
-    readonly name: string;
+    readonly name: string | number;
     private client;
     private dispatchToServer;
-    constructor(name: string);
+    constructor(name: string | number);
     /**
      * Initialize gets called by the process and
      * populates the system with the web client, message queue, and any

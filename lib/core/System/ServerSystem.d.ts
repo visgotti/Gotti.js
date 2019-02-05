@@ -1,10 +1,10 @@
 import System from "./System";
 import { Message, MessageQueue } from '../MessageQueue';
 declare abstract class ServerSystem extends System {
-    readonly name: string;
+    readonly name: string | number;
     room: any;
     state: any;
-    constructor(name: string);
+    constructor(name: string | number);
     initialize(room: any, state: any, messageQueue: MessageQueue, globalSystemVariables: {
         [reference: string]: any;
     }): void;

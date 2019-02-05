@@ -72,9 +72,6 @@ export class Client {
         })
     }
 
-    public authenticateGate(url: string, options: any = {}) {
-    }
-
     public close() {
         this.connector.connection.close();
     }
@@ -242,7 +239,6 @@ function httpGetAsync(url, token, callback)
     http.onreadystatechange = function() {
         if (http.readyState == 4){
             if(http.status == 200) {
-                console.log('status was', http.status)
                 callback(null, JSON.parse(http.responseText));
             } else {
                 callback(JSON.parse(http.responseText), null);

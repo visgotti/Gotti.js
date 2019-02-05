@@ -3,11 +3,11 @@ import { WebClient } from '../WebClient';
 import { Message, MessageQueue } from '../MessageQueue';
 
 abstract class ServerSystem extends System {
-    readonly name: string;
+    readonly name: string | number;
     public room: any;
     public state: any;
 
-    constructor(name: string) {
+    constructor(name: string | number) {
         super(name);
         this.onRemoteMessage = this.onClientMessage.bind(this);
     }

@@ -2,7 +2,12 @@ export declare abstract class Entity {
     id: string;
     type: string;
     components: any;
-    functionsFromComponent: any;
+    propertiesFromComponent: {
+        [componentName: string]: any;
+    };
+    attributes: {
+        [name: string]: any;
+    };
     constructor(id: any, type: any);
     onMessage(message: any): void;
     /**
@@ -11,6 +16,10 @@ export declare abstract class Entity {
      * @returns {Entity}
      */
     addComponent(component: any): this;
+    private setAttribute;
+    getAttributes(): {
+        [name: string]: any;
+    };
     hasComponent(componentName: any): boolean;
     removeComponent(componentName: any): void;
 }

@@ -15,7 +15,10 @@ interface ISystem {
     new (...args: Array<any>): ClientSystem | ServerSystem
 }
 
-type SystemLookup = { [systemName: string]: System }
+type SystemLookup <T extends string | number>  = {
+    [systemName: string]: System,
+    [systemName: number]: System
+}
 
 export abstract class Process<T> {
     public messageQueue: MessageQueue;
@@ -31,24 +34,24 @@ export abstract class Process<T> {
 
     private systemDecorator: (System) => void;
 
-    public systems: SystemLookup;
-    public systemNames: Array<string>;
+    public systems: SystemLookup<string | number>;
+    public systemNames: Array<string | number>;
 
-    public startedSystemsLookup: Set<string>;
+    public startedSystemsLookup: Set<string | number>;
     public startedSystems: Array<System>;
 
-    public stoppedSystems: Set<string>;
+    public stoppedSystems: Set<string | number>;
 
     constructor(processEnv: PROCESS_ENV) {
-        this.systems = {} as SystemLookup;
+        this.systems = {} as SystemLookup<string | number>;
         this.systemNames = [] as Array<string>;
 
         this.systemInitializedOrder = new Map() as Map<string | number, number>;
 
-        this.startedSystemsLookup = new Set() as Set<string>;
+        this.startedSystemsLookup = new Set() as Set<string | number>;
         this.startedSystems = [] as Array<System>;
 
-        this.stoppedSystems = new Set() as Set<string>;
+        this.stoppedSystems = new Set() as Set<string | number>;
 
         this.messageQueue = new MessageQueue();
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? server : client;
