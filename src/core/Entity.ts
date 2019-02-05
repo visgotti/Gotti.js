@@ -1,6 +1,6 @@
 export abstract class Entity {
-    public id: string;
-    public type: string;
+    public id: string | number;
+    public type: string | number;
     public components: any;
     public propertiesFromComponent: {[componentName: string]: any };
     public attributes: {[name: string]: any} = {};
