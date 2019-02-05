@@ -12,7 +12,7 @@ declare abstract class ClientSystem extends System {
      * The web client
      * @param client - Gotti web client
      * @param messageQueue
-     * @param globalSystemVariables - map of objects or values you want to be able to access in any system as a object property.
+     * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
     initialize(client: any, messageQueue: any, globalSystemVariables: {
         [reference: string]: any;
