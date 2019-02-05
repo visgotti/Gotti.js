@@ -1,6 +1,6 @@
 export declare abstract class Entity {
-    id: string;
-    type: string;
+    id: string | number;
+    type: string | number;
     components: any;
     propertiesFromComponent: {
         [componentName: string]: any;

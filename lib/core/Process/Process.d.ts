@@ -28,7 +28,7 @@ export declare abstract class Process<T> {
     startedSystems: Array<System>;
     stoppedSystems: Set<string | number>;
     constructor(processEnv: PROCESS_ENV);
-    protected addSystem(SystemConstructor: ISystem, ...args: Array<any>): void;
+    addSystem(SystemConstructor: ISystem, ...args: Array<any>): void;
     protected _stopAllSystems(): void;
     protected _stopSystem(systemName: any): void;
     protected _startAllSystems(): void;
