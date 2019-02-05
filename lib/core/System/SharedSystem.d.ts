@@ -6,7 +6,7 @@ import System from "./System";
  * while also dispatching local messages.
  */
 export declare abstract class SharedSystem extends System {
-    readonly name: string;
+    readonly name: string | number;
     private dispatch;
     constructor(name: string);
     abstract onMessage(message: any): any;

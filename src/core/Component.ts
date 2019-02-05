@@ -3,11 +3,11 @@ import { Entity } from './Entity';
 export abstract class Component {
     // name of functions an entity gets by applying the component.
     public componentProperties: Array<string>;
-    public name: string;
+    public name: string | number;
     public entityId: string;
     public parentObject: any;
     public setAttribute: Function;
-    constructor(name){
+    constructor(name: string | number){
         if (typeof(name) === 'undefined')
         {
             throw "Component: Invalid component name";
