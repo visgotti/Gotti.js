@@ -3,11 +3,17 @@ export enum PROCESS_ENV {
     SERVER = 1,
 }
 
+
+
 import { MessageQueue, Message } from '../MessageQueue'
 import System from '../System/System';
 import ClientSystem from '../System/ClientSystem';
-import ServerSystem from '../System/ServerSystem';
+import ServerSystem from '../System/ClientSystem';
 import { client, server } from '../System/SystemInitializer';
+
+interface ISystem {
+    new (...args: Array<any>): ClientSystem | ServerSystem
+}
 
 type SystemLookup = { [systemName: string]: System }
 
@@ -18,10 +24,12 @@ export abstract class Process<T> {
     protected entityManager: any;
     protected gameState: any;
     protected interfaceManager?: any;
-    protected initializerFactory: (Process) => (System) => void;
+    protected initializerFactory: (process: Process<any>, globalVariables: any) => (System) => void;
     protected systemInitializer: (System) => void;
 
-    public systemInitializedOrder: Map<string, number>;
+    public systemInitializedOrder: Map<string | number, number>;
+
+    private systemDecorator: (System) => void;
 
     public systems: SystemLookup;
     public systemNames: Array<string>;
@@ -35,7 +43,7 @@ export abstract class Process<T> {
         this.systems = {} as SystemLookup;
         this.systemNames = [] as Array<string>;
 
-        this.systemInitializedOrder = new Map() as Map<string, number>;
+        this.systemInitializedOrder = new Map() as Map<string | number, number>;
 
         this.startedSystemsLookup = new Set() as Set<string>;
         this.startedSystems = [] as Array<System>;
@@ -43,12 +51,10 @@ export abstract class Process<T> {
         this.stoppedSystems = new Set() as Set<string>;
 
         this.messageQueue = new MessageQueue();
-        this.gameState = {};
-        this.interfaceManager = {};
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? server : client;
     }
 
-    protected addSystem(SystemConstructor: ClientSystem | ServerSystem, ...args: Array<any>) {
+    protected addSystem(SystemConstructor: ISystem, ...args: Array<any>) {
         let system = new SystemConstructor(...args);
         if (this.systems[system.name]) {
             throw `Duplicate systen name ${system.name}`;

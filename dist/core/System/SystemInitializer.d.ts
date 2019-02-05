@@ -1,3 +1,6 @@
 import ClientSystem from './ClientSystem';
-export declare const server: (process: any) => (system: any) => void;
-export declare const client: (process: any) => (system: ClientSystem) => void;
+import ServerSystem from './ServerSystem';
+import { ServerProcess } from '../Process/Server';
+import { ClientProcess } from '../Process/Client';
+export declare const server: (process: ServerProcess, globalSystemVariables: any) => (system: ServerSystem) => void;
+export declare const client: (process: ClientProcess, globalSystemVariables: any) => (system: ClientSystem) => void;

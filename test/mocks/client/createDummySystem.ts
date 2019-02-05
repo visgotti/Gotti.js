@@ -1,8 +1,8 @@
 import ClientSystem from '../../../src/core/System/ClientSystem';
 
 class DummySystem extends ClientSystem {
-    constructor() {
-        super('DUMMY');
+    constructor(name = 'DUMMY') {
+        super(name);
     }
     public onLocalMessage(message) {};
     public onServerMessage(message) {};
@@ -10,6 +10,7 @@ class DummySystem extends ClientSystem {
     public onStop() {};
     public onStart() {};
     public update() {};
+    public onStateUpdate(pathString, pathData, change, value) {};
     public onMessage(message) {};
     public clear() {};
 }

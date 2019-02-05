@@ -8,6 +8,8 @@ import * as msgpack from './msgpack';
 import { Connection } from './Connection';
 import { Protocol, StateProtocol } from './Protocol';
 
+import { MessageQueue } from '../MessageQueue';
+
 export enum AreaStatus {
     NOT_IN = 0,
     LISTEN = 1,
@@ -22,7 +24,7 @@ export interface Area {
 }
 
 export class Connector {
-    private messageQueue: any;
+    private _messageQueue: MessageQueue;
     private id: string;
     private gameId: string;
 
@@ -50,15 +52,21 @@ export class Connector {
     public connection: Connection;
     private _previousState: any;
 
-    constructor(messageQueue={}, options?: any) {
-        this.messageQueue = messageQueue;
+    constructor(options?: any) {
         this.clientId = null;
         this.options = options;
-        this.connection = new Connection(undefined, false);
         this.onLeave.add(() => this.removeAllListeners());
     }
 
+    set messageQueue(value: MessageQueue) {
+        this._messageQueue = value;
+    }
+
     public connect(URL, auth?) {
+        if(!(this._messageQueue)) {
+            throw new Error('Message queue was not initialized for web client\'s Connector, can not connect Connector.')
+        }
+
         this.connection = new Connection(URL, auth);
         this.connection.onmessage = this.onMessageCallback.bind(this);
     }

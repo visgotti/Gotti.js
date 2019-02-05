@@ -10,6 +10,7 @@ class Component {
             return typeof parentObj[p] === 'function' && parentObj[p] !== "constructor";
         });
         this.entityId = parentObj.id;
+        this.setAttribute = parentObj.setAttribute ? parentObj.setAttribute.bind(parentObj) : null;
         this.name = name;
     }
 }

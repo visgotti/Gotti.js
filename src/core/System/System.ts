@@ -3,7 +3,7 @@ import { Message, MessageQueue } from '../MessageQueue';
 abstract class System {
     protected initialized: boolean;
 
-    public onRemoteMessage(message: Message);
+    public onRemoteMessage(message: Message) {};
 
     protected messageQueue: MessageQueue;
     protected gameState: any;
@@ -13,7 +13,7 @@ abstract class System {
     protected dispatchLocalInstant: Function;
     protected dispatchAllLocalInstant: Function;
 
-    readonly name: string;
+    readonly name: string | number;
     constructor(name: string | number) {
         if(!name && name !== 0) {
             throw 'Systems must be created with a valid name passed into the super constructor call.'

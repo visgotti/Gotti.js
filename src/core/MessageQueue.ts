@@ -1,21 +1,19 @@
 import System from './System/System';
 
 export interface Message {
-    type: string,
+    type: string | number,
     data: any,
-    to: Array<string>
-    from: string,
+    to: Array<string | number>
+    from: string | number,
 }
+
+type SystemName = string | number;
 
 type SystemMessageLookup = { [systemName: string]: Array<Message> }
 type SystemLookup = { [systemName: string]: System }
 
 export class MessageQueue {
-    static readToSendFormat(msg: Message) {
-        return [msg.type, msg.data, msg.to, msg.from];
-    }
-
-    private systemNames: Array<string>;
+    private systemNames: Array<string | number>;
     private _systems: SystemLookup;
     private _messages: SystemMessageLookup;
     private _remoteMessages: SystemMessageLookup;
@@ -113,7 +111,7 @@ export class MessageQueue {
      */
     public instantDispatchAll(type, data, from) {
         for(let i = 0; i < this.systemNames.length; i++) {
-            this._systems[this.systemNames[i]].onLocalMessage(message);
+            this._systems[this.systemNames[i]].onLocalMessage({ type, data, to: [this.systemNames[i]], from});
         }
     }
 

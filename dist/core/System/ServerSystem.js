@@ -4,18 +4,23 @@ const System_1 = require("./System");
 class ServerSystem extends System_1.default {
     constructor(name) {
         super(name);
+        this.onRemoteMessage = this.onClientMessage.bind(this);
     }
-    initialize(entityMap, gameState, messageQueue, room, interfaceManager) {
+    initialize(room, state, messageQueue, globalSystemVariables) {
+        Object.keys(globalSystemVariables).forEach((referenceName) => {
+            if (referenceName in this) {
+                throw new Error(`Can not have a global object that shares a reference with native system class: ${referenceName}`);
+            }
+            this[referenceName] = globalSystemVariables[referenceName];
+        });
         //  this.dispatchToClient = room.send;
-        this.entityMap = entityMap;
-        this.gameState = gameState;
+        this.state = state;
         this.messageQueue = messageQueue;
         this.messageQueue.addSystem(this);
         this.dispatchLocal = messageQueue.add;
         //     this.dispatchRemote = room.relayMessageQueue;
-        this.interfaceManager = interfaceManager;
         this.initialized = true;
-        this.onInit();
+        this._onInit();
     }
     dispatchToArea(areaId, message) { }
     ;

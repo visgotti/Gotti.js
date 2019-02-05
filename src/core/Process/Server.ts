@@ -2,10 +2,10 @@ import { Process, PROCESS_ENV } from './Process';
 
 
 export class ServerProcess extends Process<ServerProcess> {
-    private room: any;
-    private state: any;
+    public room: any;
+    public state: any;
 
-    constructor(room, state, globalSystemVariables) {
+    constructor(room, state, globalSystemVariables?: any) {
         super(PROCESS_ENV.SERVER);
 
         if(!(room) || !(state)) {

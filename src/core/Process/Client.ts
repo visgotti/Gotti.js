@@ -1,10 +1,9 @@
 import { Process, PROCESS_ENV } from './Process';
-import { ClientSystem } from '../System/ClientSystem';
-import { WebClient } from '../WebClient/Client';
+import { Client as WebClient } from '../WebClient/Client';
 
 export class ClientProcess extends Process<ClientProcess> {
-    protected client: WebClient;
-    constructor(client: WebClient, globalSystemVariables) {
+    public client: WebClient;
+    constructor(client: WebClient, globalSystemVariables?: any) {
         super(PROCESS_ENV.CLIENT);
 
         if(!(client)) {

@@ -1,5 +1,5 @@
 import System from "./System";
-import { WebClient } from '../WebClient/Client';
+import { Client as WebClient } from '../WebClient/Client';
 import { Message, MessageQueue } from '../MessageQueue';
 
 abstract class ClientSystem extends System {
@@ -24,12 +24,14 @@ abstract class ClientSystem extends System {
      */
     public initialize(client, messageQueue, globalSystemVariables: {[reference: string]: any})
     {
-        Object.keys(globalSystemVariables).forEach((referenceName) => {
-            if(referenceName in this) {
-                throw new Error(`Can not have a global object that shares a reference with native system class: ${key}`);
-            }
-            this[referenceName] = globalSystemVariables[key];
-        });
+        if(globalSystemVariables && typeof globalSystemVariables === 'object') {
+            Object.keys(globalSystemVariables).forEach((referenceName) => {
+                if(referenceName in this) {
+                    throw new Error(`Can not have a global object that shares a reference with native system class: ${referenceName}`);
+                }
+                this[referenceName] = globalSystemVariables[referenceName];
+            });
+        }
 
         this.client = client;
         this.messageQueue = messageQueue;

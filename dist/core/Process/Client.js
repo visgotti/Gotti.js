@@ -2,13 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Process_1 = require("./Process");
 class ClientProcess extends Process_1.Process {
-    constructor(client) {
+    constructor(client, globalSystemVariables) {
         super(Process_1.PROCESS_ENV.CLIENT);
+        if (!(client)) {
+            throw new Error('Client process needs a web client to construct correctly.');
+        }
         this.client = client;
-        this.systemInitializer = this.initializerFactory(this);
+        // add messageQueue to client which is created in the super constructor.
+        this.client.messageQueue = this.messageQueue;
+        this.systemInitializer = this.initializerFactory(this, globalSystemVariables);
         //   this.room.onMessageQueueRelay.add(this.onMessageQueueRelay.bind(this))
     }
-    initialize() { }
     startSystem(systemName) {
         this._startSystem(systemName);
     }

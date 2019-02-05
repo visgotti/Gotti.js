@@ -4,19 +4,30 @@ const System_1 = require("./System");
 class ClientSystem extends System_1.default {
     constructor(name) {
         super(name);
+        this.onRemoteMessage = this.onServerMessage.bind(this);
     }
-    initialize(entityMap, gameState, messageQueue, client, interfaceManager) {
-        this.dispatchToServer = client.send;
+    /**
+     * Initialize gets called by the process and
+     * populates the system with the web client, message queue, and any
+     * user defined variables you want all systems to have access to.
+     * The web client
+     * @param client - Gotti web client
+     * @param messageQueue
+     * @param globalSystemVariables - map of objects or values you want to be able to access in any system as a object property.
+     */
+    initialize(client, messageQueue, globalSystemVariables) {
+        Object.keys(globalSystemVariables).forEach((referenceName) => {
+            if (referenceName in this) {
+                throw new Error(`Can not have a global object that shares a reference with native system class: ${referenceName}`);
+            }
+            this[referenceName] = globalSystemVariables[referenceName];
+        });
         this.client = client;
-        this.entityMap = entityMap;
-        this.gameState = gameState;
         this.messageQueue = messageQueue;
         this.messageQueue.addSystem(this);
-        this.dispatchLocal = messageQueue.add;
-        //     this.dispatchRemote = room.relayMessageQueue;
-        this.interfaceManager = interfaceManager;
+        this.dispatchToServer = client.send;
         this.initialized = true;
-        this.onInit();
+        this._onInit();
     }
     addListenStatePaths(path) {
         if (Array.isArray(path)) {
@@ -31,7 +42,7 @@ class ClientSystem extends System_1.default {
     }
     ;
     //TODO: would be cool to do a runtime static code check to make sure onStateUpdate implements all listeners
-    onStateUpdate(path, change, value) { }
+    onStateUpdate(pathString, pathData, change, value) { }
     ;
 }
 exports.default = ClientSystem;

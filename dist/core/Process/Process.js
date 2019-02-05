@@ -16,11 +16,10 @@ class Process {
         this.startedSystems = [];
         this.stoppedSystems = new Set();
         this.messageQueue = new MessageQueue_1.MessageQueue();
-        this.gameState = {};
-        this.interfaceManager = {};
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? SystemInitializer_1.server : SystemInitializer_1.client;
     }
-    initializeSystem(system) {
+    addSystem(SystemConstructor, ...args) {
+        let system = new SystemConstructor(...args);
         if (this.systems[system.name]) {
             throw `Duplicate systen name ${system.name}`;
             return;

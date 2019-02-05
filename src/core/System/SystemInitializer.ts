@@ -1,9 +1,10 @@
 import ClientSystem from './ClientSystem';
 import ServerSystem from './ServerSystem';
 
-import { WebClient } from '../WebClient';
+import { ServerProcess } from '../Process/Server';
+import { ClientProcess } from '../Process/Client';
 
-export const server = function server (process: globalSystemVariables) : (system: any) => void  {
+export const server = function server (process: ServerProcess, globalSystemVariables: any) : (system: ServerSystem) => void  {
     const createdSystems = new Set();
     const { messageQueue, room, state } = process;
 
@@ -15,7 +16,7 @@ export const server = function server (process: globalSystemVariables) : (system
     };
 };
 
-export const client = function client (process, globalSystemVariables) :  (system: ClientSystem) => void  {
+export const client = function client (process: ClientProcess, globalSystemVariables: any) :  (system: ClientSystem) => void  {
     const createdSystems = new Set();
     const { messageQueue, client } = process;
 
