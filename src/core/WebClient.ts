@@ -8,6 +8,7 @@ import Protocols from './Protocols';
 export class WebClient { //extends Colyseus
     private process: ClientProcess;
     private room: any;
+    private inGate = false;
     private stateListeners : {[path: string]: Array<string>} = {};
     private systemStateHandlers: {[systemName: string]: {
             handler: Function,
@@ -15,12 +16,40 @@ export class WebClient { //extends Colyseus
         };
     } = {};
 
-
     constructor(connectionPath) {
       //  this.room = new this.join()
     }
 
-    public send(message: Message) {
+    /**
+     * Gate
+     * @param gateId
+     * @param options
+     */
+    public joinGate(options) {
+    }
+
+    private onMessage(message) {
+        /*
+        if(message[0].GATE_JOINED) {
+        } else if (message[0] === Protocols.JOIN_CONNECTOR) {
+            this.joinConnector(message[1], message[2]); //port, token
+        } else if (message[0].SYSTEM_MESSAGE) {
+            this.process.messageQueue.addRemote(message[1], message[2], message[3], message[4]);
+        };
+        */
+    }
+
+    private joinConnector(port, token) {
+        // this.connect(port);
+    }
+
+    /**
+     * sends message over network to server
+     * @param message - system message to be processed on server
+     * @param limitEvery - optional
+     */
+    public send(message: Message, limitEvery?: number) {
+
        // this.room.send([ Protocols.CLIENT_SYSTEM_MESSAGE, message ]);
     }
 

@@ -1,15 +1,24 @@
 import { Process, PROCESS_ENV } from './Process';
 
 
-export class Server extends Process<Server> {
+export class ServerProcess extends Process<ServerProcess> {
     private room: any;
-    constructor(room) {
+    private state: any;
+
+    constructor(room, state, globalSystemVariables) {
         super(PROCESS_ENV.SERVER);
+
+        if(!(room) || !(state)) {
+            throw new Error('Server process needs a GottiServer area room and state to construct correctly');
+        }
+
+        this.state = state;
         this.room = room;
+        this.room.messageQueue = this.messageQueue;
+
+        this.systemInitializer = this.initializerFactory(this, globalSystemVariables);
+
 //   this.room.onMessageQueueRelay.add(this.onMessageQueueRelay.bind(this))
-    }
-    public initialize() {
-        // this.initializeSystem();
     }
 
     public startSystem(systemName) {

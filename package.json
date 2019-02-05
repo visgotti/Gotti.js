@@ -1,6 +1,6 @@
 {
   "name": "gotti.js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Full stack scalable javascript and html5 game engine.",
   "scripts": {
     "build": "tsc",
@@ -21,7 +21,14 @@
   },
   "author": "visgotti",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@gamestdio/clock": "^1.1.0",
+    "@gamestdio/signals": "^1.0.0",
+    "@gamestdio/state-listener": "^3.1.0",
+    "@gamestdio/websocket": "^0.3.0",
+    "fossil-delta": "^1.0.0",
+    "notepack.io": "^2.2.0"
+  },
   "devDependencies": {
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.12.15",

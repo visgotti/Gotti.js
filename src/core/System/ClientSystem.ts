@@ -1,39 +1,46 @@
 import System from "./System";
-import { WebClient } from '../WebClient';
+import { WebClient } from '../WebClient/Client';
 import { Message, MessageQueue } from '../MessageQueue';
 
 abstract class ClientSystem extends System {
     readonly name: string;
-    private interfaceManager?: any;
     private client: WebClient;
 
     private dispatchToServer: (message: Message) => void;
 
-    constructor(name: string, ) {
+    constructor(name: string) {
         super(name);
+        this.onRemoteMessage = this.onServerMessage.bind(this);
     }
 
-    public initialize(entityMap: any, gameState: any, messageQueue: MessageQueue, client: WebClient, interfaceManager) {
+    /**
+     * Initialize gets called by the process and
+     * populates the system with the web client, message queue, and any
+     * user defined variables you want all systems to have access to.
+     * The web client
+     * @param client - Gotti web client
+     * @param messageQueue
+     * @param globalSystemVariables - map of objects or values you want to be able to access in any system as a object property.
+     */
+    public initialize(client, messageQueue, globalSystemVariables: {[reference: string]: any})
+    {
+        Object.keys(globalSystemVariables).forEach((referenceName) => {
+            if(referenceName in this) {
+                throw new Error(`Can not have a global object that shares a reference with native system class: ${key}`);
+            }
+            this[referenceName] = globalSystemVariables[key];
+        });
 
-        this.dispatchToServer = client.send;
-
-        this.entityMap = entityMap;
-        this.gameState = gameState;
-
+        this.client = client;
         this.messageQueue = messageQueue;
         this.messageQueue.addSystem(this);
 
-        this.dispatchLocal = messageQueue.add;
-        //     this.dispatchRemote = room.relayMessageQueue;
-
-        this.interfaceManager = interfaceManager;
+        this.dispatchToServer = client.send;
         this.initialized = true;
-
-        this.onInit();
+        this._onInit();
     }
 
     public abstract onServerMessage(message: Message);
-
 
     public addListenStatePaths(path: string | Array<string>) {
         if (Array.isArray(path)) {
@@ -47,7 +54,7 @@ abstract class ClientSystem extends System {
     };
 
     //TODO: would be cool to do a runtime static code check to make sure onStateUpdate implements all listeners
-    public onStateUpdate(path, change, value) {};
+    public onStateUpdate(pathString, pathData, change, value) {};
 }
 
 export default ClientSystem;

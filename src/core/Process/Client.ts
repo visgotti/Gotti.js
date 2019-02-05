@@ -1,16 +1,22 @@
 import { Process, PROCESS_ENV } from './Process';
-import { WebClient } from '../WebClient';
+import { ClientSystem } from '../System/ClientSystem';
+import { WebClient } from '../WebClient/Client';
 
-export abstract class ClientProcess extends Process<ClientProcess> {
+export class ClientProcess extends Process<ClientProcess> {
     protected client: WebClient;
-    constructor(client: WebClient) {
+    constructor(client: WebClient, globalSystemVariables) {
         super(PROCESS_ENV.CLIENT);
+
+        if(!(client)) {
+            throw new Error('Client process needs a web client to construct correctly.')
+        }
+
         this.client = client;
-        this.systemInitializer = this.initializerFactory(this);
+        // add messageQueue to client which is created in the super constructor.
+        this.client.messageQueue = this.messageQueue;
+        this.systemInitializer = this.initializerFactory(this, globalSystemVariables);
 //   this.room.onMessageQueueRelay.add(this.onMessageQueueRelay.bind(this))
     }
-
-    public initialize() {}
 
     public startSystem(systemName) {
         this._startSystem(systemName);

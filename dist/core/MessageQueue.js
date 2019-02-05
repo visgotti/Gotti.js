@@ -48,12 +48,12 @@ class MessageQueue {
         }
     }
     ;
-    addRemote(msg) {
+    addRemote(type, data, to, from) {
         const message = {
-            type: msg[0],
-            data: msg[1],
-            to: msg[2],
-            from: msg[3],
+            type,
+            data,
+            to,
+            from,
         };
         for (let i = 0; i < message.to.length; i++) {
             this._remoteMessages[message.to[i]].push(message);

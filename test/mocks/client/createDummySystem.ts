@@ -1,8 +1,8 @@
 import ClientSystem from '../../../src/core/System/ClientSystem';
 
 class DummySystem extends ClientSystem {
-    constructor(name: string) {
-        super(name);
+    constructor() {
+        super('DUMMY');
     }
     public onLocalMessage(message) {};
     public onServerMessage(message) {};

@@ -17,7 +17,7 @@ export abstract class SharedSystem extends System {
         this.onMessage = this.onRemoteMessage.bind(this);
     }
 
-    public abstract onMessage(message) {};
+    public abstract onMessage(message);
     //TODO: would be cool to do a runtime code check to make sure onStateUpdate implements all listeners
     public onStateUpdate(path, change, value) {};
 }

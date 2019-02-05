@@ -25,7 +25,7 @@ export declare class MessageQueue {
     removeAllMessages(): void;
     addSystem(system: System): void;
     add(message: Message): void;
-    addRemote(msg: Array<any>): void;
+    addRemote(type: any, data: any, to: any, from: any): void;
     dispatch(systemName: any): void;
 }
 export {};

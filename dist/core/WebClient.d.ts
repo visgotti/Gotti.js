@@ -3,10 +3,24 @@ import { Message } from './MessageQueue';
 export declare class WebClient {
     private process;
     private room;
+    private inGate;
     private stateListeners;
     private systemStateHandlers;
     constructor(connectionPath: any);
-    send(message: Message): void;
+    /**
+     * Gate
+     * @param gateId
+     * @param options
+     */
+    joinGate(options: any): void;
+    private onMessage;
+    private joinConnector;
+    /**
+     * sends message over network to server
+     * @param message - system message to be processed on server
+     * @param limitEvery - optional
+     */
+    send(message: Message, limitEvery?: number): void;
     joinRoom(roomId: any, options: any): void;
     /**
      * Sends a request to the server to start listening for messages and state updates from an area.

@@ -2,11 +2,37 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class WebClient {
     constructor(connectionPath) {
+        this.inGate = false;
         this.stateListeners = {};
         this.systemStateHandlers = {};
         //  this.room = new this.join()
     }
-    send(message) {
+    /**
+     * Gate
+     * @param gateId
+     * @param options
+     */
+    joinGate(options) {
+    }
+    onMessage(message) {
+        /*
+        if(message[0].GATE_JOINED) {
+        } else if (message[0] === Protocols.JOIN_CONNECTOR) {
+            this.joinConnector(message[1], message[2]); //port, token
+        } else if (message[0].SYSTEM_MESSAGE) {
+            this.process.messageQueue.addRemote(message[1], message[2], message[3], message[4]);
+        };
+        */
+    }
+    joinConnector(port, token) {
+        // this.connect(port);
+    }
+    /**
+     * sends message over network to server
+     * @param message - system message to be processed on server
+     * @param limitEvery - optional
+     */
+    send(message, limitEvery) {
         // this.room.send([ Protocols.CLIENT_SYSTEM_MESSAGE, message ]);
     }
     joinRoom(roomId, options) {

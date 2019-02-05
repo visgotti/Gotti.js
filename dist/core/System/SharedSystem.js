@@ -14,8 +14,6 @@ class SharedSystem extends System_1.default {
         this.dispatch = this.dispatchLocal.bind(this);
         this.onMessage = this.onRemoteMessage.bind(this);
     }
-    onMessage(message) { }
-    ;
     //TODO: would be cool to do a runtime code check to make sure onStateUpdate implements all listeners
     onStateUpdate(path, change, value) { }
     ;

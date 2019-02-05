@@ -7,6 +7,7 @@ class ClientSystem extends System_1.default {
     }
     initialize(entityMap, gameState, messageQueue, client, interfaceManager) {
         this.dispatchToServer = client.send;
+        this.client = client;
         this.entityMap = entityMap;
         this.gameState = gameState;
         this.messageQueue = messageQueue;

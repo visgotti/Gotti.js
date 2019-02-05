@@ -9,6 +9,6 @@ export declare abstract class SharedSystem extends System {
     readonly name: string;
     private dispatch;
     constructor(name: string);
-    abstract onMessage(message: any): void;
+    abstract onMessage(message: any): any;
     onStateUpdate(path: any, change: any, value: any): void;
 }

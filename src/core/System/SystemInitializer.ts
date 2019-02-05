@@ -1,34 +1,28 @@
 import ClientSystem from './ClientSystem';
-//import ServerSystem from './ServerSystem';
+import ServerSystem from './ServerSystem';
 
 import { WebClient } from '../WebClient';
 
-export const server = function server (process) : (system: any) => void  {
-    return (system: any) => {
-
-    };
-    /*
+export const server = function server (process: globalSystemVariables) : (system: any) => void  {
     const createdSystems = new Set();
+    const { messageQueue, room, state } = process;
 
-    const { entityManager, gameState, gameData, messageQueue, serverRoom } = process;
-
-    return (system: System) => {
+    return (system: ServerSystem) => {
         if(createdSystems.has(system.name)) {
             throw `Tried initializing duplicate system name: ${system.name} change of one of the instances.`;
         }
-        system.initialize(entityManager, gameState, gameData, messageQueue, serverRoom);
-    }
-    */
+        system.initialize(room, state, messageQueue, globalSystemVariables);
+    };
 };
 
-export const client = function client (process) :  (system: ClientSystem) => void  {
+export const client = function client (process, globalSystemVariables) :  (system: ClientSystem) => void  {
     const createdSystems = new Set();
-    const { entityManager, gameState, messageQueue, client, interfaceManager } = process;
+    const { messageQueue, client } = process;
 
     return (system: ClientSystem) => {
         if(createdSystems.has(system.name)) {
             throw `Tried initializing duplicate system name: ${system.name} change of one of the instances.`;
         }
-        system.initialize(entityManager, gameState, messageQueue, client, interfaceManager);
+        system.initialize(client, messageQueue, globalSystemVariables);
     }
 };

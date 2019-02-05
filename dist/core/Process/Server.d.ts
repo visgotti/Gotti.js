@@ -1,5 +1,5 @@
 import { Process } from './Process';
-export declare class Server extends Process<Server> {
+export declare class ServerProcess extends Process<ServerProcess> {
     private room;
     constructor(room: any);
     initialize(): void;

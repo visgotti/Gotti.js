@@ -1,0 +1,7 @@
+.gitignore
+node_modules
+test
+src
+src/**/*
+.nyc_output
+coverage

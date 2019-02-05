@@ -5,6 +5,8 @@ export enum PROCESS_ENV {
 
 import { MessageQueue, Message } from '../MessageQueue'
 import System from '../System/System';
+import ClientSystem from '../System/ClientSystem';
+import ServerSystem from '../System/ServerSystem';
 import { client, server } from '../System/SystemInitializer';
 
 type SystemLookup = { [systemName: string]: System }
@@ -20,8 +22,6 @@ export abstract class Process<T> {
     protected systemInitializer: (System) => void;
 
     public systemInitializedOrder: Map<string, number>;
-
-    private systemDecorator: (System) => void;
 
     public systems: SystemLookup;
     public systemNames: Array<string>;
@@ -48,9 +48,8 @@ export abstract class Process<T> {
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? server : client;
     }
 
-    public abstract initialize();
-
-    protected initializeSystem(system: System) {
+    protected addSystem(SystemConstructor: ClientSystem | ServerSystem, ...args: Array<any>) {
+        let system = new SystemConstructor(...args);
         if (this.systems[system.name]) {
             throw `Duplicate systen name ${system.name}`;
             return;
@@ -134,4 +133,5 @@ export abstract class Process<T> {
             this.startedSystems[i].update(delta);
         }
     }
+
 }
