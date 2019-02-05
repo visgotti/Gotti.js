@@ -20,16 +20,16 @@ abstract class ClientSystem extends System {
      * The web client
      * @param client - Gotti web client
      * @param messageQueue
-     * @param globalSystemVariables - map of objects or values you want to be able to access in any system as a object property.
+     * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
     public initialize(client, messageQueue, globalSystemVariables: {[reference: string]: any})
     {
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {
             Object.keys(globalSystemVariables).forEach((referenceName) => {
-                if(referenceName in this) {
-                    throw new Error(`Can not have a global object that shares a reference with native system class: ${referenceName}`);
+                if(referenceName in this.globals) {
+                    throw new Error(`Duplicate global object references: ${referenceName}`);
                 }
-                this[referenceName] = globalSystemVariables[referenceName];
+                this.globals[referenceName] = globalSystemVariables[referenceName];
             });
         }
 

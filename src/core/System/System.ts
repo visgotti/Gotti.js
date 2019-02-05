@@ -5,6 +5,8 @@ abstract class System {
 
     public onRemoteMessage(message: Message) {};
 
+    public globals: {[name: string]: any} = {};
+
     protected messageQueue: MessageQueue;
     protected gameState: any;
 
