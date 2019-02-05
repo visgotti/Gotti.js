@@ -57,7 +57,7 @@ export abstract class Process<T> {
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? server : client;
     }
 
-    protected addSystem(SystemConstructor: ISystem, ...args: Array<any>) {
+    public addSystem(SystemConstructor: ISystem, ...args: Array<any>) {
         let system = new SystemConstructor(...args);
         if (this.systems[system.name]) {
             throw `Duplicate systen name ${system.name}`;
