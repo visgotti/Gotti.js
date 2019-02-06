@@ -6,5 +6,6 @@ export declare abstract class Component {
     parentObject: any;
     setAttribute: Function;
     constructor(name: string | number);
+    onAdded(entity: Entity): void;
     onRemoved(entity: Entity): void;
 }

@@ -1,3 +1,4 @@
+import { Component } from './Component';
 export declare abstract class Entity {
     id: string | number;
     type: string | number;
@@ -15,7 +16,7 @@ export declare abstract class Entity {
      * @param component
      * @returns {Entity}
      */
-    addComponent(component: any): this;
+    addComponent(component: Component): this;
     private setAttribute;
     getAttributes(): {
         [name: string]: any;
