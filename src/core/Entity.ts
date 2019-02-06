@@ -2,7 +2,7 @@ export abstract class Entity {
     public id: string | number;
     public type: string | number;
     public components: any;
-    public propertiesFromComponent: {[componentName: string]: any };
+    public methodsFromComponent: {[componentName: string]: any };
     public attributes: {[name: string]: any} = {};
 
     constructor(id, type){
@@ -14,7 +14,7 @@ export abstract class Entity {
         this.components = {};
 
         // this is a map of all the functions received from the component
-        this.propertiesFromComponent = {};
+        this.methodsFromComponent = {};
 
         return this;
     }
@@ -31,17 +31,15 @@ export abstract class Entity {
             throw `Entity ${this.id} trying to add ${component.name} twice `;
         }
         this.components[component.name] = component;
-        this.propertiesFromComponent[component.name] = component.componentProperties;
+        this.methodsFromComponent[component.name] = component.componentMethods;
 
-        for(var i = 0; i < component.componentProperties.length; i++) {
-            let propertyName = component.componentProperties[i];
+        for(var i = 0; i < component.componentMethods.length; i++) {
+            let propertyName = component.componentMethods[i];
             if(this[propertyName] !== undefined){
                 throw (`Duplicated property ${propertyName} names in component ${component.name} attached to an entity. Component properties must be unique`);
             }
             if(component[propertyName] instanceof Function) {
                 this[propertyName] = component[propertyName].bind(component);
-            } else {
-                this[propertyName] = component[propertyName];
             }
         }
 
@@ -73,11 +71,11 @@ export abstract class Entity {
 
         delete this.components[componentName];
 
-        for(var i = 0; i < this.propertiesFromComponent[componentName].length; i++) {
-            delete this[this.propertiesFromComponent[componentName][i]];
+        for(var i = 0; i < this.methodsFromComponent[componentName].length; i++) {
+            delete this[this.methodsFromComponent[componentName][i]];
         }
 
-        delete this.propertiesFromComponent[componentName];
+        delete this.methodsFromComponent[componentName];
 
         component.onRemoved(this);
     }

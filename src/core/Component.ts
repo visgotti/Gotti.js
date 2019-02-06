@@ -2,7 +2,7 @@ import { Entity } from './Entity';
 
 export abstract class Component {
     // name of functions an entity gets by applying the component.
-    public componentProperties: Array<string>;
+    public componentMethods: Array<string>;
     public name: string | number;
     public entityId: string;
     public parentObject: any;
@@ -14,13 +14,12 @@ export abstract class Component {
         }
         let parentObj = this.constructor.prototype;
 
-        this.componentProperties = Object.getOwnPropertyNames(parentObj).filter(p => {
-            return parentObj[p] !== "constructor";
+        this.componentMethods = Object.getOwnPropertyNames(parentObj).filter(p => {
+            return p !== "constructor" && p !== "prototype";
         });
-
         this.name = name;
     }
-    public abstract onRemoved(entity: Entity);
+    public onRemoved(entity: Entity) {};
 };
 
 /*
