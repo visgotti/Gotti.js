@@ -6,7 +6,7 @@ abstract class ClientSystem extends System {
     readonly name: string | number;
     private client: WebClient;
 
-    private dispatchToServer: (message: Message) => void;
+    protected dispatchToServer: (message: Message) => void;
 
     constructor(name: string | number) {
         super(name);
