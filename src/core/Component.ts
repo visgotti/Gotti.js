@@ -4,18 +4,16 @@ export abstract class Component {
     // name of functions an entity gets by applying the component.
     public componentMethods: Array<string> = [];
     public name: string | number;
-    public entityId: string;
-    public parentObject: any;
     public setAttribute: Function;
+
     constructor(name: string | number){
         if (typeof(name) === 'undefined')
         {
             throw "Component: Invalid component name";
         }
         let parentObj = this.constructor.prototype;
-
         this.componentMethods = Object.getOwnPropertyNames(parentObj).filter(p => {
-            return p !== "constructor" && p !== "prototype";
+            return p !== "constructor" && p !== "prototype" && p !== 'onAdded' && p !== 'onRemoved'
         });
         this.name = name;
     }
