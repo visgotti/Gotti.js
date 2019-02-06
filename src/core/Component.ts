@@ -2,7 +2,7 @@ import { Entity } from './Entity';
 
 export abstract class Component {
     // name of functions an entity gets by applying the component.
-    public componentMethods: Array<string>;
+    public componentMethods: Array<string> = [];
     public name: string | number;
     public entityId: string;
     public parentObject: any;
