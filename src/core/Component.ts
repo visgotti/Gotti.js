@@ -19,6 +19,7 @@ export abstract class Component {
         });
         this.name = name;
     }
+    public onAdded(entity: Entity) {};
     public onRemoved(entity: Entity) {};
 };
 

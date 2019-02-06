@@ -1,3 +1,5 @@
+import { Component } from './Component';
+
 export abstract class Entity {
     public id: string | number;
     public type: string | number;
@@ -26,7 +28,7 @@ export abstract class Entity {
      * @param component
      * @returns {Entity}
      */
-    public addComponent(component) {
+    public addComponent(component: Component) {
         if(this.hasComponent(component.name)) {
             throw `Entity ${this.id} trying to add ${component.name} twice `;
         }
@@ -45,7 +47,7 @@ export abstract class Entity {
 
         // attach setAttribute to component
         component.setAttribute = this.setAttribute.bind(this);
-
+        component.onAdded(this);
         return this;
     }
 
