@@ -3,7 +3,7 @@ import { Message } from '../MessageQueue';
 declare abstract class ClientSystem extends System {
     readonly name: string | number;
     private client;
-    private dispatchToServer;
+    protected dispatchToServer: (message: Message) => void;
     constructor(name: string | number);
     /**
      * Initialize gets called by the process and

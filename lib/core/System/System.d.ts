@@ -2,11 +2,8 @@ import { Message, MessageQueue } from '../MessageQueue';
 declare abstract class System {
     protected initialized: boolean;
     onRemoteMessage(message: Message): void;
-    globals: {
-        [name: string]: any;
-    };
+    globals: any;
     protected messageQueue: MessageQueue;
-    protected gameState: any;
     protected dispatchLocal: Function;
     protected dispatchAllLocal: Function;
     protected dispatchLocalInstant: Function;

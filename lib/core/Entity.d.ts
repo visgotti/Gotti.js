@@ -2,7 +2,7 @@ export declare abstract class Entity {
     id: string | number;
     type: string | number;
     components: any;
-    propertiesFromComponent: {
+    methodsFromComponent: {
         [componentName: string]: any;
     };
     attributes: {
