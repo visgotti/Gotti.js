@@ -1,5 +1,5 @@
-import { system_names, createDummyClientProcess }  from '../mocks';
-import { DummySystem1, DummySystem2, DummySystem3 } from '../mocks/client/dummySystems';
+import { system_names, createDummyClientProcess }  from '../../mocks';
+import { DummySystem1, DummySystem2, DummySystem3 } from '../../mocks/client/dummySystems';
 import * as assert from 'assert';
 import * as mocha from 'mocha';
 import * as sinon from 'sinon';

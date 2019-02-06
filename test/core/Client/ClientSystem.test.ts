@@ -1,7 +1,7 @@
-import { WebClient } from '../../src/core/WebClient';
-import { MessageQueue } from '../../src/core/MessageQueue';
+import { WebClient } from '../../../src/core/WebClient';
+import { MessageQueue } from '../../../src/core/MessageQueue';
 
-import { createDummyClientSystem, system_names, Messages } from '../mocks';
+import { createDummyClientSystem, system_names, Messages } from '../../mocks';
 
 import * as assert from 'assert';
 import * as mocha from 'mocha';
