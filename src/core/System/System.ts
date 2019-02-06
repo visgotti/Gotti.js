@@ -5,10 +5,9 @@ abstract class System {
 
     public onRemoteMessage(message: Message) {};
 
-    public globals: {[name: string]: any} = {};
+    public globals: any = {};
 
     protected messageQueue: MessageQueue;
-    protected gameState: any;
 
     protected dispatchLocal: Function;
     protected dispatchAllLocal: Function;
