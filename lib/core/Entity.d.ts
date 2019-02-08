@@ -23,4 +23,5 @@ export declare abstract class Entity {
     };
     hasComponent(componentName: any): boolean;
     removeComponent(componentName: any): void;
+    destroy(): void;
 }
