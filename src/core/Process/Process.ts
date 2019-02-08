@@ -60,6 +60,7 @@ export abstract class Process<T> {
         // make sure decorators are restored in case for some reason it persists through making new processes.
         decorators.restore();
         // initialize the ComponentSystem decorator after systems are set up //todo: as of now it will run the hooks even if the system is stopped
+
         decorators.initializeSystemComponentDecorator(this.systems);
     }
 
