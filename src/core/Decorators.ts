@@ -7,13 +7,13 @@ import { Component } from './Component';
  * @param systems
  */
 
-type SystemComponentDecorator = (systemName: string) => any;
+type SystemComponentDecorator = (systemName: string | number) => any;
 // let SystemComponent: SystemComponentDecorator;
 
 class Decorators {
     constructor(){};
     public initializeSystemComponentDecorator(systems) {
-        this.SystemComponent = function(systemName: string) {
+        this.SystemComponent = function(systemName: string | number) {
             return (target) => {
                 if(!(target.prototype['onRemoved'] && target.prototype['onAdded'] && systems[systemName])) {
                     return target;
