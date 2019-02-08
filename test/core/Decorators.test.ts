@@ -11,6 +11,9 @@ import * as sinon from 'sinon';
 
 describe('Decorators', function() {
     let mockSystem1;
+    before(() => {
+       decorators.restore();
+    });
     it('initializes the SystemComponent decorator', (done) => {
         mockSystem1 = createDummyClientSystem('TEST');
         let systems = { 'TEST': mockSystem1 };

@@ -35,31 +35,11 @@ class Decorators {
         }
     }
     public SystemComponent: SystemComponentDecorator = null;
+
+    public restore() {
+        this.SystemComponent = null;
+    }
 };
 
 const decorators = new Decorators();
 export { decorators };
-
-export const initializeSystemComponentDecorator = (systems: {[systemName: string]: System}) => {
-    decorators.SystemComponent = function(systemName: string) {
-        return (target) => {
-            if(!(target.prototype['onRemoved'] && target.prototype['onAdded'] && systems[systemName])) {
-                return target;
-            }
-
-            const old_onRemoved = target.prototype['onRemoved'].bind(target.prototype);
-            const old_onAdded = target.prototype['onRemoved'].bind(target.prototype);
-
-            target.prototype['onRemoved']  = (entity: Entity) => {
-                old_onRemoved(entity);
-                systems[systemName].onComponentRemoved(entity);
-            };
-
-            target.prototype['onAdded']  = (entity) => {
-                old_onAdded(entity);
-                systems[systemName].onComponentAdded(entity);
-            }
-        }
-    }
-}
-
