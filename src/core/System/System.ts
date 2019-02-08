@@ -39,8 +39,9 @@ abstract class System {
     public abstract update (delta) : void;
     public abstract clear() : void;
 
-    public abstract onComponentAdded(entity: Entity): void;
-    public abstract onComponentRemoved(entity: Entity): void;
+    // optional overrides
+    public onComponentAdded(entity: Entity) {};
+    public onComponentRemoved(entity: Entity) {};
 
     // optional
     public onInit() {};

@@ -16,8 +16,8 @@ declare abstract class System {
     abstract initialize(...args: any[]): void;
     abstract update(delta: any): void;
     abstract clear(): void;
-    abstract onComponentAdded(entity: Entity): void;
-    abstract onComponentRemoved(entity: Entity): void;
+    onComponentAdded(entity: Entity): void;
+    onComponentRemoved(entity: Entity): void;
     onInit(): void;
     onStop(): void;
     onStart(): void;
