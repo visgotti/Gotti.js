@@ -14,6 +14,8 @@ export class DummySystem1 extends ClientSystem {
     public update() {};
     public onStateUpdate(pathString, pathData, change, value) {};
     public onMessage(message) {};
+    public onComponentAdded(entity) {};
+    public onComponentRemoved(entity) {};
     public clear() {};
 }
 
@@ -29,6 +31,8 @@ export class DummySystem2 extends ClientSystem {
     public update() {};
     public onStateUpdate(pathString, pathData, change, value) {};
     public onMessage(message) {};
+    public onComponentAdded(entity) {};
+    public onComponentRemoved(entity) {};
     public clear() {};
 }
 
@@ -44,5 +48,7 @@ export class DummySystem3 extends ClientSystem {
     public update() {};
     public onStateUpdate(pathString, pathData, change, value) {};
     public onMessage(message) {};
+    public onComponentAdded(entity) {};
+    public onComponentRemoved(entity) {};
     public clear() {};
 }

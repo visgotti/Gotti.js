@@ -81,4 +81,10 @@ export abstract class Entity {
 
         component.onRemoved(this);
     }
+
+    public destroy() { //todo only call this on components that are decorated with the systemComponent
+        for(let component in this.components) {
+            this.removeComponent(component);
+        }
+    }
 };

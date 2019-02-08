@@ -9,11 +9,10 @@ declare abstract class ServerSystem extends System {
         [reference: string]: any;
     }): void;
     abstract onAreaMessage(areaId: any, message: any): any;
-    abstract onClientMessage(message: any): any;
+    abstract onClientMessage(client: any, message: any): any;
     protected dispatchToArea(areaId: string, message: Message): void;
     protected dispatchAllAreas(message: Message): void;
     protected dispatchToClient(clientUid: string, message: MessageQueue): void;
     protected dispatchToAllClients(message: any): void;
-    abstract onServerMessage(message: Message): any;
 }
 export default ServerSystem;

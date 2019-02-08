@@ -55,6 +55,8 @@ export abstract class Process<T> {
 
         this.messageQueue = new MessageQueue();
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? server : client;
+
+        this
     }
 
     public addSystem(SystemConstructor: ISystem, ...args: Array<any>) {

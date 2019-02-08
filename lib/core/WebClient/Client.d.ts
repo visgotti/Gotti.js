@@ -23,7 +23,8 @@ export declare class Client {
     constructor(url: string, token: string);
     messageQueue: MessageQueue;
     getGateData(): Promise<{}>;
-    requestGame(gameType: any, gameRegion: any, auth?: any): void;
+    requestGame(gameType: any): Promise<{}>;
+    joinConnector(url: any, gottiId: any): void;
     close(): void;
     /**
      * Gate
@@ -32,7 +33,6 @@ export declare class Client {
      */
     joinGate(options: any): void;
     private onMessage;
-    joinConnector(port: any, token: any): void;
     /**
      * sends message over network to server
      * @param message - system message to be processed on server

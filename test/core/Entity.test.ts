@@ -11,7 +11,6 @@ class TestEntity extends Entity {
     }
 }
 
-
 export class TestComponent extends Component {
     public testProperty: number = 5;
     constructor() {
@@ -23,7 +22,7 @@ export class TestComponent extends Component {
     }
 }
 
-describe.only('Entity', function() {
+describe('Entity', function() {
     let testEntity;
     before('Creates entity ', (done) => {
         testEntity = new TestEntity();
@@ -52,4 +51,18 @@ describe.only('Entity', function() {
             done();
         });
     });
+    describe('entity.destroy()', () => {
+        it('calls remove method on all components', (done) => {
+            let component = new TestComponent();
+            let onAddedSpy = sinon.spy(component, 'onAdded');
+            let onRemovedSpy = sinon.spy(component, 'onRemoved');
+
+            testEntity.addComponent(component);
+            testEntity.destroy();
+
+            sinon.assert.calledOnce(onAddedSpy);
+            sinon.assert.calledOnce(onRemovedSpy);
+            done();
+        });
+    })
 });

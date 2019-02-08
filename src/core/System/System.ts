@@ -1,4 +1,5 @@
 import { Message, MessageQueue } from '../MessageQueue';
+import { Entity } from '../Entity';
 
 abstract class System {
     protected initialized: boolean;
@@ -37,6 +38,9 @@ abstract class System {
 
     public abstract update (delta) : void;
     public abstract clear() : void;
+
+    public abstract onComponentAdded(entity: Entity): void;
+    public abstract onComponentRemoved(entity: Entity): void;
 
     // optional
     public onInit() {};

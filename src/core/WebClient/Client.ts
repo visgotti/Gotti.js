@@ -62,15 +62,27 @@ export class Client {
         })
     }
 
-    public requestGame(gameType, gameRegion, auth?: any) {
-        httpPostAsync(`${this.hostname}/gate`, this.token, { gameType, gameRegion }, (err, data) => {
-            if(err) {
-                throw (`Error requesting game ${err}`);
-            } else {
-                this.connector = new Connector()
-            }
-        })
+    public async requestGame(gameType) {
+        return new Promise((resolve, reject) => {
+            httpPostAsync(`${this.hostname}/gate`, this.token, { gameType }, (err, data) => {
+                if(err) {
+                    return reject(`Error requesting game ${err}`);
+                } else {
+                    this.connector = new Connector();
+                    return resolve(data)
+                }
+            })
+        });
     }
+
+    public joinConnector(url, gottiId) {
+        if(!(this._messageQueue)) {
+            throw new Error('Message queue was not initialized in web client, can not join Connector.')
+        }
+        this.connector.connect(url, gottiId);
+        // this.connect(port);
+    }
+
 
     public close() {
         this.connector.connection.close();
@@ -95,13 +107,6 @@ export class Client {
          */
     }
 
-    public joinConnector(port, token) {
-        if(!(this._messageQueue)) {
-            throw new Error('Message queue was not initialized in web client, can not join Connector.')
-        }
-        this.connector.connect(this.hostname  )
-        // this.connect(port);
-    }
 
     /**
      * sends message over network to server
@@ -254,6 +259,7 @@ function httpPostAsync(url, token, request, callback) {
 
 //Send the proper header information along with the request
     http.setRequestHeader('Content-Type', 'application/json');
+    http.setRequestHeader('authorization', token);
 
     http.onreadystatechange = function() {//Call a function when the state changes.
         if(http.readyState == 4) {

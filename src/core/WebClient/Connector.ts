@@ -28,7 +28,7 @@ export class Connector {
     private id: string;
     private gameId: string;
 
-    public clientId: string;
+    public gottiId: string;
     public sessionId: string;
 
     public options: any;
@@ -52,9 +52,7 @@ export class Connector {
     public connection: Connection;
     private _previousState: any;
 
-    constructor(options?: any) {
-        this.clientId = null;
-        this.options = options;
+    constructor() {
         this.onLeave.add(() => this.removeAllListeners());
     }
 
@@ -62,12 +60,15 @@ export class Connector {
         this._messageQueue = value;
     }
 
-    public connect(URL, auth?) {
+    public connect(gottiId: string, URL, options: any = {}) {
         if(!(this._messageQueue)) {
             throw new Error('Message queue was not initialized for web client\'s Connector, can not connect Connector.')
         }
 
-        this.connection = new Connection(URL, auth);
+        this.gottiId = gottiId;
+        let url = this.buildEndPoint(URL, options);
+
+        this.connection = new Connection(url);
         this.connection.onmessage = this.onMessageCallback.bind(this);
     }
 
@@ -112,9 +113,8 @@ export class Connector {
         this.onLeave.removeAll();
     }
 
-    protected onJoin(sessionId, clientId, gameId, areaOptions) {
+    protected onJoin(sessionId, gameId, areaOptions) {
         this.sessionId = sessionId;
-        this.clientId = clientId;
         this.onJoinConnector.dispatch(gameId, areaOptions);
 
         Object.keys(areaOptions).forEach(areaId => {
@@ -133,7 +133,7 @@ export class Connector {
 
         if (code === Protocol.JOIN_CONNECTOR) {
             // [sessionId, client.id, gameId, areaOptions]
-            this.onJoin(message[1], message[2], message[3], message[4]);
+            this.onJoin(message[1], message[2], message[3]);
         } else if (code === Protocol.JOIN_CONNECTOR_ERROR) {
             this.onError.dispatch(message[1]);
         } else if (code === Protocol.REQUEST_WRITE_AREA) {
@@ -190,5 +190,16 @@ export class Connector {
         area.state.set( msgpack.decode(area._previousState) );
 
         this.onStateChange.dispatch(area.state);
+    }
+
+    private buildEndPoint(URL, options: any ={}) {
+        const params = [ `gottiId=${this.gottiId}`];
+        for (const name in options) {
+            if (!options.hasOwnProperty(name)) {
+                continue;
+            }
+            params.push(`${name}=${options[name]}`);
+        }
+        return `${URL}/?${params.join('&')}`;
     }
 }

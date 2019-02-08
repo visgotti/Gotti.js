@@ -13,6 +13,8 @@ class DummySystem extends ClientSystem {
     public onStateUpdate(pathString, pathData, change, value) {};
     public onMessage(message) {};
     public clear() {};
+    public onComponentAdded(entity) {};
+    public onComponentRemoved(entity) {};
 }
 
 export function createDummyClientSystem(name) {

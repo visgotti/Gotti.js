@@ -4,7 +4,7 @@ export abstract class Component {
     // name of functions an entity gets by applying the component.
     public componentMethods: Array<string> = [];
     public name: string | number;
-    public setAttribute: Function;
+    public setAttribute: Function = () => {};
 
     constructor(name: string | number){
         if (typeof(name) === 'undefined')
