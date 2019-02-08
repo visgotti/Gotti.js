@@ -3,7 +3,7 @@
  * to be triggered when its added or removed from an entity.
  * @param systems
  */
-declare type SystemComponentDecorator = (systemName: string) => any;
+declare type SystemComponentDecorator = (systemName: string | number) => any;
 declare class Decorators {
     constructor();
     initializeSystemComponentDecorator(systems: any): void;
