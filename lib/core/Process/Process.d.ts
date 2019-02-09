@@ -34,5 +34,7 @@ export declare abstract class Process<T> {
     protected _startAllSystems(): void;
     protected _startSystem(systemName: any): void;
     protected tick(delta: any): void;
+    abstract startLoop(framesPerSecond: number): void;
+    abstract stopLoop(): void;
 }
 export {};

@@ -1,6 +1,6 @@
 import { Process, PROCESS_ENV } from './Process';
 
-import * as gameloop from 'node-gameloop';
+import { setGameLoop, clearGameLoop } from '../ServerGameLoop';
 
 export class ServerProcess extends Process<ServerProcess> {
     public room: any;
@@ -27,12 +27,12 @@ export class ServerProcess extends Process<ServerProcess> {
 
     public startLoop(fps = 20) {
         let tickRate = 1000 / 20;
-        this.gameloop = gameloop.setGameLoop(this.tick.bind(this), tickRate);
+        this.gameloop = setGameLoop(this.tick.bind(this), tickRate);
     }
 
     public stopLoop() {
-        if(this.gameLoop != null) {
-            gameloop.clearGameLoop(this.gameloop);
+        if(this.gameloop != null) {
+            clearGameLoop(this.gameloop);
         }
     }
 
