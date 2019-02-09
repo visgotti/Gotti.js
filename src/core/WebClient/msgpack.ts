@@ -1,5 +1,5 @@
-import * as msgpackDecode from 'notepack.io/browser/decode.js';
-import * as msgpackEncode from 'notepack.io/browser/encode.js';
+import * as msgpackDecode from 'notepack.io/browser/decode';
+import * as msgpackEncode from 'notepack.io/browser/encode';
 
 export const decode = msgpackDecode;
 export const encode = msgpackEncode;

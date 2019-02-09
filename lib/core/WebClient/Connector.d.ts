@@ -32,12 +32,13 @@ export declare class Connector {
     onMessage: Signal;
     onError: Signal;
     onLeave: Signal;
+    onOpen: Signal;
     private areas;
     connection: Connection;
     private _previousState;
     constructor();
     messageQueue: MessageQueue;
-    connect(gottiId: string, URL: any, options?: any): void;
+    connect(gottiId: string, connectorURL: any, options?: any): Promise<{}>;
     requestListen(areaId: string, options?: any): void;
     leave(): void;
     sendSystemMessage(message: any): void;
@@ -45,7 +46,7 @@ export declare class Connector {
     listenArea(areaId: string, options?: any): void;
     readonly hasJoined: boolean;
     removeAllListeners(): void;
-    protected onJoin(sessionId: any, gameId: any, areaOptions: any): void;
+    protected onJoin(areaOptions: any, joinOptions: any): void;
     protected onMessageCallback(event: any): void;
     protected setState(areaId: string, encodedState: Buffer): void;
     protected patch(areaId: any, binaryPatch: any): void;

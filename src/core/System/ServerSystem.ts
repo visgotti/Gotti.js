@@ -1,5 +1,5 @@
 import System from "./System";
-import { WebClient } from '../WebClient';
+import { Client as WebClient } from '../WebClient/Client';
 import { Message, MessageQueue } from '../MessageQueue';
 
 abstract class ServerSystem extends System {

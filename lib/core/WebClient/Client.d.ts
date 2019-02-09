@@ -24,7 +24,7 @@ export declare class Client {
     messageQueue: MessageQueue;
     getGateData(): Promise<{}>;
     requestGame(gameType: any): Promise<{}>;
-    joinConnector(url: any, gottiId: any): void;
+    joinConnector(gottiId: any, connectorURL: any): Promise<{}>;
     close(): void;
     /**
      * Gate

@@ -46,8 +46,9 @@ export class Connector {
     public onMessage: Signal = new Signal();
     public onError: Signal = new Signal();
     public onLeave: Signal = new Signal();
+    public onOpen: Signal = new Signal();
 
-    private areas: {[areaId: string]:  Area};
+    private areas: {[areaId: string]:  Area} = {};
 
     public connection: Connection;
     private _previousState: any;
@@ -60,16 +61,17 @@ export class Connector {
         this._messageQueue = value;
     }
 
-    public connect(gottiId: string, URL, options: any = {}) {
-        if(!(this._messageQueue)) {
-            throw new Error('Message queue was not initialized for web client\'s Connector, can not connect Connector.')
-        }
-
+    public async connect(gottiId: string, connectorURL, options: any = {}) {
         this.gottiId = gottiId;
-        let url = this.buildEndPoint(URL, options);
-
+        let url = this.buildEndPoint(connectorURL, options);
         this.connection = new Connection(url);
+        this.connection.onopen = () => {};
         this.connection.onmessage = this.onMessageCallback.bind(this);
+        return new Promise((resolve, reject) => {
+            this.onJoinConnector.add((areaData, joinData) => {
+                return resolve({ areaData, joinData });
+            })
+        })
     }
 
     public requestListen(areaId: string, options?) {
@@ -81,7 +83,7 @@ export class Connector {
 
     public leave(): void {
         if (this.connection) {
-       //     this.connection.send([Protocol.LEAVE_ROOM]);
+            //     this.connection.send([Protocol.LEAVE_ROOM]);
 
         } else {
             this.onLeave.dispatch();
@@ -113,10 +115,10 @@ export class Connector {
         this.onLeave.removeAll();
     }
 
-    protected onJoin(sessionId, gameId, areaOptions) {
-        this.sessionId = sessionId;
-        this.onJoinConnector.dispatch(gameId, areaOptions);
-
+    protected onJoin(areaOptions, joinOptions) {
+        console.log('onjoin area options was', areaOptions);
+        console.log('join options were', joinOptions);
+        this.onJoinConnector.dispatch(areaOptions, joinOptions);
         Object.keys(areaOptions).forEach(areaId => {
             this.areas[areaId] = {
                 _previousState: {},
@@ -128,12 +130,16 @@ export class Connector {
     }
 
     protected onMessageCallback(event) {
-        const message = msgpack.decode( new Uint8Array(event.data) );
+        console.log('the event was', event);
+        const message = msgpack.decode(new Uint8Array(event.data));
         const code = message[0];
 
+        console.log('the message was', message);
+
         if (code === Protocol.JOIN_CONNECTOR) {
-            // [sessionId, client.id, gameId, areaOptions]
-            this.onJoin(message[1], message[2], message[3]);
+            console.log('JOINED CONNECTOR!!!!', message);
+            // [areaOptions, joinOptions]
+            this.onJoin(message[1], message[2]);
         } else if (code === Protocol.JOIN_CONNECTOR_ERROR) {
             this.onError.dispatch(message[1]);
         } else if (code === Protocol.REQUEST_WRITE_AREA) {
@@ -166,7 +172,7 @@ export class Connector {
             }
         }// else if (code === Protocol.LEAVE_ROOM) {
          //   this.leave();
-      //  }
+        //  }
     }
 
     protected setState( areaId: string, encodedState: Buffer ): void {
@@ -193,6 +199,8 @@ export class Connector {
     }
 
     private buildEndPoint(URL, options: any ={}) {
+        console.log('the url to build from was', URL);
+        console.log('the options were', options);
         const params = [ `gottiId=${this.gottiId}`];
         for (const name in options) {
             if (!options.hasOwnProperty(name)) {

@@ -34,7 +34,7 @@ class Decorators {
             }
         }
     }
-    public SystemComponent(systemName: string | number){};
+    public SystemComponent(systemName: string | number) : any {};
 
     public restore() {
         this.SystemComponent = null;

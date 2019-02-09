@@ -69,18 +69,17 @@ export class Client {
                     return reject(`Error requesting game ${err}`);
                 } else {
                     this.connector = new Connector();
+
+
                     return resolve(data)
                 }
             })
         });
     }
 
-    public joinConnector(url, gottiId) {
-        if(!(this._messageQueue)) {
-            throw new Error('Message queue was not initialized in web client, can not join Connector.')
-        }
-        this.connector.connect(url, gottiId);
-        // this.connect(port);
+    public async joinConnector(gottiId, connectorURL) {
+        const options = await this.connector.connect(gottiId, connectorURL);
+        return options;
     }
 
 
