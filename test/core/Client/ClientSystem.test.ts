@@ -1,4 +1,4 @@
-import { WebClient } from '../../../src/core/WebClient';
+import { Client as WebClient } from '../../../src/core/WebClient/Client';
 import { MessageQueue } from '../../../src/core/MessageQueue';
 
 import { createDummyClientSystem, system_names, Messages } from '../../mocks';
@@ -22,7 +22,7 @@ describe('ClientSystem', function() {
     beforeEach('Creates dummy systems and inits a web client', (done) => {
         messageQueue = new MessageQueue();
 
-        client = new WebClient('/');
+        client = new WebClient('/', '');
 
         mockSystem1 = createDummyClientSystem(system_names[0]);
         mockSystem2 = createDummyClientSystem(system_names[1]);

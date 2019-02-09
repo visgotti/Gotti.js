@@ -1,5 +1,6 @@
 import { Process, PROCESS_ENV } from './Process';
 import { Client as WebClient } from '../WebClient/Client';
+import { setGameLoop, clearGameLoop } from '../ClientGameLoop';
 
 export class ClientProcess extends Process<ClientProcess> {
     public client: WebClient;
@@ -15,6 +16,14 @@ export class ClientProcess extends Process<ClientProcess> {
         this.client.messageQueue = this.messageQueue;
         this.systemInitializer = this.initializerFactory(this, globalSystemVariables);
 //   this.room.onMessageQueueRelay.add(this.onMessageQueueRelay.bind(this))
+    }
+
+    public startLoop(fps = 60) {
+        setGameLoop(this.tick.bind(this), fps);
+    }
+
+    public stopLoop() {
+        clearGameLoop();
     }
 
     public startSystem(systemName) {

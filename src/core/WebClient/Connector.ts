@@ -57,6 +57,7 @@ export class Connector {
         this.onLeave.add(() => this.removeAllListeners());
     }
 
+    // gets set when a process is instantiated
     set messageQueue(value: MessageQueue) {
         this._messageQueue = value;
     }

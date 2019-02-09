@@ -150,4 +150,6 @@ export abstract class Process<T> {
         }
     }
 
+    public abstract startLoop (framesPerSecond: number): void;
+    public abstract stopLoop(): void;
 }
