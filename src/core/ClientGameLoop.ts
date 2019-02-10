@@ -6,8 +6,6 @@ export function clearGameLoop () {
 };
 
 export function setGameLoop (update, tickLengthMs = 1000 / 30) {
-
-
     let __cancelAnimationFrame;
     let __requestAnimationFrame;
 
@@ -29,13 +27,14 @@ export function setGameLoop (update, tickLengthMs = 1000 / 30) {
     let delta = 0;
     let framesThisSecond = 0;
     let lastFpsUpdate = 0;
-    let lastFrameTimeMs = Date.now();
+    let lastFrameTimeMs = 0;
 
     function panic() {
         delta = 0;
     }
 
-    const gameLoop = function(currentTime) {
+    const gameLoop = function() {
+        const currentTime = Date.now();
         if(currentTime < lastFrameTimeMs + tickLengthMs) {
             activeLoop = __requestAnimationFrame(gameLoop);
             return
@@ -46,6 +45,7 @@ export function setGameLoop (update, tickLengthMs = 1000 / 30) {
 
         var numUpdateSteps = 0;
         while (delta >= tickLengthMs) {
+            console.log('timestep was', tickLengthMs);
             update(tickLengthMs);
             delta -= tickLengthMs;
             if (++numUpdateSteps >= 240) {
@@ -56,5 +56,6 @@ export function setGameLoop (update, tickLengthMs = 1000 / 30) {
         activeLoop = __requestAnimationFrame(gameLoop);
     };
 
-    gameLoop(lastFrameTimeMs)
+
+    gameLoop()
 };

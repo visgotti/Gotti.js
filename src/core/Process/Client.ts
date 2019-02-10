@@ -19,7 +19,7 @@ export class ClientProcess extends Process<ClientProcess> {
     }
 
     public startLoop(fps = 60) {
-        setGameLoop(this.tick.bind(this), fps);
+        setGameLoop(this.tick.bind(this), 1000 / fps);
     }
 
     public stopLoop() {

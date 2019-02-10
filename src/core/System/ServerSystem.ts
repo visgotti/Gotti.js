@@ -4,8 +4,6 @@ import { Message, MessageQueue } from '../MessageQueue';
 
 abstract class ServerSystem extends System {
     readonly name: string | number;
-    public room: any;
-    public state: any;
 
     constructor(name: string | number) {
         super(name);
@@ -13,8 +11,6 @@ abstract class ServerSystem extends System {
     }
 
     public initialize(
-        room: any,
-        state: any,
         messageQueue: MessageQueue,
         globalSystemVariables: {[reference: string]: any})
     {
@@ -28,7 +24,6 @@ abstract class ServerSystem extends System {
         }
 
         //  this.dispatchToClient = room.send;
-        this.state = state;
         this.messageQueue = messageQueue;
         this.messageQueue.addSystem(this);
         this.dispatchLocal = messageQueue.add;
@@ -42,10 +37,10 @@ abstract class ServerSystem extends System {
     public abstract onAreaMessage(areaId, message);
     public abstract onClientMessage(client, message);
 
-    protected dispatchToArea(areaId: string, message: Message) {};
-    protected dispatchAllAreas(message: Message) {};
+    protected dispatchToAreas(message: Message) {};
     protected dispatchToClient(clientUid: string, message: MessageQueue) {};
     protected dispatchToAllClients(message) {};
+    protected dispatchToLocalClients(message) {}
 }
 
 export default ServerSystem;

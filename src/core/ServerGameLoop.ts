@@ -62,7 +62,7 @@ export function setGameLoop (update, tickLengthMs = 1000 / 30) {
             target = now + tickLengthNano;
 
             // actually run user code
-            update(delta * nano2s);
+            update(Math.floor(delta / ms2nano));
         }
 
         // do not go on to renew loop if no longer active

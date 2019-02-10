@@ -128,6 +128,16 @@ describe('Client Process with no globals', function() {
             done();
         });
     });
+
+    describe('clientProcess.addGlobal', () => {
+        it('adds global to systems', (done) => {
+            clientProcess.addGlobal('foobar', {'foo': 'bar'});
+            assert.deepStrictEqual(clientProcess.startedSystems[0].globals.foobar, {'foo': 'bar'});
+            assert.deepStrictEqual(clientProcess.startedSystems[1].globals.foobar, {'foo': 'bar'});
+            assert.deepStrictEqual(clientProcess.startedSystems[2].globals.foobar, { 'foo': 'bar'});
+            done();
+        })
+    })
 });
 
 describe('Client Process with globals', function() {

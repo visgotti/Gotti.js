@@ -6,13 +6,13 @@ import { ClientProcess } from '../Process/Client';
 
 export const server = function server (process: ServerProcess, globalSystemVariables: any) : (system: ServerSystem) => void  {
     const createdSystems = new Set();
-    const { messageQueue, room, state } = process;
+    const { messageQueue } = process;
 
     return (system: ServerSystem) => {
         if(createdSystems.has(system.name)) {
             throw `Tried initializing duplicate system name: ${system.name} change of one of the instances.`;
         }
-        system.initialize(room, state, messageQueue, globalSystemVariables);
+        system.initialize(messageQueue, globalSystemVariables);
     };
 };
 

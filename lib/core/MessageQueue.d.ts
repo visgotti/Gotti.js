@@ -36,7 +36,7 @@ export declare class MessageQueue {
      * used for sending a message instantly to other systems versus waiting for next tick in the game loop.
      * @param message
      */
-    instantDispatch(message: Message): void;
+    instantDispatch(message: Message, isRemoteMessage?: boolean): void;
     /**
      * used for sending a message instantly to all other systems
      * @param message

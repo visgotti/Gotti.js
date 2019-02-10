@@ -1,3 +1,5 @@
+//TODO: split this into server and client message queue
+
 import System from './System/System';
 
 export interface Message {
@@ -100,9 +102,16 @@ export class MessageQueue {
      * used for sending a message instantly to other systems versus waiting for next tick in the game loop.
      * @param message
      */
-    public instantDispatch(message: Message) {
-        for(let i = 0; i < message.to.length; i++) {
-            this._systems[message.to[i]].onLocalMessage(message);
+    public instantDispatch(message: Message, isRemoteMessage=false) {
+        const messageToLength = message.to.length;
+        if(isRemoteMessage) {
+            for(let i = 0; i < messageToLength; i++) {
+                this._systems[message.to[i]].onRemoteMessage(message);
+            }
+        } else {
+            for(let i = 0; i < messageToLength; i++) {
+                this._systems[message.to[i]].onLocalMessage(message);
+            }
         }
     }
     /**
@@ -114,7 +123,6 @@ export class MessageQueue {
             this._systems[this.systemNames[i]].onLocalMessage({ type, data, to: [this.systemNames[i]], from});
         }
     }
-
 
     /**
      * Queues message to be handled in either the onClientMessage handler or onServerMessage system handler

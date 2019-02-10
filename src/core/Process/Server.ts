@@ -2,31 +2,34 @@ import { Process, PROCESS_ENV } from './Process';
 
 import { setGameLoop, clearGameLoop } from '../ServerGameLoop';
 
-export class ServerProcess extends Process<ServerProcess> {
-    public room: any;
-    public state: any;
+import { ClientManager } from '../ServerFrameworks/ClientManager';
 
+import { ISystem } from './Process';
+
+export class ServerProcess extends Process<ServerProcess> {
     private gameloop: any = null;
 
-    constructor(room, state, globalSystemVariables?: any) {
+    public clientManager: ClientManager;
+
+    constructor(room: any, ClientManagerConstructor: ISystem, globalSystemVariables?: any) {
         super(PROCESS_ENV.SERVER);
 
-        if(!(room) || !(state)) {
-            throw new Error('Server process needs a GottiServer area room and state to construct correctly');
+        this.systemInitializer = this.initializerFactory(this, room, globalSystemVariables);
+
+        this.clientManager = this.addSystem(ClientManagerConstructor) as ClientManager;
+    }
+
+    public decorateSystemsWithNetworkFunctions(room) {
+        for(let i = 0; i < this.systems.length; i++) {
+            this.systems[i].dispatchToAllClients = room.dispatchGlobalSystemMessage.bind(room);
+            this.systems[i].dispatchToLocalClients = room.dispatchLocalSystemMessage.bind(room);
+            this.systems[i].dispatchToClient = room.dispatchClientSystemMessage.bind(room);
+            this.systems[i].dispatchToAreas = room.dispatchSystemMessageToAreas.bind(room);
         }
-
-
-        this.state = state;
-        this.room = room;
-        this.room.messageQueue = this.messageQueue;
-
-        this.systemInitializer = this.initializerFactory(this, globalSystemVariables);
-
-//   this.room.onMessageQueueRelay.add(this.onMessageQueueRelay.bind(this))
     }
 
     public startLoop(fps = 20) {
-        let tickRate = 1000 / 20;
+        let tickRate = 1000 / fps;
         this.gameloop = setGameLoop(this.tick.bind(this), tickRate);
     }
 

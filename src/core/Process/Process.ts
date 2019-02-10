@@ -3,17 +3,17 @@ export enum PROCESS_ENV {
     SERVER = 1,
 }
 
-
+import { ClientManager } from '../ServerFrameworks/ClientManager';
 
 import { MessageQueue, Message } from '../MessageQueue'
 import System from '../System/System';
 import ClientSystem from '../System/ClientSystem';
-import ServerSystem from '../System/ClientSystem';
+import ServerSystem from '../System/ServerSystem';
 import { client, server } from '../System/SystemInitializer';
 import { decorators } from '../Decorators';
 
-interface ISystem {
-    new (...args: Array<any>): ClientSystem | ServerSystem
+export interface ISystem {
+    new (...args: Array<any>): ClientSystem | ServerSystem | ClientManager
 }
 
 type SystemLookup <T extends string | number>  = {
@@ -31,6 +31,8 @@ export abstract class Process<T> {
     protected initializerFactory: (process: Process<any>, globalVariables: any) => (System) => void;
     protected systemInitializer: (System) => void;
 
+    readonly processEnv: PROCESS_ENV;
+
     public systemInitializedOrder: Map<string | number, number>;
 
     private systemDecorator: (System) => void;
@@ -44,6 +46,7 @@ export abstract class Process<T> {
     public stoppedSystems: Set<string | number>;
 
     constructor(processEnv: PROCESS_ENV) {
+        this.processEnv = processEnv;
         this.systems = {} as SystemLookup<string | number>;
         this.systemNames = [] as Array<string>;
 
@@ -64,11 +67,18 @@ export abstract class Process<T> {
         decorators.initializeSystemComponentDecorator(this.systems);
     }
 
-    public addSystem(SystemConstructor: ISystem, ...args: Array<any>) {
+    public addGlobal(key: string, value: any) {
+        for(let i = 0; i < this.systemNames.length; i++) {
+            this.systems[this.systemNames[i]].globals[key] = value;
+        }
+    }
+
+    public addSystem(SystemConstructor: ISystem, ...args: Array<any>) : System {
         let system = new SystemConstructor(...args);
+
         if (this.systems[system.name]) {
             throw `Duplicate systen name ${system.name}`;
-            return;
+            return null;
         }
 
         this.systemInitializer(system);
@@ -80,6 +90,7 @@ export abstract class Process<T> {
         this.systemInitializedOrder.set(system.name, this.systemInitializedOrder.size);
 
         this.stoppedSystems.add(system.name);
+        return system;
     }
 
     protected _stopAllSystems() {
