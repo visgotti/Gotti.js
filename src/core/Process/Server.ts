@@ -6,26 +6,49 @@ import { ClientManager } from '../ServerFrameworks/ClientManager';
 
 import { ISystem } from './Process';
 
+import ServerSystem from '../System/ServerSystem';
+
 export class ServerProcess extends Process<ServerProcess> {
     private gameloop: any = null;
-
+    private room: any = null;
     public clientManager: ClientManager;
 
-    constructor(room: any, ClientManagerConstructor: ISystem, globalSystemVariables?: any) {
+    constructor(ClientManagerConstructor: ISystem, globalSystemVariables?: any) {
         super(PROCESS_ENV.SERVER);
 
-        this.systemInitializer = this.initializerFactory(this, room, globalSystemVariables);
+        this.systemInitializer = this.initializerFactory(this, globalSystemVariables);
 
         this.clientManager = this.addSystem(ClientManagerConstructor) as ClientManager;
+
+        let oldAddSystem = this.addSystem.bind(this);
+
+        // override addSystem with additional check for room with network functions.
+        this.addSystem = (SystemConstructor: ISystem, ...args: Array<any>) => {
+            // call old
+            let system = oldAddSystem(SystemConstructor, ...args) as ServerSystem;
+            // if we already added the room reference and then add a system then we want to bind
+            // the network functions to it.
+            if(this.room) {
+                this.decorateSystemWithRoomFunctions(system, this.room);
+            }
+            return system;
+        };
     }
 
-    public decorateSystemsWithNetworkFunctions(room) {
-        for(let i = 0; i < this.systems.length; i++) {
-            this.systems[i].dispatchToAllClients = room.dispatchGlobalSystemMessage.bind(room);
-            this.systems[i].dispatchToLocalClients = room.dispatchLocalSystemMessage.bind(room);
-            this.systems[i].dispatchToClient = room.dispatchClientSystemMessage.bind(room);
-            this.systems[i].dispatchToAreas = room.dispatchSystemMessageToAreas.bind(room);
+    // call trace until I refactor this ----- Area Server Constructor > calls AreaRoom.initializeAndStart > calls AreaRoom.startGottiProcess
+    public addRoom(room) {
+        this.room = room;
+        for(let name in this.systems) {
+            const system = this.systems[name] as ServerSystem;
+            this.decorateSystemWithRoomFunctions(system, room);
         }
+    }
+
+    private decorateSystemWithRoomFunctions(system: ServerSystem, room: any) {
+        system.dispatchToAllClients = room.dispatchToAllClients.bind(room);
+        system.dispatchToLocalClients = room.dispatchToLocalClients.bind(room);
+        system.dispatchToClient = room.dispatchToClient.bind(room);
+        system.dispatchToAreas = room.dispatchToAreas.bind(room);
     }
 
     public startLoop(fps = 20) {
