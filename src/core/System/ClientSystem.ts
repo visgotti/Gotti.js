@@ -6,7 +6,11 @@ abstract class ClientSystem extends System {
     readonly name: string | number;
     private client: WebClient;
 
+    // sends system message to server to be processed on next game tick
     protected dispatchToServer: (message: Message) => void;
+
+    // sends system to message that gets processed as soon as it is received.
+    protected immediateDispatchToServer: (message: Message) => void;
 
     constructor(name: string | number) {
         super(name);
@@ -37,7 +41,8 @@ abstract class ClientSystem extends System {
         this.messageQueue = messageQueue;
         this.messageQueue.addSystem(this);
 
-        this.dispatchToServer = client.send;
+        this.dispatchToServer = client.sendSystemMessage;
+        this.immediateDispatchToServer = client.sendImmediateSystemMessage;
         this.initialized = true;
         this._onInit();
     }
@@ -57,6 +62,10 @@ abstract class ClientSystem extends System {
 
     //TODO: would be cool to do a runtime static code check to make sure onStateUpdate implements all listeners
     public onStateUpdate(pathString, pathData, change, value) {};
+
+    public onAreaWrite?(areaId: string | number, isInitial: boolean, options?): void;
+    public onAreaListen?(areaId: string | number, options?): void;
+    public onRemoveAreaListen?(areaId: string | number, options?): void;
 }
 
 export default ClientSystem;
