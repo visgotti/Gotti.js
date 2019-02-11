@@ -3,8 +3,6 @@ export enum PROCESS_ENV {
     SERVER = 1,
 }
 
-import { ClientManager } from '../ServerFrameworks/ClientManager';
-
 import { MessageQueue, Message } from '../MessageQueue'
 import System from '../System/System';
 import ClientSystem from '../System/ClientSystem';
@@ -13,7 +11,7 @@ import { client, server } from '../System/SystemInitializer';
 import { decorators } from '../Decorators';
 
 export interface ISystem {
-    new (...args: Array<any>): ClientSystem | ServerSystem | ClientManager
+    new (...args: Array<any>): ClientSystem | ServerSystem
 }
 
 type SystemLookup <T extends string | number>  = {

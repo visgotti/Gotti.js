@@ -2,13 +2,12 @@ export declare enum PROCESS_ENV {
     CLIENT = 0,
     SERVER = 1
 }
-import { ClientManager } from '../ServerFrameworks/ClientManager';
 import { MessageQueue } from '../MessageQueue';
 import System from '../System/System';
 import ClientSystem from '../System/ClientSystem';
 import ServerSystem from '../System/ServerSystem';
 export interface ISystem {
-    new (...args: Array<any>): ClientSystem | ServerSystem | ClientManager;
+    new (...args: Array<any>): ClientSystem | ServerSystem;
 }
 declare type SystemLookup<T extends string | number> = {
     [systemName: string]: System;

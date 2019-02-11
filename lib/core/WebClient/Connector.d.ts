@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import Clock = require('@gamestdio/clock');
 import { Signal } from '@gamestdio/signals';
 import { StateContainer } from '@gamestdio/state-listener';
