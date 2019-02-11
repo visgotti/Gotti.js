@@ -45,7 +45,6 @@ export function setGameLoop (update, tickLengthMs = 1000 / 30) {
 
         var numUpdateSteps = 0;
         while (delta >= tickLengthMs) {
-            console.log('timestep was', tickLengthMs);
             update(tickLengthMs);
             delta -= tickLengthMs;
             if (++numUpdateSteps >= 240) {
