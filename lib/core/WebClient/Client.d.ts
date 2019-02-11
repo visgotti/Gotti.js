@@ -1,10 +1,11 @@
 import { Connector } from './Connector';
 import ClientSystem from './../System/ClientSystem';
-import { MessageQueue, Message } from './../MessageQueue';
+import { Message } from './../MessageQueue';
 export declare type JoinOptions = {
     retryTimes: number;
     requestId: number;
 } & any;
+import { ClientProcess } from '../Process/Client';
 export declare class Client {
     private process;
     private inGate;
@@ -21,7 +22,7 @@ export declare class Client {
     protected hostname: string;
     private token;
     constructor(url: string, token: string);
-    messageQueue: MessageQueue;
+    addProcess(process: ClientProcess): void;
     getGateData(): Promise<{}>;
     requestGame(gameType: any): Promise<{}>;
     joinConnector(gottiId: any, connectorURL: any): Promise<{}>;
@@ -34,32 +35,27 @@ export declare class Client {
     joinGate(options: any): void;
     private onMessage;
     /**
+     * starts the process
+     * @param fps - frames per second the game loop runs
+     */
+    startGame(fps?: number): void;
+    stopGame(): void;
+    /**
      * sends message over network to server
      * @param message - system message to be processed on server
-     * @param limitEvery - optional
      */
-    send(message: Message, limitEvery?: number): void;
-    joinRoom(roomId: any, options: any): void;
+    sendSystemMessage(message: Message, limitEvery?: number): void;
     /**
-     * Sends a request to the server to start listening for messages and state updates from an area.
-     * @param areaId - area Id requesting to start listening to
-     * @param options - options that get passed to the area room
+     * sends message over network to server
+     * @param message - system message to be processed on server
      */
-    listenArea(areaId: any, options?: any): void;
+    sendImmediateSystemMessage(message: Message): void;
     /**
-     * Sends a request to the server to stop listening for messages and state updates from an area.
+     * Gets initial area when first connected.
      * @param areaId
      * @param options
      */
-    removeListenArea(areaId: any, options?: any): void;
-    /**
-     * Sends a request to the server to join an area, this doesnt change your listening status,
-     * but it will cause the joined area to be your 'main' area and will be the area that processes
-     * any messages the client sends with sendLocal.
-     * @param areaId
-     * @param options
-     */
-    joinArea(areaId: any, options?: any): void;
+    joinInitialArea(options?: any): void;
     /**
      * Fired off when we receive a server message containing the system message protocol, will dispatch into the message queue.
      * @param message

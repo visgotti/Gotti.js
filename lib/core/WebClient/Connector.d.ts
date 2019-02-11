@@ -3,7 +3,7 @@ import Clock = require('@gamestdio/clock');
 import { Signal } from '@gamestdio/signals';
 import { StateContainer } from '@gamestdio/state-listener';
 import { Connection } from './Connection';
-import { MessageQueue } from '../MessageQueue';
+import { ClientProcess } from '../Process/Client';
 export declare enum AreaStatus {
     NOT_IN = 0,
     LISTEN = 1,
@@ -16,9 +16,10 @@ export interface Area {
     options: any;
 }
 export declare class Connector {
-    private _messageQueue;
+    private messageQueue;
     private id;
     private gameId;
+    private writeAreaId;
     gottiId: string;
     sessionId: string;
     options: any;
@@ -33,17 +34,16 @@ export declare class Connector {
     onError: Signal;
     onLeave: Signal;
     onOpen: Signal;
+    private process;
     private areas;
     connection: Connection;
     private _previousState;
     constructor();
-    messageQueue: MessageQueue;
-    connect(gottiId: string, connectorURL: any, options?: any): Promise<{}>;
-    requestListen(areaId: string, options?: any): void;
+    connect(gottiId: string, connectorURL: any, process: ClientProcess, options?: any): Promise<{}>;
+    joinInitialArea(options?: any): void;
     leave(): void;
     sendSystemMessage(message: any): void;
-    writeArea(areaId: string, options?: any): void;
-    listenArea(areaId: string, options?: any): void;
+    sendImmediateSystemMessage(message: any): void;
     readonly hasJoined: boolean;
     removeAllListeners(): void;
     protected onJoin(areaOptions: any, joinOptions: any): void;

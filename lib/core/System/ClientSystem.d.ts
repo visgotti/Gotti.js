@@ -4,6 +4,7 @@ declare abstract class ClientSystem extends System {
     readonly name: string | number;
     private client;
     protected dispatchToServer: (message: Message) => void;
+    protected immediateDispatchToServer: (message: Message) => void;
     constructor(name: string | number);
     /**
      * Initialize gets called by the process and
@@ -20,5 +21,8 @@ declare abstract class ClientSystem extends System {
     abstract onServerMessage(message: Message): any;
     addListenStatePaths(path: string | Array<string>): void;
     onStateUpdate(pathString: any, pathData: any, change: any, value: any): void;
+    onAreaWrite?(areaId: string | number, isInitial: boolean, options?: any): void;
+    onAreaListen?(areaId: string | number, options?: any): void;
+    onRemoveAreaListen?(areaId: string | number, options?: any): void;
 }
 export default ClientSystem;
