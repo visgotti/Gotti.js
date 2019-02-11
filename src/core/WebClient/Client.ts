@@ -4,10 +4,11 @@ import * as msgpack from './msgpack';
 import { Protocol } from './Protocol';
 import { Connector } from './Connector';
 import ClientSystem from './../System/ClientSystem';
-import { ClientProcess } from './../Process/Client';
 import { MessageQueue, Message } from './../MessageQueue';
 
 export type JoinOptions = { retryTimes: number, requestId: number } & any;
+
+import { ClientProcess } from '../Process/Client';
 
 export class Client {
     private process: ClientProcess;
@@ -40,12 +41,11 @@ export class Client {
         this.hostname = url;
         this.options = {};
         this.token = token;
-        this.connector = new Connector();
     }
 
-    set messageQueue(value: MessageQueue) {
-        this._messageQueue = value;
-        this.connector.messageQueue = value;
+    public addProcess(process: ClientProcess) {
+        //TODO: have client be bale to add multiple processes and then start them based on requestGame response automatically.
+        this.process = process;
     }
 
     public async getGateData() {
@@ -69,8 +69,6 @@ export class Client {
                     return reject(`Error requesting game ${err}`);
                 } else {
                     this.connector = new Connector();
-
-
                     return resolve(data)
                 }
             })
@@ -78,7 +76,10 @@ export class Client {
     }
 
     public async joinConnector(gottiId, connectorURL) {
-        const options = await this.connector.connect(gottiId, connectorURL);
+        if(!(this.process)) {
+            throw new Error('Make sure the process correlated to the game has been constructed with the client');
+        }
+        const options = await this.connector.connect(gottiId, connectorURL, this.process);
         return options;
     }
 
@@ -106,54 +107,46 @@ export class Client {
          */
     }
 
+    /**
+     * starts the process
+     * @param fps - frames per second the game loop runs
+     */
+    public startGame(fps = 60) {
+        if(!this.connector || !this.process) {
+            throw new Error('Game is not ready to start, make sure you constructed a process with the client as the first parameter and sucessfully requested a game.');
+        }
+        this.process.startAllSystems();
+        this.process.startLoop(fps);
+    }
+
+    public stopGame() {
+        this.process.stopAllSystems();
+        this.process.stopLoop();
+    }
 
     /**
      * sends message over network to server
      * @param message - system message to be processed on server
-     * @param limitEvery - optional
      */
-    public send(message: Message, limitEvery?: number) {
-
-        // this.room.send([ Protocols.CLIENT_SYSTEM_MESSAGE, message ]);
-    }
-
-    public joinRoom(roomId, options) {
-        /*
-         this.room = this.join(roomId, options);
-         this.room.onConnected(() => {
-         this.process = new Process(options);
-         this.process.messageQueue.addRemote = this.onServerSystemMessage.bind(this);
-         });
-         */
+    public sendSystemMessage(message: Message, limitEvery?: number) {
+        this.connector.sendSystemMessage(message);
     }
 
     /**
-     * Sends a request to the server to start listening for messages and state updates from an area.
-     * @param areaId - area Id requesting to start listening to
-     * @param options - options that get passed to the area room
+     * sends message over network to server
+     * @param message - system message to be processed on server
      */
-    public listenArea(areaId, options?: any) {
-        //  this.room.send([Protocols.ADD_AREA_LISTEN, options]);
+    public sendImmediateSystemMessage(message: Message) {
+        this.connector.sendImmediateSystemMessage(message);
     }
 
     /**
-     * Sends a request to the server to stop listening for messages and state updates from an area.
+     * Gets initial area when first connected.
      * @param areaId
      * @param options
      */
-    public removeListenArea(areaId, options?: any) {
-        //   this.room.send([Protocols.REMOVE_AREA_LISTEN, options]);
-    }
-
-    /**
-     * Sends a request to the server to join an area, this doesnt change your listening status,
-     * but it will cause the joined area to be your 'main' area and will be the area that processes
-     * any messages the client sends with sendLocal.
-     * @param areaId
-     * @param options
-     */
-    public joinArea(areaId, options?: any) {
-        //   this.room.send([Protocols.CHANGE_AREA_WRITE, options]);
+    public joinInitialArea(options?: any) {
+        this.connector.joinInitialArea(options);
     }
 
     /**

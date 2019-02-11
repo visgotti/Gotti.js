@@ -10,6 +10,8 @@ import { Protocol, StateProtocol } from './Protocol';
 
 import { MessageQueue } from '../MessageQueue';
 
+import { ClientProcess } from '../Process/Client';
+
 export enum AreaStatus {
     NOT_IN = 0,
     LISTEN = 1,
@@ -23,10 +25,14 @@ export interface Area {
     options: any,
 }
 
+
 export class Connector {
-    private _messageQueue: MessageQueue;
+    private messageQueue: MessageQueue;
     private id: string;
     private gameId: string;
+
+    // used to indicate current area id the client is writing to.
+    private writeAreaId: string | number = null;
 
     public gottiId: string;
     public sessionId: string;
@@ -48,22 +54,21 @@ export class Connector {
     public onLeave: Signal = new Signal();
     public onOpen: Signal = new Signal();
 
+    private process: ClientProcess;
+
     private areas: {[areaId: string]:  Area} = {};
 
     public connection: Connection;
     private _previousState: any;
 
-    constructor() {
-        this.onLeave.add(() => this.removeAllListeners());
-    }
+    constructor() {}
 
-    // gets set when a process is instantiated
-    set messageQueue(value: MessageQueue) {
-        this._messageQueue = value;
-    }
-
-    public async connect(gottiId: string, connectorURL, options: any = {}) {
+    public async connect(gottiId: string, connectorURL, process: ClientProcess, options: any = {}) {
         this.gottiId = gottiId;
+
+        this.process = process;
+        this.messageQueue = process.messageQueue;
+
         let url = this.buildEndPoint(connectorURL, options);
         this.connection = new Connection(url);
         this.connection.onopen = () => {};
@@ -75,11 +80,16 @@ export class Connector {
         })
     }
 
-    public requestListen(areaId: string, options?) {
-        if(!(areaId in this.areas)) {
-            throw new Error(`trying to listen to non existent area ${areaId}`)
+    public joinInitialArea(options?) {
+        if(!this.connection ) {
+            throw new Error('No connection, can not join an initial area');
         }
-        this.connection.send([Protocol.REQUEST_LISTEN_AREA, ])
+
+        if(this.writeAreaId !== null) {
+            throw new Error('Player is already writing to an area.')
+        }
+
+        this.connection.send([Protocol.GET_INITIAL_CLIENT_AREA_WRITE, options]);
     }
 
     public leave(): void {
@@ -92,15 +102,11 @@ export class Connector {
     }
 
     public sendSystemMessage(message: any): void {
-        this.connection.send([ Protocol.SYSTEM_MESSAGE, this.id, message.type, message.data, message.to, message.from]);
+        this.connection.send([ Protocol.SYSTEM_MESSAGE, message.type, message.data, message.to, message.from]);
     }
 
-    public writeArea(areaId: string, options?) {
-        this.connection.send([Protocol.REQUEST_WRITE_AREA, this.id, areaId, options]);
-    }
-
-    public listenArea(areaId: string, options?) {
-        this.connection.send([Protocol.REQUEST_LISTEN_AREA, this.id, areaId, options]);
+    public sendImmediateSystemMessage(message: any): void {
+        this.connection.send([ Protocol.IMMEDIATE_SYSTEM_MESSAGE, message.type, message.data, message.to, message.from]);
     }
 
     public get hasJoined() {
@@ -131,38 +137,36 @@ export class Connector {
     }
 
     protected onMessageCallback(event) {
-        console.log('the event was', event);
         const message = msgpack.decode(new Uint8Array(event.data));
         const code = message[0];
-
-        console.log('the message was', message);
-
         if (code === Protocol.JOIN_CONNECTOR) {
-            console.log('JOINED CONNECTOR!!!!', message);
             // [areaOptions, joinOptions]
             this.onJoin(message[1], message[2]);
         } else if (code === Protocol.JOIN_CONNECTOR_ERROR) {
             this.onError.dispatch(message[1]);
-        } else if (code === Protocol.REQUEST_WRITE_AREA) {
+        } else if (code === Protocol.SET_CLIENT_AREA_WRITE) {
             // newAreaId, oldAreaId?, options?
             if(message[2]) {
                 this.areas[message[1]].status = AreaStatus.LISTEN;
             }
-            this.areas[message[0]].status = AreaStatus.WRITE;
-            this.onWrite.dispatch(message[1], message[2], message[3]);
+            this.areas[message[1]].status = AreaStatus.WRITE;
 
-        } else if (code === Protocol.REQUEST_LISTEN_AREA) {
+            this.process.dispatchOnAreaWrite(message[1], this.writeAreaId === null, message[2]);
+            this.writeAreaId = message[1];
+        } else if (code === Protocol.ADD_CLIENT_AREA_LISTEN) {
             // areaId, options?
             this.areas[message[1]].status = AreaStatus.LISTEN;
-            this.onListen.dispatch(message[1], message[2]);
+            const { responseOptions, encodedState } = message[2];
+            this.process.dispatchOnAreaListen(message[1], encodedState, responseOptions);
         }
-        else if (code === Protocol.REQUEST_REMOVE_LISTEN_AREA) {
+        else if (code === Protocol.REMOVE_CLIENT_AREA_LISTEN) {
             this.areas[message[1]].status = AreaStatus.NOT_IN;
-            this.onRemoveListen.dispatch();
+            this.process.dispatchOnRemoveAreaListen(message[1], message[2]);
         } else if (code === Protocol.SYSTEM_MESSAGE) {
-            // this.messageQueue.addRemote(message[1], message[2], message[3], message[4]);
+            this.messageQueue.addRemote(message[1], message[2], message[3], message[4]);
+        } else if (code === Protocol.IMMEDIATE_SYSTEM_MESSAGE) {
+            this.messageQueue.instantDispatch({ type: message[1], data: message[2], to: message[3], from: message[4] }, true);
         }
-
         else if (code === Protocol.AREA_STATE_UPDATE) {
             const updateType = message[1];
             const areaId = message[2];
