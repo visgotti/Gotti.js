@@ -6,7 +6,7 @@ export interface Message {
     type: string | number,
     data: any,
     to: Array<string | number>
-    from: string | number,
+    from?: string | number,
 }
 
 type SystemName = string | number;
