@@ -22,12 +22,16 @@ export class Client {
 
     public id?: string;
 
+    public onJoinGame: Signal = new Signal();
+
     public authenticated: boolean = false;
     public options: any;
     public gameTypes: Array<string> = [];
     public gameRegions: Array<string> = [];
 
     private _messageQueue: MessageQueue = null;
+
+    private joinedGame = false;
 
     protected connector: Connector;
 
@@ -37,6 +41,8 @@ export class Client {
 
     private token: string;
 
+    private processInitializers: {[gameType: string]: Function };
+
     constructor(url: string, token: string) {
         this.hostname = url;
         this.options = {};
@@ -44,8 +50,12 @@ export class Client {
     }
 
     public addProcess(process: ClientProcess) {
-        //TODO: have client be bale to add multiple processes and then start them based on requestGame response automatically.
+        //TODO: have client be able to add multiple processes and then start them based on requestGame response automatically.
         this.process = process;
+    }
+
+    public addProcessInitializers(processInitializers) {
+        this.processInitializers = processInitializers;
     }
 
     public async getGateData() {
@@ -62,24 +72,61 @@ export class Client {
         })
     }
 
-    public async requestGame(gameType) {
+    public async joinGame(gameType, options) {
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}/gate`, this.token, { gameType }, (err, data) => {
+            httpPostAsync(`${this.hostname}/gate`, this.token, { gameType, options }, (err, data) => {
                 if(err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
+
+                    console.log(`sucessfully joined the game... ${gameType} initializing process with serverGameData as ${data} then joining connector`);
+
+                    try {
+                        this.processInitializers[gameType.toLowerCase()](data);
+                    } catch(err) {
+                        return reject(err);
+                    }
+
                     this.connector = new Connector();
-                    return resolve(data)
+
+                    this.joinConnector(data.gottiId, `${data.host}:${data.port}`).then(joinOptions => {
+                        console.log(`succesfully joined connector starting ${gameType} process's game loop`);
+                        this.startGame(60);
+                        return resolve(joinOptions)
+                    }).catch(err => {
+                        return reject(err);
+                    });
                 }
             })
         });
     }
 
-    public async joinConnector(gottiId, connectorURL) {
-        if(!(this.process)) {
-            throw new Error('Make sure the process correlated to the game has been constructed with the client');
+    /**
+     * When you finally join a game, you need to make one last mandatory request
+     * which is to find your initial write area. This is the only time where the client
+     * natively can send data directly requesting an area if you wanted. The connector server
+     * class will receive the client, areaOptions, and clientOptions. There is no callback or promise
+     * for this, from this point on you will communicate with the server through your Gotti systems.
+     * You can either implement the onAreaWrite method in your systems or you can have a server system
+     * send a custom system message to one of your client systems.
+     * @param clientOptions - options to send to connector when getting initial area.
+     */
+    public writeInitialArea(clientOptions?) {
+        console.log('joining initial area... please register the onAreaWrite in one of your systems to handle the callback.');
+
+        if(!(this.joinedGame)) {
+            throw new Error('Make sure client.joinGame\'s prmise is sucessfully resolved before requesting to write to an initial area.')
         }
+
+        this.connector.joinInitialArea(clientOptions);
+    }
+
+    private async joinConnector(gottiId, connectorURL) {
+
         const options = await this.connector.connect(gottiId, connectorURL, this.process);
+
+        this.joinedGame = true;
+
         return options;
     }
 
@@ -110,8 +157,9 @@ export class Client {
     /**
      * starts the process
      * @param fps - frames per second the game loop runs
+     * @options - options are client defined and get sent to
      */
-    public startGame(fps = 60) {
+    private startGame(fps = 60) {
         if(!this.connector || !this.process) {
             throw new Error('Game is not ready to start, make sure you constructed a process with the client as the first parameter and sucessfully requested a game.');
         }
@@ -138,15 +186,6 @@ export class Client {
      */
     public sendImmediateSystemMessage(message: Message) {
         this.connector.sendImmediateSystemMessage(message);
-    }
-
-    /**
-     * Gets initial area when first connected.
-     * @param areaId
-     * @param options
-     */
-    public joinInitialArea(options?: any) {
-        this.connector.joinInitialArea(options);
     }
 
     /**

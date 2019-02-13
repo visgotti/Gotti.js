@@ -213,6 +213,6 @@ export class Connector {
             }
             params.push(`${name}=${options[name]}`);
         }
-        return `${URL}/?${params.join('&')}`;
+        return `ws://${URL}/?${params.join('&')}`;
     }
 }
