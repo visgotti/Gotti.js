@@ -3,7 +3,7 @@ export interface Message {
     type: string | number;
     data: any;
     to: Array<string | number>;
-    from: string | number;
+    from?: string | number;
 }
 declare type SystemMessageLookup = {
     [systemName: string]: Array<Message>;
