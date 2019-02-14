@@ -1,17 +1,18 @@
 import System from "./System";
 import { Client as WebClient } from '../WebClient/Client';
-import { Message, MessageQueue } from '../MessageQueue';
-
+import { Message } from '../MessageQueue';
+import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 abstract class ServerSystem extends System {
     readonly name: string | number;
 
+    public messageQueue: ServerMessageQueue;
+
     constructor(name: string | number) {
         super(name);
-        this.onRemoteMessage = this.onClientMessage.bind(this);
     }
 
     public initialize(
-        messageQueue: MessageQueue,
+        messageQueue: ServerMessageQueue,
         globalSystemVariables: {[reference: string]: any})
     {
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {

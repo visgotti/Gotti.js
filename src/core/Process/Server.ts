@@ -8,13 +8,25 @@ import { ISystem } from './Process';
 
 import ServerSystem from '../System/ServerSystem';
 
+import { ServerMessageQueue } from '../Server/ServerMessageQueue';
+
+interface ServerProcessOptions {
+    fpsTickRate?: number,
+}
+
 export class ServerProcess extends Process<ServerProcess> {
     private gameloop: any = null;
     private room: any = null;
     public clientManager: ClientManager;
+    private fpsTickRate: number = 20;
+    public messageQueue: ServerMessageQueue;
 
-    constructor(ClientManagerConstructor: ISystem, globalSystemVariables?: any) {
+    constructor(ClientManagerConstructor: ISystem, globalSystemVariables?: any, options?: ServerProcessOptions) {
         super(PROCESS_ENV.SERVER);
+
+        if(options && options.fpsTickRate) {
+            this.fpsTickRate = options.fpsTickRate;
+        }
 
         this.systemInitializer = this.initializerFactory(this, globalSystemVariables);
 
@@ -51,7 +63,7 @@ export class ServerProcess extends Process<ServerProcess> {
         system.dispatchToAreas = room.dispatchToAreas.bind(room);
     }
 
-    public startLoop(fps = 20) {
+    public startLoop(fps = this.fpsTickRate) {
         let tickRate = 1000 / fps;
         this.gameloop = setGameLoop(this.tick.bind(this), tickRate);
     }

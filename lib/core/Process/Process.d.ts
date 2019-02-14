@@ -3,18 +3,18 @@ export declare enum PROCESS_ENV {
     SERVER = 1
 }
 import { MessageQueue } from '../MessageQueue';
-import System from '../System/System';
+import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import ClientSystem from '../System/ClientSystem';
 import ServerSystem from '../System/ServerSystem';
 export interface ISystem {
     new (...args: Array<any>): ClientSystem | ServerSystem;
 }
 declare type SystemLookup<T extends string | number> = {
-    [systemName: string]: System;
-    [systemName: number]: System;
+    [systemName: string]: ClientSystem | ServerSystem;
+    [systemName: number]: ClientSystem | ServerSystem;
 };
 export declare abstract class Process<T> {
-    messageQueue: MessageQueue;
+    messageQueue: MessageQueue | ServerMessageQueue;
     protected entityManager: any;
     protected gameState: any;
     protected interfaceManager?: any;
@@ -26,11 +26,11 @@ export declare abstract class Process<T> {
     systems: SystemLookup<string | number>;
     systemNames: Array<string | number>;
     startedSystemsLookup: Set<string | number>;
-    startedSystems: Array<System>;
+    startedSystems: Array<ServerSystem | ClientSystem>;
     stoppedSystems: Set<string | number>;
     constructor(processEnv: PROCESS_ENV);
     addGlobal(key: string, value: any): void;
-    addSystem(SystemConstructor: ISystem, ...args: Array<any>): System;
+    addSystem(SystemConstructor: ISystem, ...args: Array<any>): ServerSystem | ClientSystem;
     protected _stopAllSystems(): void;
     protected _stopSystem(systemName: any): void;
     protected _startAllSystems(): void;

@@ -1,8 +1,14 @@
 import { Process } from './Process';
 import { Client as WebClient } from '../WebClient/Client';
+import { MessageQueue } from '../MessageQueue';
+interface ClientProcessOptions {
+    fpsTickRate?: number;
+}
 export declare class ClientProcess extends Process<ClientProcess> {
     client: WebClient;
-    constructor(client: WebClient, globalSystemVariables?: any);
+    private fpsTickRate;
+    messageQueue: MessageQueue;
+    constructor(client: WebClient, globalSystemVariables?: any, options?: ClientProcessOptions);
     /**
      *
      * @param areaId - id of area that the client is now writing to.
@@ -30,3 +36,4 @@ export declare class ClientProcess extends Process<ClientProcess> {
     stopSystem(systemName: any): void;
     stopAllSystems(): void;
 }
+export {};

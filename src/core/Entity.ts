@@ -55,6 +55,10 @@ export abstract class Entity {
         this.attributes[key] = value;
     }
 
+    public getComponent(componentName) {
+        return this.components[componentName];
+    }
+
     public getAttributes() {
         return this.attributes;
     }

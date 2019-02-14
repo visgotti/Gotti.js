@@ -27,7 +27,7 @@ export interface Area {
 
 
 export class Connector {
-    private messageQueue: MessageQueue;
+    private messageQueue: any; //todo type
     private id: string;
     private gameId: string;
 

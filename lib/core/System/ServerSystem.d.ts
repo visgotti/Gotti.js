@@ -1,9 +1,11 @@
 import System from "./System";
-import { Message, MessageQueue } from '../MessageQueue';
+import { Message } from '../MessageQueue';
+import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 declare abstract class ServerSystem extends System {
     readonly name: string | number;
+    messageQueue: ServerMessageQueue;
     constructor(name: string | number);
-    initialize(messageQueue: MessageQueue, globalSystemVariables: {
+    initialize(messageQueue: ServerMessageQueue, globalSystemVariables: {
         [reference: string]: any;
     }): void;
     abstract onAreaMessage(areaId: any, message: any): any;

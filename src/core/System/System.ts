@@ -1,4 +1,5 @@
 import { Message, MessageQueue } from '../MessageQueue';
+import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { Entity } from '../Entity';
 
 abstract class System {
@@ -8,7 +9,7 @@ abstract class System {
 
     public globals: any = {};
 
-    protected messageQueue: MessageQueue;
+    protected messageQueue: MessageQueue | ServerMessageQueue;
 
     protected dispatchLocal: Function;
     protected dispatchAllLocal: Function;

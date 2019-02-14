@@ -1,6 +1,6 @@
 //TODO: split this into server and client message queue
 
-import System from './System/System';
+import ServerSystem from '../System/ServerSystem';
 
 export interface Message {
     type: string | number,
@@ -10,22 +10,24 @@ export interface Message {
 }
 
 type SystemName = string | number;
-
+type ServerSystemMessageLookup = { [systemName: string]: Array<Array<string | Message>> }
 type SystemMessageLookup = { [systemName: string]: Array<Message> }
-type SystemLookup = { [systemName: string]: System }
+type SystemLookup = { [systemName: string]: ServerSystem }
 
-export class MessageQueue {
+export class ServerMessageQueue {
     private systemNames: Array<string | number>;
     private _systems: SystemLookup;
     private _messages: SystemMessageLookup;
-    private _remoteMessages?: SystemMessageLookup;
+    private _clientMessages: ServerSystemMessageLookup;
+    private _areaMessages: ServerSystemMessageLookup;
 
     constructor() {
         this._systems = {} as SystemLookup;
         this.systemNames = [];
 
         this._messages = {} as SystemMessageLookup;
-        this._remoteMessages = {} as SystemMessageLookup;
+        this._clientMessages = {} as ServerSystemMessageLookup;
+        this._areaMessages = {} as ServerSystemMessageLookup;
     }
 
     get systems() {
@@ -36,13 +38,19 @@ export class MessageQueue {
         return this._messages;
     }
 
-    get remoteMessages() {
-        return this._remoteMessages;
+    get clientMessages() {
+        return this._clientMessages;
+    }
+
+    get areaMessages() {
+        return this._areaMessages;
     }
 
     public removeSystem(systemName) {
         this._messages[systemName].length = 0;
         delete this._messages[systemName];
+        delete this._clientMessages[systemName];
+        delete this._areaMessages[systemName];
         delete this._systems[systemName];
 
         const index = this.systemNames.indexOf(systemName);
@@ -55,12 +63,14 @@ export class MessageQueue {
         for(let systemName in this._systems) {
             delete this._systems[systemName];
             this._messages[systemName].length = 0;
+            this._clientMessages[systemName].length = 0;
+            this._areaMessages[systemName].length = 0;
+
             delete this._messages[systemName];
+            delete this._areaMessages[systemName];
+            delete this._clientMessages[systemName];
 
             this.systemNames.length = 0;
-
-            this._remoteMessages[systemName].length = 0;
-            delete this._remoteMessages[systemName];
         }
     }
 
@@ -70,18 +80,32 @@ export class MessageQueue {
         }
     }
 
-    public addSystem(system: System) {
+    public addSystem(system: ServerSystem) {
         this._systems[system.name] = system;
         this._messages[system.name] = [];
-        this._remoteMessages[system.name] = [];
+        this._clientMessages[system.name] = [];
+        this._areaMessages[system.name] = [];
         this.systemNames.push(system.name);
     }
 
     public add(message: Message) {
         for(let i = 0; i < message.to.length; i++) {
-            this.messages[message.to[i]].push(message);
+            this._messages[message.to[i]].push(message);
         }
     };
+
+    public addClientMessage(clientId, message: Message) {
+        for(let i = 0; i < message.to.length; i++) {
+            this._clientMessages[message.to[i]].push([clientId, message]);
+        }
+    };
+
+    public addAreaMessage(areaId, message: Message) {
+        for(let i = 0; i < message.to.length; i++) {
+            this._clientMessages[message.to[i]].push([areaId, message]);
+        }
+    };
+
 
     /**
      * Adds message to every system even if they dont have a registered handler //TODO: possible inclusion/exclusion options in system
@@ -90,28 +114,36 @@ export class MessageQueue {
      * @param from
      */
     public addAll(type, data, from) {
-       this.add({
+        this.add({
             type,
             data,
             to: this.systemNames,
             from,
-       });
+        });
     };
+
+    public instantClientDispatch(clientId, message: Message) {
+        const messageToLength = message.to.length;
+        for(let i = 0; i < messageToLength; i++) {
+            this._systems[message.to[i]].onClientMessage(clientId, message);
+        }
+    }
+
+    public instantAreaDispatch(areaId, message: Message) {
+        const messageToLength = message.to.length;
+        for(let i = 0; i < messageToLength; i++) {
+            this._systems[message.to[i]].onAreaMessage(areaId, message);
+        }
+    }
 
     /**
      * used for sending a message instantly to other systems versus waiting for next tick in the game loop.
      * @param message
      */
-    public instantDispatch(message: Message, isRemoteMessage=false) {
+    public instantDispatch(message: Message) {
         const messageToLength = message.to.length;
-        if(isRemoteMessage) {
-            for(let i = 0; i < messageToLength; i++) {
-                this._systems[message.to[i]].onRemoteMessage(message);
-            }
-        } else {
-            for(let i = 0; i < messageToLength; i++) {
-                this._systems[message.to[i]].onLocalMessage(message);
-            }
+        for(let i = 0; i < messageToLength; i++) {
+            this._systems[message.to[i]].onLocalMessage(message);
         }
     }
     /**
@@ -124,17 +156,8 @@ export class MessageQueue {
         }
     }
 
-    /**
-     * Queues message to be handled in either the onClientMessage handler or onServerMessage system handler
-     */
-    public addRemote(type, data, to, from) {
-        for(let i = 0; i < to.length; i++) {
-            this._remoteMessages[to[i]].push({ type, data, to, from });
-        }
-    }
-
     public dispatch(systemName) {
-        let i: number, system: System, msg: Message;
+        let i: number, system: ServerSystem, msg: Message, serverMsg: Array<string | Message>;
 
         for(i = 0; this._messages[systemName].length; i++){
             msg = this._messages[systemName][i];
@@ -148,15 +171,27 @@ export class MessageQueue {
             i--;
         }
 
-        for(i = 0; this._remoteMessages[systemName].length; i++){
-            msg = this._remoteMessages[systemName][i];
-            if(msg) {
+        for(i = 0; this._areaMessages[systemName].length; i++){
+            serverMsg = this._areaMessages[systemName][i];
+            if(serverMsg) {
                 system = this._systems[systemName];
                 if (system) {
-                    system.onRemoteMessage(msg)
+                    system.onAreaMessage(serverMsg[0], serverMsg[1])
                 }
             }
-            this._remoteMessages[systemName].splice(i, 1);
+            this._areaMessages[systemName].splice(i, 1);
+            i--;
+        }
+
+        for(i = 0; this._clientMessages[systemName].length; i++){
+            serverMsg = this._clientMessages[systemName][i];
+            if(serverMsg) {
+                system = this._systems[systemName];
+                if (system) {
+                    system.onClientMessage(serverMsg[0], serverMsg[1])
+                }
+            }
+            this._clientMessages[systemName].splice(i, 1);
             i--;
         }
     }

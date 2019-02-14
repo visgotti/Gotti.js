@@ -18,6 +18,7 @@ export declare abstract class Entity {
      */
     addComponent(component: Component): this;
     private setAttribute;
+    getComponent(componentName: any): any;
     getAttributes(): {
         [name: string]: any;
     };

@@ -26,9 +26,10 @@ class Decorators {
                     old_onRemoved(entity);
                     systems[systemName].onComponentRemoved(entity);
                 };
-
+                console.log('decorating..')
                 target.prototype['onAdded']  = (entity) => {
                     old_onAdded(entity);
+                    console.log('decorated system name:', systemName, 'for entity', entity);
                     systems[systemName].onComponentAdded(entity);
                 }
             }

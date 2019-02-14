@@ -51,6 +51,7 @@ export function setGameLoop (update, tickLengthMs = 1000 / 30) {
     let frame = 0;
 
     const gameLoop = function() {
+
         frame++;
 
         const now = getNano();
@@ -62,7 +63,7 @@ export function setGameLoop (update, tickLengthMs = 1000 / 30) {
             target = now + tickLengthNano;
 
             // actually run user code
-            update(Math.floor(delta / ms2nano));
+            update(delta * nano2s);
         }
 
         // do not go on to renew loop if no longer active

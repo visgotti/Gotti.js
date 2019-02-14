@@ -4,6 +4,8 @@ import ServerSystem from './ServerSystem';
 import { ServerProcess } from '../Process/Server';
 import { ClientProcess } from '../Process/Client';
 
+import { MessageQueue } from '../MessageQueue';
+
 export const server = function server (process: ServerProcess, globalSystemVariables: any) : (system: ServerSystem) => void  {
     const createdSystems = new Set();
     const { messageQueue } = process;

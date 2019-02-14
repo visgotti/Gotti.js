@@ -2,14 +2,27 @@ import { Process, PROCESS_ENV } from './Process';
 import { Client as WebClient } from '../WebClient/Client';
 import ClientSystem from '../System/ClientSystem';
 import { setGameLoop, clearGameLoop } from '../ClientGameLoop';
+import { MessageQueue } from '../MessageQueue';
+interface ClientProcessOptions {
+    fpsTickRate?: number,
+}
 
 export class ClientProcess extends Process<ClientProcess> {
     public client: WebClient;
-    constructor(client: WebClient, globalSystemVariables?: any) {
+
+    private fpsTickRate: number = 60;
+
+    public messageQueue: MessageQueue;
+
+    constructor(client: WebClient, globalSystemVariables?: any, options?: ClientProcessOptions) {
         super(PROCESS_ENV.CLIENT);
 
         if(!(client)) {
             throw new Error('Client process needs a web client to construct correctly.')
+        }
+
+        if(options && options.fpsTickRate) {
+            this.fpsTickRate = options.fpsTickRate;
         }
 
         client.addProcess(this);
@@ -63,8 +76,7 @@ export class ClientProcess extends Process<ClientProcess> {
         }
     }
 
-
-    public startLoop(fps = 60) {
+    public startLoop(fps = this.fpsTickRate) {
         setGameLoop(this.tick.bind(this), 1000 / fps);
     }
 

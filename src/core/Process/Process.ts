@@ -4,6 +4,7 @@ export enum PROCESS_ENV {
 }
 
 import { MessageQueue, Message } from '../MessageQueue'
+import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import System from '../System/System';
 import ClientSystem from '../System/ClientSystem';
 import ServerSystem from '../System/ServerSystem';
@@ -15,12 +16,12 @@ export interface ISystem {
 }
 
 type SystemLookup <T extends string | number>  = {
-    [systemName: string]: System,
-    [systemName: number]: System
+    [systemName: string]: ClientSystem | ServerSystem,
+    [systemName: number]: ClientSystem | ServerSystem
 }
 
 export abstract class Process<T> {
-    public messageQueue: MessageQueue;
+    public messageQueue: MessageQueue | ServerMessageQueue;
 
     // SHARED FRAMEWORKS
     protected entityManager: any;
@@ -39,7 +40,7 @@ export abstract class Process<T> {
     public systemNames: Array<string | number>;
 
     public startedSystemsLookup: Set<string | number>;
-    public startedSystems: Array<System>;
+    public startedSystems: Array<ServerSystem | ClientSystem>;
 
     public stoppedSystems: Set<string | number>;
 
@@ -51,11 +52,11 @@ export abstract class Process<T> {
         this.systemInitializedOrder = new Map() as Map<string | number, number>;
 
         this.startedSystemsLookup = new Set() as Set<string | number>;
-        this.startedSystems = [] as Array<System>;
+        this.startedSystems = [] as Array<ServerSystem | ClientSystem>;
 
         this.stoppedSystems = new Set() as Set<string | number>;
 
-        this.messageQueue = new MessageQueue();
+        this.messageQueue = processEnv === PROCESS_ENV.SERVER ? new ServerMessageQueue() : new MessageQueue();
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? server : client;
 
         // make sure decorators are restored in case for some reason it persists through making new processes.
@@ -71,7 +72,7 @@ export abstract class Process<T> {
         }
     }
 
-    public addSystem(SystemConstructor: ISystem, ...args: Array<any>) : System {
+    public addSystem(SystemConstructor: ISystem, ...args: Array<any>) : ServerSystem | ClientSystem {
         let system = new SystemConstructor(...args);
 
         if (this.systems[system.name]) {

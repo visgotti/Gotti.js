@@ -35,6 +35,7 @@ export function setGameLoop (update, tickLengthMs = 1000 / 30) {
 
     const gameLoop = function() {
         const currentTime = Date.now();
+        const tick = tickLengthMs / 1000
         if(currentTime < lastFrameTimeMs + tickLengthMs) {
             activeLoop = __requestAnimationFrame(gameLoop);
             return
@@ -42,10 +43,9 @@ export function setGameLoop (update, tickLengthMs = 1000 / 30) {
         delta += currentTime - lastFrameTimeMs;
         lastFrameTimeMs = currentTime;
 
-
         var numUpdateSteps = 0;
         while (delta >= tickLengthMs) {
-            update(tickLengthMs);
+            update(tick);
             delta -= tickLengthMs;
             if (++numUpdateSteps >= 240) {
                 panic();

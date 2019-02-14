@@ -1,10 +1,11 @@
 import { Message, MessageQueue } from '../MessageQueue';
+import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { Entity } from '../Entity';
 declare abstract class System {
     protected initialized: boolean;
     onRemoteMessage(message: Message): void;
     globals: any;
-    protected messageQueue: MessageQueue;
+    protected messageQueue: MessageQueue | ServerMessageQueue;
     protected dispatchLocal: Function;
     protected dispatchAllLocal: Function;
     protected dispatchLocalInstant: Function;

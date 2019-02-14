@@ -26,7 +26,7 @@ abstract class ClientSystem extends System {
      * @param messageQueue
      * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
-    public initialize(client, messageQueue, globalSystemVariables: {[reference: string]: any})
+    public initialize(client, messageQueue: MessageQueue, globalSystemVariables: {[reference: string]: any})
     {
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {
             Object.keys(globalSystemVariables).forEach((referenceName) => {
@@ -41,8 +41,8 @@ abstract class ClientSystem extends System {
         this.messageQueue = messageQueue;
         this.messageQueue.addSystem(this);
 
-        this.dispatchToServer = client.sendSystemMessage;
-        this.immediateDispatchToServer = client.sendImmediateSystemMessage;
+        this.dispatchToServer = client.sendSystemMessage.bind(client);
+        this.immediateDispatchToServer = client.sendImmediateSystemMessage.bind(client);
         this.initialized = true;
         this._onInit();
     }
