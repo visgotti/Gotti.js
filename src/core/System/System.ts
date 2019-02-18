@@ -16,6 +16,9 @@ abstract class System {
     protected dispatchLocalInstant: Function;
     protected dispatchAllLocalInstant: Function;
 
+    protected addEntity: Function;
+    protected removeEntity: Function;
+
     readonly name: string | number;
     constructor(name: string | number) {
         if(!name && name !== 0) {
@@ -39,10 +42,6 @@ abstract class System {
 
     public abstract update (delta) : void;
     public abstract clear() : void;
-
-    // optional overrides
-    public onComponentAdded(entity: Entity) {};
-    public onComponentRemoved(entity: Entity) {};
 
     // optional
     public onInit() {};

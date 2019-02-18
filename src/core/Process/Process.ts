@@ -9,7 +9,6 @@ import System from '../System/System';
 import ClientSystem from '../System/ClientSystem';
 import ServerSystem from '../System/ServerSystem';
 import { client, server } from '../System/SystemInitializer';
-import { decorators } from '../Decorators';
 
 export interface ISystem {
     new (...args: Array<any>): ClientSystem | ServerSystem
@@ -58,12 +57,6 @@ export abstract class Process<T> {
 
         this.messageQueue = processEnv === PROCESS_ENV.SERVER ? new ServerMessageQueue() : new MessageQueue();
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? server : client;
-
-        // make sure decorators are restored in case for some reason it persists through making new processes.
-        decorators.restore();
-        // initialize the ComponentSystem decorator after systems are set up //todo: as of now it will run the hooks even if the system is stopped
-
-        decorators.initializeSystemComponentDecorator(this.systems);
     }
 
     public addGlobal(key: string, value: any) {

@@ -123,8 +123,6 @@ export class Connector {
     }
 
     protected onJoin(areaOptions, joinOptions) {
-        console.log('onjoin area options was', areaOptions);
-        console.log('join options were', joinOptions);
         this.onJoinConnector.dispatch(areaOptions, joinOptions);
         Object.keys(areaOptions).forEach(areaId => {
             this.areas[areaId] = {
@@ -136,7 +134,7 @@ export class Connector {
         })
     }
 
-    protected onMessageCallback(event) {
+    protected onMessageCallback(event) { // TODO: REFACTOR PROTOCOLS TO USE BITWISE OPS PLS
         const message = msgpack.decode(new Uint8Array(event.data));
         const code = message[0];
         if (code === Protocol.JOIN_CONNECTOR) {

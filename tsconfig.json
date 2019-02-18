@@ -7,7 +7,7 @@
     "declaration": true,
     "noImplicitAny": false,
     "sourceMap": false,
-    "types": ["node"],
+    "types": ["node", "fpsmeter"],
     "experimentalDecorators": true
   },
   "include": [
