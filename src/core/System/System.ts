@@ -7,7 +7,7 @@ abstract class System {
 
     public onRemoteMessage(message: Message) {};
 
-    public globals: any = {};
+    public globals: any;
 
     protected messageQueue: MessageQueue | ServerMessageQueue;
 

@@ -14,8 +14,8 @@ export class ClientProcess extends Process<ClientProcess> {
 
     public messageQueue: MessageQueue;
 
-    constructor(client: WebClient, globalSystemVariables?: any, options?: ClientProcessOptions) {
-        super(PROCESS_ENV.CLIENT);
+    constructor(client: WebClient, globals?: any, options?: ClientProcessOptions) {
+        super(PROCESS_ENV.CLIENT, globals);
 
         if(!(client)) {
             throw new Error('Client process needs a web client to construct correctly.')
@@ -29,7 +29,7 @@ export class ClientProcess extends Process<ClientProcess> {
 
         this.client = client;
         // add messageQueue to client which is created in the super constructor.
-        this.systemInitializer = this.initializerFactory(this, globalSystemVariables);
+        this.systemInitializer = this.initializerFactory(this);
 //   this.room.onMessageQueueRelay.add(this.onMessageQueueRelay.bind(this))
     }
 
@@ -55,7 +55,6 @@ export class ClientProcess extends Process<ClientProcess> {
      * @param options - options sent back from area when it added the client as listener
      */
     public dispatchOnAreaListen(areaId, state: any, options?: any) {
-        console.log('dispatching on listen', areaId, state, options);
         const length = this.systemNames.length;
         for(let i = 0; i < length; i++) {
             const system = this.systems[this.systemNames[i]] as ClientSystem;

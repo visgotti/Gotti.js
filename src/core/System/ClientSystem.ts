@@ -29,12 +29,7 @@ abstract class ClientSystem extends System {
     public initialize(client, messageQueue: MessageQueue, globalSystemVariables: {[reference: string]: any})
     {
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {
-            Object.keys(globalSystemVariables).forEach((referenceName) => {
-                if(referenceName in this.globals) {
-                    throw new Error(`Duplicate global object references: ${referenceName}`);
-                }
-                this.globals[referenceName] = globalSystemVariables[referenceName];
-            });
+            this.globals = globalSystemVariables;
         }
 
         this.client = client;

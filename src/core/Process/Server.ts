@@ -21,14 +21,14 @@ export class ServerProcess extends Process<ServerProcess> {
     private fpsTickRate: number = 20;
     public messageQueue: ServerMessageQueue;
 
-    constructor(ClientManagerConstructor: ISystem, globalSystemVariables?: any, options?: ServerProcessOptions) {
-        super(PROCESS_ENV.SERVER);
+    constructor(ClientManagerConstructor: ISystem, globals?: any, options?: ServerProcessOptions) {
+        super(PROCESS_ENV.SERVER, globals);
 
         if(options && options.fpsTickRate) {
             this.fpsTickRate = options.fpsTickRate;
         }
 
-        this.systemInitializer = this.initializerFactory(this, globalSystemVariables);
+        this.systemInitializer = this.initializerFactory(this);
 
         this.clientManager = this.addSystem(ClientManagerConstructor) as ClientManager;
 

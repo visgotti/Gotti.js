@@ -14,7 +14,6 @@ describe('Client Process with no globals', function() {
 
     before('creates instance of a client process and sets up spies', (done) => {
         clientProcess = createDummyClientProcess();
-
         systemInitializerSpy = sinon.spy(clientProcess, 'systemInitializer');
         startSystemSpy = sinon.spy(clientProcess, '_startSystem');
         stopSystemSpy = sinon.spy(clientProcess, '_stopSystem');

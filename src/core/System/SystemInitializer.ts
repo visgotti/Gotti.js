@@ -6,26 +6,26 @@ import { ClientProcess } from '../Process/Client';
 
 import { MessageQueue } from '../MessageQueue';
 
-export const server = function server (process: ServerProcess, globalSystemVariables: any) : (system: ServerSystem) => void  {
+export const server = function server (process: ServerProcess) : (system: ServerSystem) => void  {
     const createdSystems = new Set();
-    const { messageQueue } = process;
+    const { messageQueue, globals } = process;
 
     return (system: ServerSystem) => {
         if(createdSystems.has(system.name)) {
             throw `Tried initializing duplicate system name: ${system.name} change of one of the instances.`;
         }
-        system.initialize(messageQueue, globalSystemVariables);
+        system.initialize(messageQueue, globals);
     };
 };
 
-export const client = function client (process: ClientProcess, globalSystemVariables: any) :  (system: ClientSystem) => void  {
+export const client = function client (process: ClientProcess) :  (system: ClientSystem) => void  {
     const createdSystems = new Set();
-    const { messageQueue, client } = process;
+    const { messageQueue, globals, client } = process;
 
     return (system: ClientSystem) => {
         if(createdSystems.has(system.name)) {
             throw `Tried initializing duplicate system name: ${system.name} change of one of the instances.`;
         }
-        system.initialize(client, messageQueue, globalSystemVariables);
+        system.initialize(client, messageQueue, globals);
     }
 };

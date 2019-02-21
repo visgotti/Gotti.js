@@ -22,11 +22,13 @@ type SystemLookup <T extends string | number>  = {
 export abstract class Process<T> {
     public messageQueue: MessageQueue | ServerMessageQueue;
 
+    public globals: any;
+
     // SHARED FRAMEWORKS
     protected entityManager: any;
     protected gameState: any;
     protected interfaceManager?: any;
-    protected initializerFactory: (process: Process<any>, globalVariables: any) => (System) => void;
+    protected initializerFactory: (process: Process<any>) => (System) => void;
     protected systemInitializer: (System) => void;
 
     readonly processEnv: PROCESS_ENV;
@@ -43,7 +45,8 @@ export abstract class Process<T> {
 
     public stoppedSystems: Set<string | number>;
 
-    constructor(processEnv: PROCESS_ENV) {
+    constructor(processEnv: PROCESS_ENV, globals={}) {
+        this.globals = globals;
         this.processEnv = processEnv;
         this.systems = {} as SystemLookup<string | number>;
         this.systemNames = [] as Array<string>;
@@ -60,9 +63,7 @@ export abstract class Process<T> {
     }
 
     public addGlobal(key: string, value: any) {
-        for(let i = 0; i < this.systemNames.length; i++) {
-            this.systems[this.systemNames[i]].globals[key] = value;
-        }
+        this.globals[key] = value;
     }
 
     public addSystem(SystemConstructor: ISystem, ...args: Array<any>) : ServerSystem | ClientSystem {
