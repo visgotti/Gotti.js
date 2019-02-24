@@ -33,7 +33,7 @@ abstract class ServerSystem extends System {
     public abstract onAreaMessage(areaId, message);
     public abstract onClientMessage(client, message);
 
-    public dispatchToAreas(message: Message) {};
+    public dispatchToAreas(message: Message, toAreaIds?: Array<string>) {};
     public dispatchToClient(clientUid: string, message: Message) {};
     public dispatchToAllClients(message: Message) {};
     public dispatchToLocalClients(message: Message) {}
