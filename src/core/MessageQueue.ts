@@ -15,6 +15,7 @@ type SystemMessageLookup = { [systemName: string]: Array<Message> }
 type SystemLookup = { [systemName: string]: System }
 
 export class MessageQueue {
+    private engineSystemMessageGameSystemHooks = {};
     private systemNames: Array<string | number>;
     private _systems: SystemLookup;
     private _messages: SystemMessageLookup;
@@ -38,6 +39,27 @@ export class MessageQueue {
 
     get remoteMessages() {
         return this._remoteMessages;
+    }
+
+    /**
+     * dispatches message to systems if there were any passed in.
+     * @param type
+     */
+    private gameSystemHook(message, listeningSystemNames?: Array<SystemName>) {
+        // if theres any registered game systems listening for this specific type of message...
+        if(listeningSystemNames) {
+            const length = listeningSystemNames.length;
+            for(let i = 0; i < length; i++) {
+                this._messages[listeningSystemNames[length]].push(message);
+            }
+        }
+    }
+
+    public addGameSystemMessageListener(systemName: SystemName, messageType: string | number) {
+        if(!(messageType in this.engineSystemMessageGameSystemHooks)) {
+            this.engineSystemMessageGameSystemHooks[messageType] = [];
+        }
+        this.engineSystemMessageGameSystemHooks[messageType].push(systemName);
     }
 
     public removeSystem(systemName) {
@@ -81,6 +103,7 @@ export class MessageQueue {
         for(let i = 0; i < message.to.length; i++) {
             this.messages[message.to[i]].push(message);
         }
+        this.gameSystemHook(message, this.engineSystemMessageGameSystemHooks[message.type]);
     };
 
     /**
@@ -112,6 +135,7 @@ export class MessageQueue {
             for(let i = 0; i < messageToLength; i++) {
                 this._systems[message.to[i]].onLocalMessage(message);
             }
+            this.gameSystemHook(message, this.engineSystemMessageGameSystemHooks[message.type]);
         }
     }
     /**
