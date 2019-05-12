@@ -8,7 +8,7 @@ export declare class ClientProcess extends Process<ClientProcess> {
     client: WebClient;
     private fpsTickRate;
     messageQueue: MessageQueue;
-    constructor(client: WebClient, globalSystemVariables?: any, options?: ClientProcessOptions);
+    constructor(client: WebClient, globals?: any, options?: ClientProcessOptions);
     /**
      *
      * @param areaId - id of area that the client is now writing to.

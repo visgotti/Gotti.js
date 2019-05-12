@@ -5,9 +5,10 @@ import System from './System/System';
 export interface Message {
     type: string | number,
     data: any,
-    to: Array<string | number>
+    to?: Array<string | number>
     from?: string | number,
 }
+
 
 type SystemName = string | number;
 
@@ -101,24 +102,20 @@ export class MessageQueue {
 
     public add(message: Message) {
         for(let i = 0; i < message.to.length; i++) {
+            if(!(message.to[i] in this._systems)) {
+                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                continue;
+            }
             this.messages[message.to[i]].push(message);
         }
         this.gameSystemHook(message, this.engineSystemMessageGameSystemHooks[message.type]);
     };
 
-    /**
-     * Adds message to every system even if they dont have a registered handler //TODO: possible inclusion/exclusion options in system
-     * @param type
-     * @param data
-     * @param from
-     */
-    public addAll(type, data, from) {
-       this.add({
-            type,
-            data,
-            to: this.systemNames,
-            from,
-       });
+    public addAll(message: Message) {
+        const systemsLength = this.systemNames.length;
+        for(let i = 0; i < systemsLength; i++) {
+            this.messages[this.systemNames[i]].push(message);
+        }
     };
 
     /**
@@ -129,10 +126,18 @@ export class MessageQueue {
         const messageToLength = message.to.length;
         if(isRemoteMessage) {
             for(let i = 0; i < messageToLength; i++) {
+                if(!(message.to[i] in this._systems)) {
+                    console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                    continue;
+                }
                 this._systems[message.to[i]].onRemoteMessage(message);
             }
         } else {
             for(let i = 0; i < messageToLength; i++) {
+                if(!(message.to[i] in this._systems)) {
+                    console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                    continue;
+                }
                 this._systems[message.to[i]].onLocalMessage(message);
             }
             this.gameSystemHook(message, this.engineSystemMessageGameSystemHooks[message.type]);
@@ -153,6 +158,10 @@ export class MessageQueue {
      */
     public addRemote(type, data, to, from) {
         for(let i = 0; i < to.length; i++) {
+            if(!(to[i] in this._systems)) {
+                console.error('trying to dispatch message', type, 'to a nonexistent system name', to);
+                continue;
+            }
             this._remoteMessages[to[i]].push({ type, data, to, from });
         }
     }

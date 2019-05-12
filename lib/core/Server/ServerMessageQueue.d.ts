@@ -5,6 +5,7 @@ export interface Message {
     to: Array<string | number>;
     from?: string | number;
 }
+declare type SystemName = string | number;
 declare type ServerSystemMessageLookup = {
     [systemName: string]: Array<Array<string | Message>>;
 };
@@ -15,6 +16,7 @@ declare type SystemLookup = {
     [systemName: string]: ServerSystem;
 };
 export declare class ServerMessageQueue {
+    private engineSystemMessageGameSystemHooks;
     private systemNames;
     private _systems;
     private _messages;
@@ -25,6 +27,12 @@ export declare class ServerMessageQueue {
     readonly messages: SystemMessageLookup;
     readonly clientMessages: ServerSystemMessageLookup;
     readonly areaMessages: ServerSystemMessageLookup;
+    /**
+     * dispatches message to systems if there were any passed in.
+     * @param type
+     */
+    private gameSystemHook;
+    addGameSystemMessageListener(systemName: SystemName, messageType: string | number): void;
     removeSystem(systemName: any): void;
     removeAllSystemsAndMessages(): void;
     removeAllMessages(): void;
@@ -34,11 +42,8 @@ export declare class ServerMessageQueue {
     addAreaMessage(areaId: any, message: Message): void;
     /**
      * Adds message to every system even if they dont have a registered handler //TODO: possible inclusion/exclusion options in system
-     * @param type
-     * @param data
-     * @param from
      */
-    addAll(type: any, data: any, from: any): void;
+    addAll(message: Message): void;
     instantClientDispatch(clientId: any, message: Message): void;
     instantAreaDispatch(areaId: any, message: Message): void;
     /**

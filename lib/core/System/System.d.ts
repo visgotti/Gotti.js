@@ -14,6 +14,7 @@ declare abstract class System {
     readonly name: string | number;
     constructor(name: string | number);
     protected _onInit(): void;
+    addMessageListener(messageName: string | number): void;
     abstract onLocalMessage(message: Message): void;
     abstract initialize(...args: any[]): void;
     abstract update(delta: any): void;

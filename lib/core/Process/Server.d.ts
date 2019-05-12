@@ -11,7 +11,7 @@ export declare class ServerProcess extends Process<ServerProcess> {
     clientManager: ClientManager;
     private fpsTickRate;
     messageQueue: ServerMessageQueue;
-    constructor(ClientManagerConstructor: ISystem, globalSystemVariables?: any, options?: ServerProcessOptions);
+    constructor(ClientManagerConstructor: ISystem, globals?: any, options?: ServerProcessOptions);
     addRoom(room: any): void;
     private decorateSystemWithRoomFunctions;
     startLoop(fps?: number): void;

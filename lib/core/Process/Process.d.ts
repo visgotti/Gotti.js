@@ -15,10 +15,11 @@ declare type SystemLookup<T extends string | number> = {
 };
 export declare abstract class Process<T> {
     messageQueue: MessageQueue | ServerMessageQueue;
+    globals: any;
     protected entityManager: any;
     protected gameState: any;
     protected interfaceManager?: any;
-    protected initializerFactory: (process: Process<any>, globalVariables: any) => (System: any) => void;
+    protected initializerFactory: (process: Process<any>) => (System: any) => void;
     protected systemInitializer: (System: any) => void;
     readonly processEnv: PROCESS_ENV;
     systemInitializedOrder: Map<string | number, number>;
@@ -28,7 +29,7 @@ export declare abstract class Process<T> {
     startedSystemsLookup: Set<string | number>;
     startedSystems: Array<ServerSystem | ClientSystem>;
     stoppedSystems: Set<string | number>;
-    constructor(processEnv: PROCESS_ENV);
+    constructor(processEnv: PROCESS_ENV, globals?: {});
     addGlobal(key: string, value: any): void;
     addSystem(SystemConstructor: ISystem, ...args: Array<any>): ServerSystem | ClientSystem;
     protected _stopAllSystems(): void;

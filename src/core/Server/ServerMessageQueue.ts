@@ -112,6 +112,10 @@ export class ServerMessageQueue {
 
     public add(message: Message) {
         for (let i = 0; i < message.to.length; i++) {
+            if(!(message.to[i] in this._systems)) {
+                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                continue;
+            }
             this._messages[message.to[i]].push(message);
         }
         this.gameSystemHook(message, this.engineSystemMessageGameSystemHooks[message.type]);
@@ -119,34 +123,41 @@ export class ServerMessageQueue {
 
     public addClientMessage(clientId, message: Message) {
         for(let i = 0; i < message.to.length; i++) {
+            if(!(message.to[i] in this._systems)) {
+                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                continue;
+            }
             this._clientMessages[message.to[i]].push([clientId, message]);
         }
     };
 
     public addAreaMessage(areaId, message: Message) {
         for(let i = 0; i < message.to.length; i++) {
+            if(!(message.to[i] in this._systems)) {
+                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                continue;
+            }
             this._areaMessages[message.to[i]].push([areaId, message]);
         }
     };
 
     /**
      * Adds message to every system even if they dont have a registered handler //TODO: possible inclusion/exclusion options in system
-     * @param type
-     * @param data
-     * @param from
      */
-    public addAll(type, data, from) {
-        this.add({
-            type,
-            data,
-            to: this.systemNames,
-            from,
-        });
+     public addAll(message: Message) {
+        const systemsLength = this.systemNames.length;
+        for(let i = 0; i < systemsLength; i++) {
+            this.messages[this.systemNames[i]].push(message);
+        }
     };
 
     public instantClientDispatch(clientId, message: Message) {
         const messageToLength = message.to.length;
         for(let i = 0; i < messageToLength; i++) {
+            if(!(message.to[i] in this._systems)) {
+                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                continue;
+            }
             this._systems[message.to[i]].onClientMessage(clientId, message);
         }
     }
@@ -154,6 +165,10 @@ export class ServerMessageQueue {
     public instantAreaDispatch(areaId, message: Message) {
         const messageToLength = message.to.length;
         for(let i = 0; i < messageToLength; i++) {
+            if(!(message.to[i] in this._systems)) {
+                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                continue;
+            }
             this._systems[message.to[i]].onAreaMessage(areaId, message);
         }
     }
@@ -165,6 +180,10 @@ export class ServerMessageQueue {
     public instantDispatch(message: Message) {
         const messageToLength = message.to.length;
         for(let i = 0; i < messageToLength; i++) {
+            if(!(message.to[i] in this._systems)) {
+                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                continue;
+            }
             this._systems[message.to[i]].onLocalMessage(message);
         }
         this.gameSystemHook(message, this.engineSystemMessageGameSystemHooks[message.type]);

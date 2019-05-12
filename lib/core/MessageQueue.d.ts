@@ -2,9 +2,10 @@ import System from './System/System';
 export interface Message {
     type: string | number;
     data: any;
-    to: Array<string | number>;
+    to?: Array<string | number>;
     from?: string | number;
 }
+declare type SystemName = string | number;
 declare type SystemMessageLookup = {
     [systemName: string]: Array<Message>;
 };
@@ -12,6 +13,7 @@ declare type SystemLookup = {
     [systemName: string]: System;
 };
 export declare class MessageQueue {
+    private engineSystemMessageGameSystemHooks;
     private systemNames;
     private _systems;
     private _messages;
@@ -20,18 +22,18 @@ export declare class MessageQueue {
     readonly systems: SystemLookup;
     readonly messages: SystemMessageLookup;
     readonly remoteMessages: SystemMessageLookup;
+    /**
+     * dispatches message to systems if there were any passed in.
+     * @param type
+     */
+    private gameSystemHook;
+    addGameSystemMessageListener(systemName: SystemName, messageType: string | number): void;
     removeSystem(systemName: any): void;
     removeAllSystemsAndMessages(): void;
     removeAllMessages(): void;
     addSystem(system: System): void;
     add(message: Message): void;
-    /**
-     * Adds message to every system even if they dont have a registered handler //TODO: possible inclusion/exclusion options in system
-     * @param type
-     * @param data
-     * @param from
-     */
-    addAll(type: any, data: any, from: any): void;
+    addAll(message: Message): void;
     /**
      * used for sending a message instantly to other systems versus waiting for next tick in the game loop.
      * @param message

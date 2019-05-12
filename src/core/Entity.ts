@@ -51,7 +51,7 @@ export abstract class Entity {
         return this;
     }
 
-    private setAttribute(key: string, value: any) {
+    protected setAttribute(key: string, value: any) {
         this.attributes[key] = value;
     }
 

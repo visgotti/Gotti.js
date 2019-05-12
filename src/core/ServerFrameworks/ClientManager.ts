@@ -1,6 +1,9 @@
 import  ServerSystem from '../System/ServerSystem';
 
 export abstract class ClientManager extends ServerSystem {
+    public writingClientIds: Set<any>;
+    public listeningClientIds: Set<any>;
+
     constructor(name: string | number) {
         // needs to be a unique id
         super(name);

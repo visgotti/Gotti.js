@@ -36,7 +36,7 @@ abstract class System {
         this.onInit();
     }
 
-    private addMessageListener(messageName: string | number) {
+    public addMessageListener(messageName: string | number) {
         throw new Error('addMessageListener must be called after the systems onInit function is executed');
     };
 
