@@ -12,7 +12,7 @@ import { ClientProcess } from '../Process/Client';
 
 export class Client {
     private runningProcess: ClientProcess = null;
-    private processes: {[gameType: string]: ClientProcess };
+    private processes: {[gameType: string]: ClientProcess } = {};
     private inGate = false;
     private stateListeners : {[path: string]: Array<string>} = {};
     private systemStateHandlers: {[systemName: string]: {
@@ -42,8 +42,6 @@ export class Client {
 
     private token: string;
 
-    private gameProcesses: { [gameType: string]: ClientProcess } = {};
-
     constructor(url: string, token: string) {
         this.hostname = url;
         this.options = {};
@@ -54,6 +52,7 @@ export class Client {
         if(gameType in this.processes) {
             throw new Error(`Duplicate named game process: ${gameType}`)
         }
+        this.processes[gameType] = process;
     }
 
     public async getConnectorData(gameType, options) {
@@ -68,14 +67,15 @@ export class Client {
         })
     }
 
-    public async joinGame(gameType, fps, gottiId?, host?, port?) {
+    public async startGame(gameType, fps=60, gottiId?, host?, port?) {
         return new Promise((resolve, reject) => {
             const process = this.processes[gameType];
             if(!process) {
                 return reject('Invalid gameType');
             }
 
-            this.startGameProcess(process);
+            console.log('calling start game process');
+            this.startGameProcess(process, fps);
 
             if(process.isNetworked) {
                 this.joinConnector(gottiId, `${host}:${port}`).then(joinOptions => {
@@ -87,7 +87,17 @@ export class Client {
         });
     }
 
-    private startGameProcess(process, fps = 60) {
+    public stopGame() {
+        if(!this.runningProcess) {
+            throw new Error('No process is running to stop');
+        }
+        if(this.runningProcess.isNetworked) {
+            this.close()
+        }
+        this.clearGameProcess();
+    }
+
+    private startGameProcess(process, fps) {
         if(this.runningProcess !== null) {
             this.clearGameProcess();
         }
@@ -96,7 +106,7 @@ export class Client {
         this.runningProcess.startLoop(fps);
     }
 
-    public clearGameProcess() {
+    private clearGameProcess() {
         this.runningProcess.stopAllSystems();
         this.runningProcess.stopLoop();
         this.runningProcess = null;
@@ -129,10 +139,15 @@ export class Client {
     public writeInitialArea(clientOptions?) {
         console.log('joining initial area... please register the onAreaWrite in one of your systems to handle the callback.');
 
-        if(!(this.joinedGame)) {
-            throw new Error('Make sure client.joinGame\'s prmise is sucessfully resolved before requesting to write to an initial area.')
+        if(!this.runningProcess) {
+            throw new Error('There is no currently running networked process.')
         }
-
+        if(!this.runningProcess.isNetworked) {
+            throw new Error('The current running process is not networked, there is no area to write to.');
+        }
+        if(!this.joinedGame) {
+            throw new Error('Make sure client.startGame\'s promise resolved when called with gotti credentials in parameters')
+        }
         this.connector.joinInitialArea(clientOptions);
     }
 
@@ -146,6 +161,7 @@ export class Client {
     }
 
     public close() {
+        this.joinedGame = false;
         this.connector.connection.close();
     }
 

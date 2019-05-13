@@ -1,19 +1,32 @@
 
 let activeLoop;
 const __cancelAnimationFrame = typeof cancelAnimationFrame === 'function' ? cancelAnimationFrame.bind(window) : clearTimeout;
-let meter = null;
+
+const disabledMeter = {
+    tickStart: () => {},
+    tick: () => {},
+    destroy: () => {},
+};
+
+let meter = disabledMeter;
 
 export function clearGameLoop () {
     __cancelAnimationFrame(activeLoop);
     if(meter) {
         meter.destroy();
-        meter = null;
+        meter = disabledMeter;
     }
 };
 
 export function setGameLoop (update, tickLengthMs = 1000 / 30, useFpsMeter = true) {
     let __cancelAnimationFrame;
     let __requestAnimationFrame;
+
+    if(useFpsMeter) {
+        if(!(typeof FPSMeter)) {
+            useFpsMeter = false;
+        }
+    }
 
     __requestAnimationFrame = typeof requestAnimationFrame === 'function' ? requestAnimationFrame.bind(window) : (function(){
         var lastTimestamp = Date.now(),
@@ -72,8 +85,7 @@ export function setGameLoop (update, tickLengthMs = 1000 / 30, useFpsMeter = tru
         activeLoop = __requestAnimationFrame(gameLoopWithMeter);
     };
 
-    if(useFpsMeter && FPSMeter !== undefined) {
-        meter = new FPSMeter();
+    if(useFpsMeter) {
         gameLoopWithMeter();
     } else {
         gameLookWithoutMeter();
