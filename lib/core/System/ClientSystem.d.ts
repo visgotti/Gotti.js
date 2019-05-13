@@ -5,6 +5,7 @@ declare abstract class ClientSystem extends System {
     private client;
     protected dispatchToServer: (message: Message) => void;
     protected immediateDispatchToServer: (message: Message) => void;
+    isNetworked: boolean;
     constructor(name: string | number);
     /**
      * Initialize gets called by the process and
@@ -15,7 +16,7 @@ declare abstract class ClientSystem extends System {
      * @param messageQueue
      * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
-    initialize(client: any, messageQueue: MessageQueue, globalSystemVariables: {
+    initialize(client: any, isNetworked: any, messageQueue: MessageQueue, globalSystemVariables: {
         [reference: string]: any;
     }): void;
     abstract onServerMessage(message: Message): any;

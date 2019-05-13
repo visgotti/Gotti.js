@@ -8,7 +8,8 @@ export declare type JoinOptions = {
 } & any;
 import { ClientProcess } from '../Process/Client';
 export declare class Client {
-    private process;
+    private runningProcess;
+    private processes;
     private inGate;
     private stateListeners;
     private systemStateHandlers;
@@ -24,12 +25,14 @@ export declare class Client {
     protected requestId: number;
     protected hostname: string;
     private token;
-    private processInitializers;
+    private gameProcesses;
     constructor(url: string, token: string);
-    addProcess(process: ClientProcess): void;
-    addProcessInitializers(processInitializers: any): void;
+    addGameProcess(gameType: any, process: ClientProcess): void;
+    getConnectorData(gameType: any, options: any): Promise<{}>;
+    joinGame(gameType: any, fps: any, gottiId?: any, host?: any, port?: any): Promise<{}>;
+    private startGameProcess;
+    clearGameProcess(): void;
     getGateData(): Promise<{}>;
-    joinGame(gameType: any, options: any): Promise<{}>;
     /**
      * When you finally join a game, you need to make one last mandatory request
      * which is to find your initial write area. This is the only time where the client
@@ -50,13 +53,6 @@ export declare class Client {
      */
     joinGate(options: any): void;
     private onMessage;
-    /**
-     * starts the process
-     * @param fps - frames per second the game loop runs
-     * @options - options are client defined and get sent to
-     */
-    private startGame;
-    stopGame(): void;
     /**
      * sends message over network to server
      * @param message - system message to be processed on server
