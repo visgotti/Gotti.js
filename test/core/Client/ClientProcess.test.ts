@@ -1,4 +1,4 @@
-import { system_names, createDummyClientProcess }  from '../../mocks';
+import { system_names, createDummyNetworkClientProcess, createDummyOfflineClientProcess }  from '../../mocks';
 import { DummySystem1, DummySystem2, DummySystem3 } from '../../mocks/client/dummySystems';
 import * as assert from 'assert';
 import * as mocha from 'mocha';
@@ -13,7 +13,8 @@ describe('Client Process with no globals', function() {
     let clientProcess;
 
     before('creates instance of a client process and sets up spies', (done) => {
-        clientProcess = createDummyClientProcess();
+        clientProcess = createDummyNetworkClientProcess();
+        assert.strictEqual(clientProcess.isNetworked, true);
         systemInitializerSpy = sinon.spy(clientProcess, 'systemInitializer');
         startSystemSpy = sinon.spy(clientProcess, '_startSystem');
         stopSystemSpy = sinon.spy(clientProcess, '_stopSystem');
@@ -147,7 +148,7 @@ describe('Client Process with globals', function() {
     let clientProcess;
 
     before('creates instance of a client process and sets up spies', (done) => {
-        clientProcess = createDummyClientProcess({
+        clientProcess = createDummyOfflineClientProcess({
             "foo": "bar",
             "bar": () => {
                 return "baz"

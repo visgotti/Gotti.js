@@ -11,7 +11,8 @@ export type JoinOptions = { retryTimes: number, requestId: number } & any;
 import { ClientProcess } from '../Process/Client';
 
 export class Client {
-    private process: ClientProcess;
+    private runningProcess: ClientProcess = null;
+    private processes: {[gameType: string]: ClientProcess };
     private inGate = false;
     private stateListeners : {[path: string]: Array<string>} = {};
     private systemStateHandlers: {[systemName: string]: {
@@ -41,7 +42,7 @@ export class Client {
 
     private token: string;
 
-    private processInitializers: {[gameType: string]: Function };
+    private gameProcesses: { [gameType: string]: ClientProcess } = {};
 
     constructor(url: string, token: string) {
         this.hostname = url;
@@ -49,13 +50,56 @@ export class Client {
         this.token = token;
     }
 
-    public addProcess(process: ClientProcess) {
-        //TODO: have client be able to add multiple processes and then start them based on requestGame response automatically.
-        this.process = process;
+    public addGameProcess(gameType, process: ClientProcess) {
+        if(gameType in this.processes) {
+            throw new Error(`Duplicate named game process: ${gameType}`)
+        }
     }
 
-    public addProcessInitializers(processInitializers) {
-        this.processInitializers = processInitializers;
+    public async getConnectorData(gameType, options) {
+        return new Promise((resolve, reject) => {
+            httpPostAsync(`${this.hostname}/gate`, this.token, { gameType, options }, (err, data) => {
+                if (err) {
+                    return reject(`Error requesting game ${err}`);
+                } else {
+                    return resolve(data);
+                }
+            });
+        })
+    }
+
+    public async joinGame(gameType, fps, gottiId?, host?, port?) {
+        return new Promise((resolve, reject) => {
+            const process = this.processes[gameType];
+            if(!process) {
+                return reject('Invalid gameType');
+            }
+
+            this.startGameProcess(process);
+
+            if(process.isNetworked) {
+                this.joinConnector(gottiId, `${host}:${port}`).then(joinOptions => {
+                    return resolve(joinOptions);
+                });
+            } else {
+                return resolve();
+            }
+        });
+    }
+
+    private startGameProcess(process, fps = 60) {
+        if(this.runningProcess !== null) {
+            this.clearGameProcess();
+        }
+        this.runningProcess = process;
+        this.runningProcess.startAllSystems();
+        this.runningProcess.startLoop(fps);
+    }
+
+    public clearGameProcess() {
+        this.runningProcess.stopAllSystems();
+        this.runningProcess.stopLoop();
+        this.runningProcess = null;
     }
 
     public async getGateData() {
@@ -70,35 +114,6 @@ export class Client {
                 return resolve(data);
             });
         })
-    }
-
-    public async joinGame(gameType, options) {
-        return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}/gate`, this.token, { gameType, options }, (err, data) => {
-                if(err) {
-                    return reject(`Error requesting game ${err}`);
-                } else {
-
-                    console.log(`sucessfully joined the game... ${gameType} initializing process with serverGameData as ${data} then joining connector`);
-
-                    try {
-                        this.processInitializers[gameType.toLowerCase()](data);
-                    } catch(err) {
-                        return reject(err);
-                    }
-
-                    this.connector = new Connector();
-
-                    this.joinConnector(data.gottiId, `${data.host}:${data.port}`).then(joinOptions => {
-                        console.log(`succesfully joined connector starting ${gameType} process's game loop`);
-                        this.startGame(60);
-                        return resolve(joinOptions)
-                    }).catch(err => {
-                        return reject(err);
-                    });
-                }
-            })
-        });
     }
 
     /**
@@ -123,13 +138,12 @@ export class Client {
 
     private async joinConnector(gottiId, connectorURL) {
 
-        const options = await this.connector.connect(gottiId, connectorURL, this.process);
+        const options = await this.connector.connect(gottiId, connectorURL, this.runningProcess);
 
         this.joinedGame = true;
 
         return options;
     }
-
 
     public close() {
         this.connector.connection.close();
@@ -152,24 +166,6 @@ export class Client {
          this.process.messageQueue.addRemote(message[1], message[2], message[3], message[4]);
          };
          */
-    }
-
-    /**
-     * starts the process
-     * @param fps - frames per second the game loop runs
-     * @options - options are client defined and get sent to
-     */
-    private startGame(fps = 60) {
-        if(!this.connector || !this.process) {
-            throw new Error('Game is not ready to start, make sure you constructed a process with the client as the first parameter and sucessfully requested a game.');
-        }
-        this.process.startAllSystems();
-        this.process.startLoop(fps);
-    }
-
-    public stopGame() {
-        this.process.stopAllSystems();
-        this.process.stopLoop();
     }
 
     /**

@@ -14,8 +14,12 @@ export class ClientProcess extends Process<ClientProcess> {
 
     public messageQueue: MessageQueue;
 
-    constructor(client: WebClient, globals?: any, options?: ClientProcessOptions) {
+    public isNetworked: boolean = false;
+
+    constructor(client: WebClient, isNetworked: boolean, globals?: any, options?: ClientProcessOptions) {
         super(PROCESS_ENV.CLIENT, globals);
+
+        this.isNetworked = isNetworked;
 
         if(!(client)) {
             throw new Error('Client process needs a web client to construct correctly.')
@@ -24,8 +28,6 @@ export class ClientProcess extends Process<ClientProcess> {
         if(options && options.fpsTickRate) {
             this.fpsTickRate = options.fpsTickRate;
         }
-
-        client.addProcess(this);
 
         this.client = client;
         // add messageQueue to client which is created in the super constructor.

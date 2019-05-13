@@ -34,13 +34,15 @@ describe('ClientSystem', function() {
     describe('clientSystem.initialize', () => {
         it('ran messageQueue.addSystem', (done) => {
             let messageQueue_addSystemSpy = sinon.spy(messageQueue, 'addSystem');
-            mockSystem1.initialize(client, messageQueue, client);
+            mockSystem1.initialize(client, false, messageQueue, client);
+            assert.strictEqual(mockSystem1.isNetworked, false);
             sinon.assert.calledOnce(messageQueue_addSystemSpy);
             done();
         });
         it('ran clientSystem.onInit function', (done) => {
             let clientSystem_onInitSpy = sinon.spy(mockSystem1, 'onInit');
-            mockSystem1.initialize(client, messageQueue, client);
+            mockSystem1.initialize(client, true, messageQueue, client);
+            assert.strictEqual(mockSystem1.isNetworked, true);
             sinon.assert.calledOnce(clientSystem_onInitSpy);
             done();
         });
@@ -48,7 +50,7 @@ describe('ClientSystem', function() {
 
     describe('clientSystem.addListenStatePaths', () => {
         beforeEach('initialize system', (done) => {
-            mockSystem1.initialize(client, messageQueue, client);
+            mockSystem1.initialize(client, true, messageQueue, client);
             done();
         });
         it('calls the webClient addSystemPathHandler once when passing in a string path', (done) => {

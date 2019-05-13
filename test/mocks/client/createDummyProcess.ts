@@ -2,6 +2,10 @@ import { ClientProcess } from '../../../src/core/Process/Client';
 
 import { createDummyWebClient } from './createDummyWebClient';
 
-export function createDummyClientProcess(globalVariables?: any) {
-    return new ClientProcess(createDummyWebClient(), globalVariables);
+export function createDummyNetworkClientProcess(globalVariables?: any) {
+    return new ClientProcess(createDummyWebClient(), true, globalVariables);
+}
+
+export function createDummyOfflineClientProcess(globalVariables?: any) {
+    return new ClientProcess(createDummyWebClient(), false, globalVariables);
 }

@@ -1,5 +1,7 @@
 import ServerSystem from '../System/ServerSystem';
 export declare abstract class ClientManager extends ServerSystem {
+    writingClientIds: Set<any>;
+    listeningClientIds: Set<any>;
     constructor(name: string | number);
     abstract onClientWrite(clientId: any, options?: any): void;
     abstract onClientRemoveWrite(clientId: any, options?: any): void;

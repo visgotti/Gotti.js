@@ -12,6 +12,8 @@ abstract class ClientSystem extends System {
     // sends system to message that gets processed as soon as it is received.
     protected immediateDispatchToServer: (message: Message) => void;
 
+    public isNetworked: boolean = false;
+
     constructor(name: string | number) {
         super(name);
         this.onRemoteMessage = this.onServerMessage.bind(this);
@@ -26,8 +28,9 @@ abstract class ClientSystem extends System {
      * @param messageQueue
      * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
-    public initialize(client, messageQueue: MessageQueue, globalSystemVariables: {[reference: string]: any})
+    public initialize(client, isNetworked, messageQueue: MessageQueue, globalSystemVariables: {[reference: string]: any})
     {
+        this.isNetworked = isNetworked;
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {
             this.globals = globalSystemVariables;
         }
