@@ -1,3 +1,5 @@
+import {EntityManager} from "../EntityManager";
+
 export enum PROCESS_ENV {
     CLIENT = 0,
     SERVER = 1,
@@ -14,20 +16,17 @@ export interface ISystem {
     new (...args: Array<any>): ClientSystem | ServerSystem
 }
 
-type SystemLookup <T extends string | number>  = {
+export type SystemLookup <T extends string | number>  = {
     [systemName: string]: ClientSystem | ServerSystem,
     [systemName: number]: ClientSystem | ServerSystem
 }
 
 export abstract class Process<T> {
     public messageQueue: MessageQueue | ServerMessageQueue;
+    public entityManager: EntityManager;
 
     public globals: any;
 
-    // SHARED FRAMEWORKS
-    protected entityManager: any;
-    protected gameState: any;
-    protected interfaceManager?: any;
     protected initializerFactory: (process: Process<any>) => (System) => void;
     protected systemInitializer: (System) => void;
 
@@ -59,6 +58,7 @@ export abstract class Process<T> {
         this.stoppedSystems = new Set() as Set<string | number>;
 
         this.messageQueue = processEnv === PROCESS_ENV.SERVER ? new ServerMessageQueue() : new MessageQueue();
+        this.entityManager = new EntityManager(this.systems);
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? server : client;
     }
 

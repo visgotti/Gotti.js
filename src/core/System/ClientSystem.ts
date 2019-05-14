@@ -1,6 +1,7 @@
 import System from "./System";
 import { Client as WebClient } from '../WebClient/Client';
 import { Message, MessageQueue } from '../MessageQueue';
+import {EntityManager} from "../EntityManager";
 
 abstract class ClientSystem extends System {
     readonly name: string | number;
@@ -28,7 +29,7 @@ abstract class ClientSystem extends System {
      * @param messageQueue
      * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
-    public initialize(client, isNetworked, messageQueue: MessageQueue, globalSystemVariables: {[reference: string]: any})
+    public initialize(client, messageQueue: MessageQueue, entityManager: EntityManager, isNetworked, globalSystemVariables: {[reference: string]: any})
     {
         this.isNetworked = isNetworked;
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {
@@ -38,6 +39,9 @@ abstract class ClientSystem extends System {
         this.client = client;
         this.messageQueue = messageQueue;
         this.messageQueue.addSystem(this);
+
+        this.initializeEntity = entityManager.initializeEntity.bind(entityManager);
+        this.destroyEntity = entityManager.destroyEntity.bind(entityManager);
 
         this.dispatchToServer = client.sendSystemMessage.bind(client);
         this.immediateDispatchToServer = client.sendImmediateSystemMessage.bind(client);

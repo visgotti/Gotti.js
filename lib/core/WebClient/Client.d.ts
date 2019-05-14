@@ -25,13 +25,13 @@ export declare class Client {
     protected requestId: number;
     protected hostname: string;
     private token;
-    private gameProcesses;
     constructor(url: string, token: string);
     addGameProcess(gameType: any, process: ClientProcess): void;
     getConnectorData(gameType: any, options: any): Promise<{}>;
-    joinGame(gameType: any, fps: any, gottiId?: any, host?: any, port?: any): Promise<{}>;
+    startGame(gameType: any, fps?: number, gottiId?: any, host?: any, port?: any): Promise<{}>;
+    stopGame(): void;
     private startGameProcess;
-    clearGameProcess(): void;
+    private clearGameProcess;
     getGateData(): Promise<{}>;
     /**
      * When you finally join a game, you need to make one last mandatory request

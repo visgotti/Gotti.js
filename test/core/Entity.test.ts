@@ -9,6 +9,7 @@ class TestEntity extends Entity {
     constructor() {
         super(0, 'test');
     }
+    initialize(): void {}
 }
 
 export class TestComponent extends Component {

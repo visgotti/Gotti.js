@@ -2,6 +2,9 @@ import System from "./System";
 import { Client as WebClient } from '../WebClient/Client';
 import { Message } from '../MessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
+import { EntityManager } from '../EntityManager';
+import { Entity } from '../Entity';
+
 abstract class ServerSystem extends System {
     readonly name: string | number;
 
@@ -13,11 +16,15 @@ abstract class ServerSystem extends System {
 
     public initialize(
         messageQueue: ServerMessageQueue,
+        entityManager: EntityManager,
         globalSystemVariables: {[reference: string]: any})
     {
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {
             this.globals = globalSystemVariables;
         }
+
+        this.initializeEntity = entityManager.initializeEntity.bind(entityManager);
+        this.destroyEntity = entityManager.destroyEntity.bind(entityManager);
 
         //  this.dispatchToClient = room.send;
         this.messageQueue = messageQueue;
