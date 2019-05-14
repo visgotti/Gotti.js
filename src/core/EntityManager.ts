@@ -17,8 +17,9 @@ export class EntityManager {
     /**
      * decorates the entity with hooks for system onRemove and onAdded;
      * @param entity
+     * @param data - any additional data you may want to use to initialize the entity inside of the system hooks
      */
-    public initializeEntity(entity: Entity) {
+    public initializeEntity(entity: Entity, data?: any) {
         const oldAddComponent = entity.addComponent;
         entity.addComponent = (component: Component) => {
             oldAddComponent.call(entity, component);
@@ -36,7 +37,7 @@ export class EntityManager {
                 system.onEntityRemovedComponent(entity);
             }
         };
-        entity.initialize();
+        entity.initialize(data);
         return entity;
     }
 

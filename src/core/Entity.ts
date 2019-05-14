@@ -23,7 +23,7 @@ export abstract class Entity {
     }
 
     // add components to start in here
-    public abstract initialize() : void;
+    public abstract initialize(data?: any) : void;
 
     /**
      * Adds the component to an Entity, giving it all the functionality from the methods defined.
