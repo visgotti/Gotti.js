@@ -11,7 +11,7 @@ export declare abstract class Entity {
         [name: string]: any;
     };
     constructor(id: any, type: any);
-    abstract initialize(): void;
+    abstract initialize(data?: any): void;
     /**
      * Adds the component to an Entity, giving it all the functionality from the methods defined.
      * @param component

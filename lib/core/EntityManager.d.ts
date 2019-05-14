@@ -9,7 +9,8 @@ export declare class EntityManager {
     /**
      * decorates the entity with hooks for system onRemove and onAdded;
      * @param entity
+     * @param data - any additional data you may want to use to initialize the entity inside of the system hooks
      */
-    initializeEntity(entity: Entity): Entity;
+    initializeEntity(entity: Entity, data?: any): Entity;
     destroyEntity(entity: Entity): void;
 }

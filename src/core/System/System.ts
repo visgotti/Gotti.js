@@ -49,7 +49,7 @@ abstract class System {
     public abstract clear() : void;
 
     //overrided in ServerSystem and ClientSystem initialize function
-    public initializeEntity(entity:Entity) {};
+    public initializeEntity(entity:Entity, data?: any) {};
     public destroyEntity(entity:Entity) {};
 
     // optional
