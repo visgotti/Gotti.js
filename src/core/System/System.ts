@@ -48,7 +48,13 @@ abstract class System {
     public abstract update (delta) : void;
     public abstract clear() : void;
 
+    //overrided in ServerSystem and ClientSystem initialize function
+    public initializeEntity(entity:Entity) {};
+    public destroyEntity(entity:Entity) {};
+
     // optional
+    public onEntityRemovedComponent(entity) {};
+    public onEntityAddedComponent(entity) {};
     public onInit() {};
     public onStop() {};
     public onStart() {};

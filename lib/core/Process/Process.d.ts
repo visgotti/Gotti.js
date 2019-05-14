@@ -1,3 +1,4 @@
+import { EntityManager } from "../EntityManager";
 export declare enum PROCESS_ENV {
     CLIENT = 0,
     SERVER = 1
@@ -9,16 +10,14 @@ import ServerSystem from '../System/ServerSystem';
 export interface ISystem {
     new (...args: Array<any>): ClientSystem | ServerSystem;
 }
-declare type SystemLookup<T extends string | number> = {
+export declare type SystemLookup<T extends string | number> = {
     [systemName: string]: ClientSystem | ServerSystem;
     [systemName: number]: ClientSystem | ServerSystem;
 };
 export declare abstract class Process<T> {
     messageQueue: MessageQueue | ServerMessageQueue;
+    entityManager: EntityManager;
     globals: any;
-    protected entityManager: any;
-    protected gameState: any;
-    protected interfaceManager?: any;
     protected initializerFactory: (process: Process<any>) => (System: any) => void;
     protected systemInitializer: (System: any) => void;
     readonly processEnv: PROCESS_ENV;
@@ -40,4 +39,3 @@ export declare abstract class Process<T> {
     abstract startLoop(framesPerSecond: number): void;
     abstract stopLoop(): void;
 }
-export {};

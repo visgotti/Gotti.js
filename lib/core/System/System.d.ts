@@ -1,5 +1,6 @@
 import { Message, MessageQueue } from '../MessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
+import { Entity } from '../Entity';
 declare abstract class System {
     protected initialized: boolean;
     onRemoteMessage(message: Message): void;
@@ -19,6 +20,10 @@ declare abstract class System {
     abstract initialize(...args: any[]): void;
     abstract update(delta: any): void;
     abstract clear(): void;
+    initializeEntity(entity: Entity): void;
+    destroyEntity(entity: Entity): void;
+    onEntityRemovedComponent(entity: any): void;
+    onEntityAddedComponent(entity: any): void;
     onInit(): void;
     onStop(): void;
     onStart(): void;

@@ -4,6 +4,7 @@ export abstract class Entity {
     public id: string | number;
     public type: string | number;
     public components: any;
+    public componentNames: Array<string | number> = [];
     public methodsFromComponent: {[componentName: string]: any };
     public attributes: {[name: string]: any} = {};
 
@@ -21,7 +22,8 @@ export abstract class Entity {
         return this;
     }
 
-    onMessage(message){}
+    // add components to start in here
+    public abstract initialize() : void;
 
     /**
      * Adds the component to an Entity, giving it all the functionality from the methods defined.
@@ -48,7 +50,7 @@ export abstract class Entity {
         // attach setAttribute to component
         component.setAttribute = this.setAttribute.bind(this);
         component.onAdded(this);
-        return this;
+        this.componentNames.push(component.name);
     }
 
     protected setAttribute(key: string, value: any) {
@@ -83,12 +85,15 @@ export abstract class Entity {
 
         delete this.methodsFromComponent[componentName];
 
+        const index = this.componentNames.indexOf(componentName);
+        this.componentNames.splice(index, 1);
         component.onRemoved(this);
     }
 
-    public destroy() { //todo only call this on components that are decorated with the systemComponent
+    public destroy() {
         for(let component in this.components) {
             this.removeComponent(component);
         }
+        this.componentNames = [];
     }
 };

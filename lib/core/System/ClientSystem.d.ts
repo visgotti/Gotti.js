@@ -1,5 +1,6 @@
 import System from "./System";
 import { Message, MessageQueue } from '../MessageQueue';
+import { EntityManager } from "../EntityManager";
 declare abstract class ClientSystem extends System {
     readonly name: string | number;
     private client;
@@ -16,7 +17,7 @@ declare abstract class ClientSystem extends System {
      * @param messageQueue
      * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
-    initialize(client: any, isNetworked: any, messageQueue: MessageQueue, globalSystemVariables: {
+    initialize(client: any, messageQueue: MessageQueue, entityManager: EntityManager, isNetworked: any, globalSystemVariables: {
         [reference: string]: any;
     }): void;
     abstract onServerMessage(message: Message): any;

@@ -1,6 +1,6 @@
 import { Client as WebClient } from '../../../src/core/WebClient/Client';
 import { MessageQueue } from '../../../src/core/MessageQueue';
-
+import { EntityManager} from "../../../src/core/EntityManager";
 import { createDummyClientSystem, system_names, Messages } from '../../mocks';
 
 import * as assert from 'assert';
@@ -10,6 +10,7 @@ import * as sinon from 'sinon';
 describe('ClientSystem', function() {
 
     let messageQueue;
+    let entityManager;
     let client;
     let mockSystem1;
     let mockSystem2;
@@ -21,7 +22,7 @@ describe('ClientSystem', function() {
 
     beforeEach('Creates dummy systems and inits a web client', (done) => {
         messageQueue = new MessageQueue();
-
+        entityManager = new EntityManager({});
         client = new WebClient('/', '');
 
         mockSystem1 = createDummyClientSystem(system_names[0]);
@@ -34,14 +35,14 @@ describe('ClientSystem', function() {
     describe('clientSystem.initialize', () => {
         it('ran messageQueue.addSystem', (done) => {
             let messageQueue_addSystemSpy = sinon.spy(messageQueue, 'addSystem');
-            mockSystem1.initialize(client, false, messageQueue, client);
+            mockSystem1.initialize(client, messageQueue, entityManager, false, client);
             assert.strictEqual(mockSystem1.isNetworked, false);
             sinon.assert.calledOnce(messageQueue_addSystemSpy);
             done();
         });
         it('ran clientSystem.onInit function', (done) => {
             let clientSystem_onInitSpy = sinon.spy(mockSystem1, 'onInit');
-            mockSystem1.initialize(client, true, messageQueue, client);
+            mockSystem1.initialize(client, messageQueue, entityManager, true, client);
             assert.strictEqual(mockSystem1.isNetworked, true);
             sinon.assert.calledOnce(clientSystem_onInitSpy);
             done();
@@ -50,7 +51,7 @@ describe('ClientSystem', function() {
 
     describe('clientSystem.addListenStatePaths', () => {
         beforeEach('initialize system', (done) => {
-            mockSystem1.initialize(client, true, messageQueue, client);
+            mockSystem1.initialize(client, messageQueue, entityManager, true, client);
             done();
         });
         it('calls the webClient addSystemPathHandler once when passing in a string path', (done) => {

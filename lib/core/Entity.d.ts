@@ -3,6 +3,7 @@ export declare abstract class Entity {
     id: string | number;
     type: string | number;
     components: any;
+    componentNames: Array<string | number>;
     methodsFromComponent: {
         [componentName: string]: any;
     };
@@ -10,13 +11,13 @@ export declare abstract class Entity {
         [name: string]: any;
     };
     constructor(id: any, type: any);
-    onMessage(message: any): void;
+    abstract initialize(): void;
     /**
      * Adds the component to an Entity, giving it all the functionality from the methods defined.
      * @param component
      * @returns {Entity}
      */
-    addComponent(component: Component): this;
+    addComponent(component: Component): void;
     protected setAttribute(key: string, value: any): void;
     getComponent(componentName: any): any;
     getAttributes(): {
