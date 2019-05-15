@@ -8,6 +8,7 @@ abstract class System {
     public onRemoteMessage(message: Message) {};
 
     public globals: any;
+    private _serverGameData: any;
 
     protected messageQueue: MessageQueue | ServerMessageQueue;
 
@@ -25,6 +26,16 @@ abstract class System {
             throw 'Systems must be created with a valid name passed into the super constructor call.'
         }
         this.name = name;
+    }
+
+    set serverGameData(newData) {
+        const oldServerData = { ...this._serverGameData };
+        this._serverGameData = newData;
+        this.onServerDataUpdated(newData, oldServerData);
+    }
+
+    get serverGameData() {
+        return this._serverGameData;
     }
 
     protected _onInit() {
@@ -59,6 +70,7 @@ abstract class System {
     public onStop() {};
     public onStart() {};
     public onGameDataUpdate() {};
+    public onServerDataUpdated(newData: any, oldData: any) {}
 }
 
 export default System;

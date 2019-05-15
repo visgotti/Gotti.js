@@ -137,6 +137,22 @@ describe('Client Process with no globals', function() {
             assert.deepStrictEqual(clientProcess.startedSystems[2].globals.foobar, { 'foo': 'bar'});
             done();
         })
+    });
+
+    describe('clientProcess.serverGameData', () => {
+        it('calls the onServerDataUpdated method on started systems', () => {
+            const onServerDataUpdatedSystemSpy1 = sinon.spy(clientProcess.startedSystems[0], 'onServerDataUpdated');
+            clientProcess.serverGameData = { "foo": "bar" };
+
+            sinon.assert.calledWith(onServerDataUpdatedSystemSpy1, { "foo": "bar"}, {} );
+            assert.deepStrictEqual(clientProcess.startedSystems[0].serverGameData, { "foo": "bar"});
+
+            clientProcess.serverGameData = { "foo": "baz" };
+            sinon.assert.calledWith(onServerDataUpdatedSystemSpy1, { "foo": "baz"}, { "foo": "bar" } );
+            assert.deepStrictEqual(clientProcess.startedSystems[0].serverGameData, { "foo": "baz"});
+
+            sinon.assert.callCount(onServerDataUpdatedSystemSpy1, 2);
+        })
     })
 });
 
