@@ -67,14 +67,18 @@ export class Client {
         })
     }
 
-    public async startGame(gameType, fps=60, gottiId?, host?, port?) {
+    public async startGame(gameType, fps=60, serverGameData?, gottiId?, host?, port?) {
         return new Promise((resolve, reject) => {
             const process = this.processes[gameType];
+
             if(!process) {
                 return reject('Invalid gameType');
             }
 
-            console.log('calling start game process');
+            if(serverGameData) {
+                process.serverGameData = serverGameData;
+            }
+
             this.startGameProcess(process, fps);
 
             if(process.isNetworked) {
@@ -85,6 +89,13 @@ export class Client {
                 return resolve();
             }
         });
+    }
+
+    public updateServerGameData(data: any) {
+        if(!this.runningProcess) {
+            throw new Error('No process is running to update server game data.');
+        }
+        this.runningProcess.serverGameData = data;
     }
 
     public stopGame() {

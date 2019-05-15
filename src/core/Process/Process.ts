@@ -21,11 +21,17 @@ export type SystemLookup <T extends string | number>  = {
     [systemName: number]: ClientSystem | ServerSystem
 }
 
+/**
+ * globals - data or objects that can be used from any system
+ * serverGameData - data that should contain information for systems that are dynamically driven ie weaponStatsData
+ */
 export abstract class Process<T> {
     public messageQueue: MessageQueue | ServerMessageQueue;
     public entityManager: EntityManager;
 
     public globals: any;
+
+    private _serverGameData: any;
 
     protected initializerFactory: (process: Process<any>) => (System) => void;
     protected systemInitializer: (System) => void;
@@ -55,6 +61,8 @@ export abstract class Process<T> {
         this.startedSystemsLookup = new Set() as Set<string | number>;
         this.startedSystems = [] as Array<ServerSystem | ClientSystem>;
 
+        this._serverGameData = {};
+
         this.stoppedSystems = new Set() as Set<string | number>;
 
         this.messageQueue = processEnv === PROCESS_ENV.SERVER ? new ServerMessageQueue() : new MessageQueue();
@@ -64,6 +72,13 @@ export abstract class Process<T> {
 
     public addGlobal(key: string, value: any) {
         this.globals[key] = value;
+    }
+
+    set serverGameData(data) {
+        this._serverGameData = data;
+        this.startedSystems.forEach(system => {
+            system.serverGameData = data;
+        });
     }
 
     public addSystem(SystemConstructor: ISystem, ...args: Array<any>) : ServerSystem | ClientSystem {
@@ -142,6 +157,7 @@ export abstract class Process<T> {
                     }
                 }
             }
+            this.systems[systemName].serverGameData = this._serverGameData;
             this.stoppedSystems.delete(systemName);
             this.systems[systemName].onStart();
         }

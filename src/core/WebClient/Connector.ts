@@ -202,8 +202,6 @@ export class Connector {
     }
 
     private buildEndPoint(URL, options: any ={}) {
-        console.log('the url to build from was', URL);
-        console.log('the options were', options);
         const params = [ `gottiId=${this.gottiId}`];
         for (const name in options) {
             if (!options.hasOwnProperty(name)) {
