@@ -5,6 +5,7 @@ declare abstract class System {
     protected initialized: boolean;
     onRemoteMessage(message: Message): void;
     globals: any;
+    private _serverGameData;
     protected messageQueue: MessageQueue | ServerMessageQueue;
     protected dispatchLocal: Function;
     protected dispatchAllLocal: Function;
@@ -14,6 +15,7 @@ declare abstract class System {
     protected removeEntity: Function;
     readonly name: string | number;
     constructor(name: string | number);
+    serverGameData: any;
     protected _onInit(): void;
     addMessageListener(messageName: string | number): void;
     abstract onLocalMessage(message: Message): void;
@@ -27,6 +29,6 @@ declare abstract class System {
     onInit(): void;
     onStop(): void;
     onStart(): void;
-    onGameDataUpdate(): void;
+    onServerDataUpdated(newData: any, oldData: any): void;
 }
 export default System;

@@ -28,7 +28,8 @@ export declare class Client {
     constructor(url: string, token: string);
     addGameProcess(gameType: any, process: ClientProcess): void;
     getConnectorData(gameType: any, options: any): Promise<{}>;
-    startGame(gameType: any, fps?: number, gottiId?: any, host?: any, port?: any): Promise<{}>;
+    startGame(gameType: any, fps?: number, serverGameData?: any, gottiId?: any, host?: any, port?: any): Promise<{}>;
+    updateServerGameData(data: any): void;
     stopGame(): void;
     private startGameProcess;
     private clearGameProcess;

@@ -69,7 +69,6 @@ abstract class System {
     public onInit() {};
     public onStop() {};
     public onStart() {};
-    public onGameDataUpdate() {};
     public onServerDataUpdated(newData: any, oldData: any) {}
 }
 

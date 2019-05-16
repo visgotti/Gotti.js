@@ -51,7 +51,7 @@ export class MessageQueue {
         if(listeningSystemNames) {
             const length = listeningSystemNames.length;
             for(let i = 0; i < length; i++) {
-                this._messages[listeningSystemNames[length]].push(message);
+                this._messages[listeningSystemNames[i]].push(message);
             }
         }
     }
