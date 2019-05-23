@@ -65,15 +65,15 @@ It's mostly used by inheriting from the core base classes and implementing abstr
     initializeEntity(entity) // decorates entity to trigger system functions when adding/removing components with same name as the system
     destroyEntity(entity) // as of now just calls entity.destroy() which if initialized with initializeEntity it will trigger the onEntityRemovedComponent of all components that have a sibling system started.
     
-#Not yet documented - 
- ###Component.ts
- ###Entity.ts
- ###ServerSystem.ts
- ###ClientManager.ts (ServerSystem with extra functionality)
- ###Process.ts - initializing/adding systems to a pre defined process.
- ###Client.ts - Web client used to start processes.
+# Not yet documented - 
+ ### Component.ts
+ ### Entity.ts
+ ### ServerSystem.ts
+ ### ClientManager.ts (ServerSystem with extra functionality)
+ ### Process.ts - initializing/adding systems to a pre defined process.
+ ### Client.ts - Web client used to start processes.
    
- I'm going to work on writing better documentation and possibly a tutorial.. This is just the start of what the framework is capable of and it's meant to be configured with GottiColyseus servers in order to unlock it's real potential of a full stack ECS framework.. it's not as trivial to setup as I want it to be but after I write some documentation I will hopefully be able to make it more approachable. 
+I'm going to work on writing better documentation and possibly a tutorial.. This is just the start of what the framework is capable of and it's meant to be configured with GottiColyseus servers in order to unlock it's real potential of a full stack ECS framework.. it's not as trivial to setup as I want it to be but after I write some documentation I will hopefully be able to make it more approachable. 
 
 
  
