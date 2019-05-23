@@ -9,7 +9,7 @@ Gotti.js is a full stack javascript game engine framework.
 It's mostly used by inheriting from the core base classes and implementing abstract methods.
 
 # SYSTEMS
-### CLIENT INHERITTED ABSTRACT METHODS 
+### CLIENT SYSTEM INHERITTED ABSTRACT METHODS 
     import { ClientSystem } from 'gotti';
     import { SYSTEM, MESSAGES } from './Constants'; // should have a constants file with enumerated types 
 
@@ -27,7 +27,7 @@ It's mostly used by inheriting from the core base classes and implementing abstr
             switch(msg.type) {
                 case MESSAGES.TEST_MESSAGE:
                 	// handle message here
-                	console.log(msg.test);
+                	console.log(msg.data );
                     break;  
             }
         };
@@ -55,7 +55,7 @@ It's mostly used by inheriting from the core base classes and implementing abstr
           // hook that gets called when a component is removed from an
         }
     }
-### CLIENT GOTTI.JS METHODS
+### CLIENT SYSTEM GOTTI.JS METHODS
     dispatchLocal({type, data, to, from?})
     dispatchToServer({type, data, to, from?})
     immediateDispatchToServer ({type, data,to, from?}) // doesnt get queued in game loop from client or on server, use for data you want to be synched as fast as possible, I use it for projectile shooting
