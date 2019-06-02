@@ -6,7 +6,7 @@
   "description": "Full stack scalable javascript and html5 game engine.",
   "scripts": {
     "prepublish": "tsc -d",
-    "test": "nyc mocha --recursive --require ts-node/register --require canvas --require jsdom-global/register 'test/**/*.test.ts' --exit"
+    "test": "nyc mocha --recursive --require ts-node/register --require canvas --require jsdom-global/register \"test/**/*.test.ts\" --exit"
   },
   "nyc": {
     "extension": [
