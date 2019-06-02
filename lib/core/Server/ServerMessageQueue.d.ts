@@ -33,6 +33,7 @@ export declare class ServerMessageQueue {
      */
     private gameSystemHook;
     addGameSystemMessageListener(systemName: SystemName, messageType: string | number): void;
+    removeGameSystemMessageListener(systemName: SystemName, messageType: string | number): boolean;
     removeSystem(systemName: any): void;
     removeAllSystemsAndMessages(): void;
     removeAllMessages(): void;

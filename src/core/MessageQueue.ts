@@ -60,10 +60,47 @@ export class MessageQueue {
         if(!(messageType in this.engineSystemMessageGameSystemHooks)) {
             this.engineSystemMessageGameSystemHooks[messageType] = [];
         }
+        // dont allow duplicate hooks from the same system so do a check
+        // addGameSystemMessageListener shouldnt be called really outside of the onInit
+        // or very infrequently, so the loop shouldnt hinder performance anywhere.
+        let length = this.engineSystemMessageGameSystemHooks[messageType];
+        while(length--) {
+            if(this.engineSystemMessageGameSystemHooks[messageType][length] === systemName) {
+                throw new Error(`Duplicate message: ${messageType} listener for system: ${systemName} `);
+            }
+        }
         this.engineSystemMessageGameSystemHooks[messageType].push(systemName);
     }
 
+    public removeGameSystemMessageListener(systemName: SystemName, messageType: string | number) {
+        if(!(messageType in this.engineSystemMessageGameSystemHooks)) {
+            throw new Error(`Trying to remove a message listener: ${messageType} from system: ${systemName} but the message was never listened to by any system`);
+        } else {
+            let length = this.engineSystemMessageGameSystemHooks[messageType].length;
+            while(length--) {
+                if(this.engineSystemMessageGameSystemHooks[messageType][length] === systemName) {
+                    this.engineSystemMessageGameSystemHooks[messageType].splice(length, 1);
+                    if(this.engineSystemMessageGameSystemHooks[messageType].length === 0) {
+                        delete this.engineSystemMessageGameSystemHooks[messageType];
+                    }
+                    return true;
+                }
+            }
+            // if it gets here it didnt find the system for the message
+            throw new Error(`Trying to remove message: ${messageType} listener from System: ${systemName} but the system never listened to it.`);
+        }
+    }
+
     public removeSystem(systemName) {
+        // remove all message listeners from that system if there are any
+        // its a bit redundant but systems shouldnt be removed/added quickly anyway so doesnt
+        // need to be optimized
+        for(let messageType in this.engineSystemMessageGameSystemHooks) {
+            try { this.removeGameSystemMessageListener(systemName, messageType) // we know this may throw an error if the system wasnt listening to anything so its okay
+            } catch(err){}
+        }
+
+
         this._messages[systemName].length = 0;
         delete this._messages[systemName];
         delete this._systems[systemName];

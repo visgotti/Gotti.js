@@ -18,6 +18,7 @@ declare abstract class System {
     serverGameData: any;
     protected _onInit(): void;
     addMessageListener(messageName: string | number): void;
+    removeMessageListener(messageName: string | number): void;
     abstract onLocalMessage(message: Message): void;
     abstract initialize(...args: any[]): void;
     abstract update(delta: any): void;

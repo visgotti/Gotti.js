@@ -40,6 +40,7 @@ abstract class System {
 
     protected _onInit() {
         this.addMessageListener = this.messageQueue.addGameSystemMessageListener.bind(this.messageQueue, this.name);
+        this.removeMessageListener = this.messageQueue.removeGameSystemMessageListener.bind(this.messageQueue, this.name);
         this.dispatchLocal = this.messageQueue.add.bind(this.messageQueue);
         this.dispatchAllLocal = this.messageQueue.addAll.bind(this.messageQueue);
         this.dispatchLocalInstant = this.messageQueue.instantDispatch.bind(this.messageQueue);
@@ -49,6 +50,10 @@ abstract class System {
 
     public addMessageListener(messageName: string | number) {
         throw new Error('addMessageListener must be called after the systems onInit function is executed');
+    };
+
+    public removeMessageListener(messageName: string | number) {
+        throw new Error('removeMessageListener must be called after the systems onInit function is executed');
     };
 
     // if its a local message on server side it triggers onLocalServerMessage, if its a local
