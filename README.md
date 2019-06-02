@@ -23,7 +23,14 @@ It's mostly used by inheriting from the core base classes and implementing abstr
         	// gotti.js initialized system and decorated with needed methods at this point
         };
     
-        public onLocalMessage(msg) { // { type: number | string , data: any, to: Array<number | string>, from? number | string }
+        /*{ 
+            type: number | string - Message type/code
+            data: any - Payload of message 
+            to: Array<number | string> - system names/codes the message was dispatched to explicitly  
+            from? number | string  - which system name/code it was sent from
+        }*/
+       
+        public onLocalMessage(msg) { 
             switch(msg.type) {
                 case MESSAGES.TEST_MESSAGE:
                 	// handle message here
@@ -40,7 +47,7 @@ It's mostly used by inheriting from the core base classes and implementing abstr
         };
     
         public update(delta) {
-         	// update loop 
+         	// update loop called every tick 
         };
         public onStop() {
           	// called when process stops a system 
@@ -64,6 +71,8 @@ It's mostly used by inheriting from the core base classes and implementing abstr
     dispatchAllLocalInstant // triggers onLocalMessage instantly of all client started systems
     initializeEntity(entity) // decorates entity to trigger system functions when adding/removing components with same name as the system
     destroyEntity(entity) // as of now just calls entity.destroy() which if initialized with initializeEntity it will trigger the onEntityRemovedComponent of all components that have a sibling system started.
+    addMessageListener(messageType) // if a message isnt explicitly dispatched to a system a system can still listen for it, and then handle it normally inside the onLocalMessage TODO: listen for server messages too
+    removeMessageListener(messageType) // removes message listener (gets called if system is stopped too so you dont have to worry about doing this in the onStop abstract method)
     
 # Not yet documented - 
  ### Component.ts
