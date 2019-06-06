@@ -13,6 +13,7 @@ export declare class Client {
     private inGate;
     private stateListeners;
     private systemStateHandlers;
+    private processMessageHandlers;
     id?: string;
     onJoinGame: Signal;
     authenticated: boolean;
@@ -34,6 +35,13 @@ export declare class Client {
     private startGameProcess;
     private clearGameProcess;
     getGateData(): Promise<{}>;
+    /**
+     * can dispatch process messages from within a client system using
+     * this.dispatchProcessMessage()
+     */
+    onProcessMessage(messageName: string, handler: Function): void;
+    removeProcessMessage(messageName: any): void;
+    raiseMessage(messageName: any, payload: any): void;
     /**
      * When you finally join a game, you need to make one last mandatory request
      * which is to find your initial write area. This is the only time where the client
