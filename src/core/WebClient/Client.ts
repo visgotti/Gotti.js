@@ -21,6 +21,8 @@ export class Client {
     };
     } = {};
 
+    private processMessageHandlers: {[message: string]: Function} = {};
+
     public id?: string;
 
     public onJoinGame: Signal = new Signal();
@@ -136,6 +138,24 @@ export class Client {
             });
         })
     }
+
+
+    /**
+     * can dispatch process messages from within a client system using
+     * this.dispatchProcessMessage()
+     */
+    public onProcessMessage(messageName: string, handler: Function) {
+        this.processMessageHandlers[messageName] = handler;
+    }
+
+    public removeProcessMessage(messageName) {
+        delete this.processMessageHandlers[messageName];
+    }
+
+    public raiseMessage(messageName, payload: any) {
+        this.processMessageHandlers[messageName] && this.processMessageHandlers[messageName](payload);
+    }
+
 
     /**
      * When you finally join a game, you need to make one last mandatory request
