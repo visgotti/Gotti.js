@@ -5,6 +5,7 @@ import { EntityManager } from '../EntityManager';
 declare abstract class ServerSystem extends System {
     readonly name: string | number;
     messageQueue: ServerMessageQueue;
+    areaId: string | number;
     constructor(name: string | number);
     initialize(messageQueue: ServerMessageQueue, entityManager: EntityManager, globalSystemVariables: {
         [reference: string]: any;
