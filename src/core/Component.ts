@@ -5,6 +5,7 @@ export abstract class Component {
     public componentMethods: Array<string> = [];
     public name: string | number;
     public setAttribute: Function = () => {};
+    public setAttributeGetter: Function = () => {};
 
     constructor(name: string | number){
         if (typeof(name) === 'undefined')
