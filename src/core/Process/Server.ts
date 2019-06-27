@@ -61,6 +61,7 @@ export class ServerProcess extends Process<ServerProcess> {
         system.dispatchToLocalClients = room.dispatchToLocalClients.bind(room);
         system.dispatchToClient = room.dispatchToClient.bind(room);
         system.dispatchToAreas = room.dispatchToAreas.bind(room);
+        system.areaId = room.areaId;
     }
 
     public startLoop(fps = this.fpsTickRate) {

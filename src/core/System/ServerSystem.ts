@@ -9,6 +9,7 @@ abstract class ServerSystem extends System {
     readonly name: string | number;
 
     public messageQueue: ServerMessageQueue;
+    public areaId: string | number;
 
     constructor(name: string | number) {
         super(name);
