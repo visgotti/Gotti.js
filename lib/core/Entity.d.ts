@@ -10,6 +10,7 @@ export declare abstract class Entity {
     attributes: {
         [name: string]: any;
     };
+    attributeGetters: Array<Array<any>>;
     constructor(id: any, type: any);
     abstract initialize(data?: any): void;
     /**
@@ -19,6 +20,7 @@ export declare abstract class Entity {
      */
     addComponent(component: Component): void;
     protected setAttribute(key: string, value: any): void;
+    protected setAttributeGetter(key: string, value: Function): void;
     getComponent(componentName: any): any;
     getAttributes(): {
         [name: string]: any;

@@ -7,6 +7,7 @@ export abstract class Entity {
     public componentNames: Array<string | number> = [];
     public methodsFromComponent: {[componentName: string]: any };
     public attributes: {[name: string]: any} = {};
+    public attributeGetters: Array<Array<any>> = [];
 
     constructor(id, type){
         // Generate a pseudo random ID
@@ -49,6 +50,7 @@ export abstract class Entity {
 
         // attach setAttribute to component
         component.setAttribute = this.setAttribute.bind(this);
+        component.setAttributeGetter = this.setAttributeGetter.bind(this);
         component.onAdded(this);
         this.componentNames.push(component.name);
     }
@@ -57,11 +59,25 @@ export abstract class Entity {
         this.attributes[key] = value;
     }
 
+    protected setAttributeGetter(key: string, value: Function) {
+        for(let i = 0; i < this.attributeGetters.length; i++) {
+            if(this.attributeGetters[i][0] === key) {
+                throw new Error(`Trying to set multiple attribute getters for the same key ${key}`)
+            }
+        }
+        this.attributeGetters.push([key, value]);
+    }
+
     public getComponent(componentName) {
         return this.components[componentName];
     }
 
     public getAttributes() {
+        let len = this.attributeGetters.length;
+        while(len--) {
+            const array = this.attributeGetters[len];
+            this.attributes[array[0]] = array[1]();
+        }
         return this.attributes;
     }
 

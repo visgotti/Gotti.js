@@ -11,7 +11,7 @@ abstract class ClientSystem extends System {
     protected dispatchToServer: (message: Message) => void;
 
     // raises a message that you can register a handler from a web client using client.onProcessMessage();
-    protected dispatchProccessMessage: (payload: any) => void;
+    protected dispatchProcessMessage: (messageName: string, payload: any) => void;
 
     // sends system to message that gets processed as soon as it is received.
     protected immediateDispatchToServer: (message: Message) => void;
@@ -43,7 +43,7 @@ abstract class ClientSystem extends System {
         this.messageQueue = messageQueue;
         this.messageQueue.addSystem(this);
 
-        this.dispatchProccessMessage = client.raiseMessage.bind(client);
+        this.dispatchProcessMessage = client.raiseMessage.bind(client);
         this.initializeEntity = entityManager.initializeEntity.bind(entityManager);
         this.destroyEntity = entityManager.destroyEntity.bind(entityManager);
 

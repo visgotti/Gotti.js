@@ -5,7 +5,7 @@ declare abstract class ClientSystem extends System {
     readonly name: string | number;
     private client;
     protected dispatchToServer: (message: Message) => void;
-    protected dispatchProccessMessage: (payload: any) => void;
+    protected dispatchProcessMessage: (messageName: string, payload: any) => void;
     protected immediateDispatchToServer: (message: Message) => void;
     isNetworked: boolean;
     constructor(name: string | number);

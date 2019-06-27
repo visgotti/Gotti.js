@@ -48,6 +48,7 @@ export class Client {
         this.hostname = url;
         this.options = {};
         this.token = token;
+        this.connector = new Connector();
     }
 
     public addGameProcess(gameType, process: ClientProcess) {

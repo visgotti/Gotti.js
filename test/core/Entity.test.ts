@@ -25,7 +25,7 @@ export class TestComponent extends Component {
 
 describe('Entity', function() {
     let testEntity;
-    before('Creates entity ', (done) => {
+    beforeEach('Creates entity ', (done) => {
         testEntity = new TestEntity();
         done();
     });
@@ -39,12 +39,14 @@ describe('Entity', function() {
             done();
         });
         it('throws an error if we try adding duplicate components', (done) => {
+            testEntity.addComponent(new TestComponent());
             assert.throws(() => {    testEntity.addComponent(new TestComponent()); });
             done();
         })
     });
     describe('entity.removeComponent', () => {
         it('succesfully removes component and its methods from entity', (done) => {
+            testEntity.addComponent(new TestComponent());
             testEntity.removeComponent('TEST');
             assert.ok(!('testMethod' in testEntity));
             assert.strictEqual(Object.keys(testEntity.methodsFromComponent).length, 0);
@@ -65,5 +67,25 @@ describe('Entity', function() {
             sinon.assert.calledOnce(onRemovedSpy);
             done();
         });
+    });
+    describe('entity.getAttributes()', () => {
+        it('gets attributes from components using setAttribute', (done) => {
+            let component = new TestComponent();
+            testEntity.addComponent(component);
+            component.setAttribute("test_key", "test_value");
+            const attributes = testEntity.getAttributes();
+            assert.deepStrictEqual(attributes, { "test_key": "test_value"});
+            done();
+        });
+        it("gets attributes from components using setAttributeGetter", (done) => {
+            let component = new TestComponent();
+            testEntity.addComponent(component);
+            component.setAttributeGetter("test_key", () => {
+                return "test_value"
+            });
+            const attributes = testEntity.getAttributes();
+            assert.deepStrictEqual(attributes, { "test_key": "test_value"});
+            done();
+        })
     })
 });
