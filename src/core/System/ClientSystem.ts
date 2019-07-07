@@ -58,7 +58,10 @@ abstract class ClientSystem extends System {
 
     public addNetworkedFunctions(component: Component): void {
         if(this.isNetworked) { // make sure client system is networked before binding
-            component.dispatchRemote = this.dispatchToServer.bind(this);
+            component.sendRemote = this.dispatchToServer.bind(this);
+            component.sendRemoteImmediate = this.immediateDispatchToServer.bind(this);
+            //client side components dont broadcast so just execute empty func if called
+            component.broadcastRemote = (message) => {};
         }
     }
 
