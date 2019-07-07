@@ -8,7 +8,15 @@ export abstract class Component {
     public setAttributeGetter: Function = () => {};
     public isNetworked: boolean;
 
-    public dispatchRemote: Function = (message) => {};
+    // sends message in timed send interval
+    public sendRemote: Function = (message) => {};
+    // sends message as soon as function is called
+    //TODO: no immediate from server to client yet will work same as sendRemote on server
+    public sendRemoteImmediate: Function = (message) => {};
+
+    // only works for server components
+    public broadcastRemote: Function = (message) => {};
+
     public onRemote: Function = (message) => {};
     public entityId: string | number;
 

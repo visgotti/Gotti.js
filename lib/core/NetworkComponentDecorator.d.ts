@@ -1,2 +1,2 @@
 import { Component } from "./Component";
-export declare function NetworkComponent(component: Component): Component;
+export declare const NetworkComponent: (component: Component) => Component;

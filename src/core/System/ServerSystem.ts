@@ -40,7 +40,9 @@ abstract class ServerSystem extends System {
     }
 
     public addNetworkedFunctions(component: Component): void {
-        component.dispatchRemote = this.dispatchToClient.bind(this, component.entityId);
+        component.sendRemote = this.dispatchToClient.bind(this, component.entityId);
+        component.sendRemoteImmediate = this.dispatchToClient.bind(this, component.entityId);
+        component.broadcastRemote = this.dispatchToLocalClients.bind(this)
     }
 
     public abstract onAreaMessage(areaId, message);
