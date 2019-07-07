@@ -1,4 +1,5 @@
 import System from "./System";
+import { Component } from "../Component";
 import { Message } from '../MessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { EntityManager } from '../EntityManager';
@@ -10,6 +11,7 @@ declare abstract class ServerSystem extends System {
     initialize(messageQueue: ServerMessageQueue, entityManager: EntityManager, globalSystemVariables: {
         [reference: string]: any;
     }): void;
+    addNetworkedFunctions(component: Component): void;
     abstract onAreaMessage(areaId: any, message: any): any;
     abstract onClientMessage(client: any, message: any): any;
     dispatchToAreas(message: Message, toAreaIds?: Array<string>): void;

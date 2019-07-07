@@ -1,7 +1,7 @@
 import { Message, MessageQueue } from '../MessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { Entity } from '../Entity';
-
+import { Component } from '../Component';
 abstract class System {
     protected initialized: boolean;
 
@@ -63,6 +63,8 @@ abstract class System {
 
     public abstract update (delta) : void;
     public abstract clear() : void;
+
+    protected abstract addNetworkedFunctions(component: Component) : void;
 
     //overrided in ServerSystem and ClientSystem initialize function
     public initializeEntity(entity:Entity, data?: any) {};

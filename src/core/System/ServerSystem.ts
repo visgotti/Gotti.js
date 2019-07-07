@@ -1,4 +1,5 @@
 import System from "./System";
+import { Component } from "../Component";
 import { Client as WebClient } from '../WebClient/Client';
 import { Message } from '../MessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
@@ -36,6 +37,10 @@ abstract class ServerSystem extends System {
         this.initialized = true;
 
         this._onInit();
+    }
+
+    public addNetworkedFunctions(component: Component): void {
+        component.dispatchRemote = this.dispatchToClient.bind(this, component.entityId);
     }
 
     public abstract onAreaMessage(areaId, message);
