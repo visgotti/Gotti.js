@@ -1,6 +1,13 @@
 import { Message, MessageQueue } from '../MessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { Entity } from '../Entity';
+import { Mixin } from '../SystemMixin';
+import ClientSystem from "./ClientSystem";
+import ServerSystem from "./ServerSystem";
+
+interface IMixin {
+    new (...args: Array<any>): Mixin
+}
 
 abstract class System {
     protected initialized: boolean;
@@ -8,10 +15,13 @@ abstract class System {
     public onRemoteMessage(message: Message) {};
 
     public globals: any;
+
+    public mixins: Array<any>;
+
     private _serverGameData: any;
 
+    protected props: any = {};
     protected messageQueue: MessageQueue | ServerMessageQueue;
-
     protected dispatchLocal: Function;
     protected dispatchAllLocal: Function;
     protected dispatchLocalInstant: Function;
@@ -45,7 +55,72 @@ abstract class System {
         this.dispatchAllLocal = this.messageQueue.addAll.bind(this.messageQueue);
         this.dispatchLocalInstant = this.messageQueue.instantDispatch.bind(this.messageQueue);
         this.dispatchAllLocalInstant = this.messageQueue.instantDispatchAll.bind(this.messageQueue);
+
+        if(this.mixins && this.mixins.length > 0) {
+            let mixinLength = this.mixins.length;
+            for(let i = 0; i < mixinLength; i++) {
+                this.applyMixin(this.mixins[i]);
+            }
+        }
+
         this.onInit();
+    }
+
+    private applyAfterMixinHook(systemPropertyName, hookFunction) {
+        if(!this[systemPropertyName]){
+            throw new Error(`Applying hook to a non existent system method, ${systemPropertyName}`)
+        }
+        this[systemPropertyName] = (...args) => {
+            this[systemPropertyName](...args);
+            hookFunction.call(this, ...args);
+        }
+    }
+    private applyBeforeMixinHook(systemPropertyName, hookFunction) {
+        if(!this[systemPropertyName]){
+            throw new Error(`Applying hook to a non existent system method, ${systemPropertyName}`)
+        }
+        this[systemPropertyName] = (...args) => {
+            hookFunction.call(this, ...args);
+            this[systemPropertyName](...args)
+        }
+    }
+
+    private applyMixin(klass: IMixin) {
+        console.log('the mixin Proto was', Object.getOwnPropertyNames(klass.prototype));
+        let mixin = klass.prototype;
+        Object.getOwnPropertyNames(mixin).forEach(mixinProp => {
+            let systemPropertyName;
+            if(mixinProp.substr(0, 5) === "after") {
+                systemPropertyName = mixinProp.substr(5, mixinProp.length);
+                systemPropertyName = systemPropertyName.charAt(0).toLowerCase() + systemPropertyName.slice(1);
+                this.applyAfterMixinHook(systemPropertyName, mixin[mixinProp]);
+            } else if(mixinProp.substr(0, 6) === "before") {
+                systemPropertyName = mixinProp.substr(6, mixinProp.length);
+                systemPropertyName = systemPropertyName.charAt(0).toLowerCase() + systemPropertyName.slice(1);
+                this.applyBeforeMixinHook(systemPropertyName, mixin[mixinProp]);
+            } else if(mixinProp === 'methods') {
+                Object.keys(mixin.methods).forEach(methodName => {
+                    if(this[methodName]) {
+                        throw new Error(`Attempting to apply duplicate method name from mixin: ${methodName} on system: ${this.name}`)
+                    }
+                    this[methodName] = mixin.methods[methodName].bind(this);
+                })
+            } else if(mixinProp === 'props') {
+                Object.keys(mixin.props).forEach(propName => {
+                    if(this.props[propName]) {
+                        throw new Error(`Attempting to apply duplicate prop from mixin: ${propName} on system: ${this.name}`)
+                    }
+                    if(Array.isArray(mixin.props[propName])) {
+                        this.props[propName] = [ ...mixin.props[propName]]
+                    }
+                    else if(typeof mixin.props === 'object') {
+                        this.props[propName] = { ...mixin.props[propName]}
+                    } else {
+                        this.props[propName] = mixin.props[propName]
+                    }
+                })
+            }
+        });
     }
 
     public addMessageListener(messageName: string | number) {
