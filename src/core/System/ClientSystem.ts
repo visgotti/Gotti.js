@@ -2,6 +2,7 @@ import System from "./System";
 import { Client as WebClient } from '../WebClient/Client';
 import { Message, MessageQueue } from '../MessageQueue';
 import {EntityManager} from "../EntityManager";
+import { Component } from "../Component";
 
 abstract class ClientSystem extends System {
     readonly name: string | number;
@@ -54,6 +55,12 @@ abstract class ClientSystem extends System {
     }
 
     public abstract onServerMessage(message: Message);
+
+    public addNetworkedFunctions(component: Component): void {
+        if(this.isNetworked) { // make sure client system is networked before binding
+            component.dispatchRemote = this.dispatchToServer.bind(this);
+        }
+    }
 
     public addListenStatePaths(path: string | Array<string>) {
         if (Array.isArray(path)) {

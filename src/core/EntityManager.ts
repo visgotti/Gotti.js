@@ -26,6 +26,9 @@ export class EntityManager {
             const system = this.systemMap[component.name];
             if(system) {
                 system.onEntityAddedComponent(entity);
+                if(component.isNetworked) {
+                    system.addNetworkedFunctions(component);
+                }
             }
         };
 

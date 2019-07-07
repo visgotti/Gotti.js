@@ -1,6 +1,7 @@
 import System from "./System";
 import { Message, MessageQueue } from '../MessageQueue';
 import { EntityManager } from "../EntityManager";
+import { Component } from "../Component";
 declare abstract class ClientSystem extends System {
     readonly name: string | number;
     private client;
@@ -22,6 +23,7 @@ declare abstract class ClientSystem extends System {
         [reference: string]: any;
     }): void;
     abstract onServerMessage(message: Message): any;
+    addNetworkedFunctions(component: Component): void;
     addListenStatePaths(path: string | Array<string>): void;
     onStateUpdate(pathString: any, pathData: any, change: any, value: any): void;
     onAreaWrite?(areaId: string | number, isInitial: boolean, options?: any): void;

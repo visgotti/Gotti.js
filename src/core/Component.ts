@@ -6,8 +6,14 @@ export abstract class Component {
     public name: string | number;
     public setAttribute: Function = () => {};
     public setAttributeGetter: Function = () => {};
+    public isNetworked: boolean;
 
-    constructor(name: string | number){
+    public dispatchRemote: Function = (message) => {};
+    public onRemote: Function = (message) => {};
+    public entityId: string | number;
+
+    constructor(name: string | number, isNetworked=false){
+        this.isNetworked = isNetworked;
         if (typeof(name) === 'undefined')
         {
             throw "Component: Invalid component name";
@@ -16,6 +22,7 @@ export abstract class Component {
         this.componentMethods = Object.getOwnPropertyNames(parentObj).filter(p => {
             return p !== "constructor" && p !== "prototype" && p !== 'onAdded' && p !== 'onRemoved'
         });
+        this.entityId = parentObj.id;
         this.name = name;
     }
     public onAdded(entity: Entity) {};
