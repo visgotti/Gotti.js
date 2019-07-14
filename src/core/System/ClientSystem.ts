@@ -1,6 +1,6 @@
 import System from "./System";
 import { Client as WebClient } from '../WebClient/Client';
-import { Message, MessageQueue } from '../MessageQueue';
+import { Message, ClientMessageQueue } from '../ClientMessageQueue';
 import {EntityManager} from "../EntityManager";
 import { Component } from "../Component";
 
@@ -33,7 +33,7 @@ abstract class ClientSystem extends System {
      * @param messageQueue
      * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
-    public initialize(client, messageQueue: MessageQueue, entityManager: EntityManager, isNetworked, globalSystemVariables: {[reference: string]: any})
+    public initialize(client, messageQueue: ClientMessageQueue, entityManager: EntityManager, isNetworked, globalSystemVariables: {[reference: string]: any})
     {
         this.isNetworked = isNetworked;
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {
@@ -51,10 +51,21 @@ abstract class ClientSystem extends System {
         this.dispatchToServer = client.sendSystemMessage.bind(client);
         this.immediateDispatchToServer = client.sendImmediateSystemMessage.bind(client);
         this.initialized = true;
+
+        this.dispatchToPeer = client.connector.sendPeerMessage.bind(client.connector);
+        this.dispatchToAllPeers = client.connector.sendAllPeersMessage.bind(client.connector);
+        this.dispatchToPeers = client.connector.sendPeersMessage.bind(client.connector);
+        this.addPeer = client.connector.startPeerConnection.bind(client.connector);
+        this.removePeer = client.connector.stopPeerConnection.bind(client.connector);
+        this.getPeers = () => {
+            return Object.keys(client.connector.peerConnections)
+        }
         this._onInit();
     }
 
     public abstract onServerMessage(message: Message);
+
+    public abstract onPeerMessage(peerId: number | string, message: Message);
 
     public addNetworkedFunctions(component: Component): void {
         if(this.isNetworked) { // make sure client system is networked before binding
@@ -82,6 +93,14 @@ abstract class ClientSystem extends System {
     public onAreaWrite?(areaId: string | number, isInitial: boolean, options?): void;
     public onAreaListen?(areaId: string | number, options?): void;
     public onRemoveAreaListen?(areaId: string | number, options?): void;
+
+    // overrided
+    public dispatchToPeer(toPeerId: string | number, message: Message) {};
+    public dispatchToPeers(toPeerIds: string | number, message: Message) {};
+    public dispatchToAllPeers(message: Message) {};
+    public addPeer(peerIndex: number) {};
+    public removePeer(peerIndex: number) {};
+    public getPeers(): Array<any> { return [] };
 }
 
 export default ClientSystem;

@@ -1,7 +1,9 @@
+/// <reference types="node" />
 import Clock = require('@gamestdio/clock');
 import { Signal } from '@gamestdio/signals';
 import { StateContainer } from '@gamestdio/state-listener';
 import { Connection } from './Connection';
+import { PeerConnection } from "./PeerConnection";
 import { ClientProcess } from '../Process/Client';
 export declare enum AreaStatus {
     NOT_IN = 0,
@@ -25,6 +27,9 @@ export declare class Connector {
     clock: Clock;
     remoteClock: Clock;
     onJoinConnector: Signal;
+    onEnabledP2P: Signal;
+    onNewP2PConnection: Signal;
+    onRemovedP2PConnection: Signal;
     onWrite: Signal;
     onListen: Signal;
     onRemoveListen: Signal;
@@ -36,11 +41,19 @@ export declare class Connector {
     private process;
     private areas;
     connection: Connection;
+    peerConnections: {
+        [playerIndex: number]: PeerConnection;
+    };
     private _previousState;
     constructor();
-    connect(gottiId: string, connectorURL: any, process: ClientProcess, options?: any): Promise<{}>;
+    connect(gottiId: string, connectorURL: any, process: ClientProcess, options?: any): Promise<unknown>;
+    startPeerConnection(peerIndex: any, signalData: any): void;
+    stopPeerConnection(peerIndex: any): void;
     joinInitialArea(options?: any): void;
     leave(): void;
+    sendPeerMessage(peerIndex: any, message: any): void;
+    sendAllPeersMessage(message: any): void;
+    sendPeersMessage(message: any, peerIndexes: any): void;
     sendSystemMessage(message: any): void;
     sendImmediateSystemMessage(message: any): void;
     readonly hasJoined: boolean;

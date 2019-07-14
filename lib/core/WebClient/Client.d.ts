@@ -1,7 +1,7 @@
 import { Signal } from '@gamestdio/signals';
 import { Connector } from './Connector';
 import ClientSystem from './../System/ClientSystem';
-import { Message } from './../MessageQueue';
+import { Message } from '../ClientMessageQueue';
 export declare type JoinOptions = {
     retryTimes: number;
     requestId: number;
@@ -26,15 +26,16 @@ export declare class Client {
     protected requestId: number;
     protected hostname: string;
     private token;
+    readonly isWebRTCSupported: boolean;
     constructor(url: string, token: string);
     addGameProcess(gameType: any, process: ClientProcess): void;
-    getConnectorData(gameType: any, options: any): Promise<{}>;
-    startGame(gameType: any, fps?: number, serverGameData?: any, gottiId?: any, host?: any, port?: any): Promise<{}>;
+    getConnectorData(gameType: any, options: any): Promise<unknown>;
+    startGame(gameType: any, fps?: number, serverGameData?: any, gottiId?: any, host?: any, port?: any): Promise<unknown>;
     updateServerGameData(data: any): void;
     stopGame(): void;
     private startGameProcess;
     private clearGameProcess;
-    getGateData(): Promise<{}>;
+    getGateData(): Promise<unknown>;
     /**
      * can dispatch process messages from within a client system using
      * this.dispatchProcessMessage()

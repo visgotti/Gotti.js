@@ -33,6 +33,7 @@ export abstract class Component {
         this.entityId = parentObj.id;
         this.name = name;
     }
+
     public onAdded(entity: Entity) {};
     public onRemoved(entity: Entity) {};
 };

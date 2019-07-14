@@ -2,7 +2,7 @@ import { Process, PROCESS_ENV } from './Process';
 import { Client as WebClient } from '../WebClient/Client';
 import ClientSystem from '../System/ClientSystem';
 import { setGameLoop, clearGameLoop } from '../ClientGameLoop';
-import { MessageQueue } from '../MessageQueue';
+import { ClientMessageQueue } from '../ClientMessageQueue';
 interface ClientProcessOptions {
     fpsTickRate?: number,
 }
@@ -12,7 +12,7 @@ export class ClientProcess extends Process<ClientProcess> {
 
     private fpsTickRate: number = 60;
 
-    public messageQueue: MessageQueue;
+    public messageQueue: ClientMessageQueue;
 
     public isNetworked: boolean = false;
 

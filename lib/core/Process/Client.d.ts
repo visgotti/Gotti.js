@@ -1,13 +1,13 @@
 import { Process } from './Process';
 import { Client as WebClient } from '../WebClient/Client';
-import { MessageQueue } from '../MessageQueue';
+import { ClientMessageQueue } from '../ClientMessageQueue';
 interface ClientProcessOptions {
     fpsTickRate?: number;
 }
 export declare class ClientProcess extends Process<ClientProcess> {
     client: WebClient;
     private fpsTickRate;
-    messageQueue: MessageQueue;
+    messageQueue: ClientMessageQueue;
     isNetworked: boolean;
     constructor(client: WebClient, isNetworked: boolean, globals?: any, options?: ClientProcessOptions);
     /**

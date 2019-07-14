@@ -1,5 +1,5 @@
 import System from "./System";
-import { Message, MessageQueue } from '../MessageQueue';
+import { Message, ClientMessageQueue } from '../ClientMessageQueue';
 import { EntityManager } from "../EntityManager";
 import { Component } from "../Component";
 declare abstract class ClientSystem extends System {
@@ -19,15 +19,22 @@ declare abstract class ClientSystem extends System {
      * @param messageQueue
      * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
-    initialize(client: any, messageQueue: MessageQueue, entityManager: EntityManager, isNetworked: any, globalSystemVariables: {
+    initialize(client: any, messageQueue: ClientMessageQueue, entityManager: EntityManager, isNetworked: any, globalSystemVariables: {
         [reference: string]: any;
     }): void;
     abstract onServerMessage(message: Message): any;
+    abstract onPeerMessage(peerId: number | string, message: Message): any;
     addNetworkedFunctions(component: Component): void;
     addListenStatePaths(path: string | Array<string>): void;
     onStateUpdate(pathString: any, pathData: any, change: any, value: any): void;
     onAreaWrite?(areaId: string | number, isInitial: boolean, options?: any): void;
     onAreaListen?(areaId: string | number, options?: any): void;
     onRemoveAreaListen?(areaId: string | number, options?: any): void;
+    dispatchToPeer(toPeerId: string | number, message: Message): void;
+    dispatchToPeers(toPeerIds: string | number, message: Message): void;
+    dispatchToAllPeers(message: Message): void;
+    addPeer(peerIndex: number): void;
+    removePeer(peerIndex: number): void;
+    getPeers(): Array<any>;
 }
 export default ClientSystem;

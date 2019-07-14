@@ -4,11 +4,18 @@ import * as msgpack from './msgpack';
 import { Protocol } from './Protocol';
 import { Connector } from './Connector';
 import ClientSystem from './../System/ClientSystem';
-import { MessageQueue, Message } from './../MessageQueue';
+import { ClientMessageQueue, Message } from '../ClientMessageQueue';
 
 export type JoinOptions = { retryTimes: number, requestId: number } & any;
 
 import { ClientProcess } from '../Process/Client';
+
+interface Window {
+    RTCPeerConnection?: any;
+    navigator?: any;
+}
+declare var window: Window;
+
 
 export class Client {
     private runningProcess: ClientProcess = null;
@@ -32,7 +39,7 @@ export class Client {
     public gameTypes: Array<string> = [];
     public gameRegions: Array<string> = [];
 
-    private _messageQueue: MessageQueue = null;
+    private _messageQueue: ClientMessageQueue = null;
 
     private joinedGame = false;
 
@@ -44,11 +51,15 @@ export class Client {
 
     private token: string;
 
+    readonly isWebRTCSupported: boolean;
+
     constructor(url: string, token: string) {
         this.hostname = url;
         this.options = {};
         this.token = token;
         this.connector = new Connector();
+
+        this.isWebRTCSupported = window.RTCPeerConnection && window.navigator.userAgent.indexOf("Edge") > -1;
     }
 
     public addGameProcess(gameType, process: ClientProcess) {
@@ -185,7 +196,7 @@ export class Client {
 
     private async joinConnector(gottiId, connectorURL) {
 
-        const options = await this.connector.connect(gottiId, connectorURL, this.runningProcess);
+        const options = await this.connector.connect(gottiId, connectorURL, this.runningProcess, { options: { isWebRTCSupported: this.isWebRTCSupported } });
 
         this.joinedGame = true;
 

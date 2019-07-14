@@ -1,5 +1,5 @@
 
-import { MessageQueue } from '../../src/core/MessageQueue';
+import { ClientMessageQueue } from '../../src/core/ClientMessageQueue';
 
 import { createDummyClientSystem, system_names, Messages } from '../mocks';
 
@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import * as mocha from 'mocha';
 import * as sinon from 'sinon';
 
-describe('MessageQueue', function() {
+describe('ClientMessageQueue', function() {
 
     let messageQueue;
 
@@ -25,7 +25,7 @@ describe('MessageQueue', function() {
 
 
     before('Creates a message queue, mock systems with spies, and validates mock messages.', (done) => {
-        messageQueue = new MessageQueue();
+        messageQueue = new ClientMessageQueue();
 
         mockSystem1 = createDummyClientSystem(system_names[0]);
         mockSystem2 = createDummyClientSystem(system_names[1]);

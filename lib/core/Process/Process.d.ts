@@ -3,7 +3,7 @@ export declare enum PROCESS_ENV {
     CLIENT = 0,
     SERVER = 1
 }
-import { MessageQueue } from '../MessageQueue';
+import { ClientMessageQueue } from '../ClientMessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import ClientSystem from '../System/ClientSystem';
 import ServerSystem from '../System/ServerSystem';
@@ -19,7 +19,7 @@ export declare type SystemLookup<T extends string | number> = {
  * serverGameData - data that should contain information for systems that are dynamically driven ie weaponStatsData
  */
 export declare abstract class Process<T> {
-    messageQueue: MessageQueue | ServerMessageQueue;
+    messageQueue: ClientMessageQueue | ServerMessageQueue;
     entityManager: EntityManager;
     globals: any;
     private _serverGameData;

@@ -37,7 +37,7 @@ export class TestSystem extends System {
     update(delta): void {}
     addNetworkedFunctions(component: Component): void {
         if(component.isNetworked) {
-            component.dispatchRemote = (message) => {};
+            component.sendRemote = (message) => {};
         }
     }
 }

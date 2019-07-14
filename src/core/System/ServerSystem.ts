@@ -1,7 +1,7 @@
 import System from "./System";
 import { Component } from "../Component";
 import { Client as WebClient } from '../WebClient/Client';
-import { Message } from '../MessageQueue';
+import { Message } from '../ClientMessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { EntityManager } from '../EntityManager';
 import { Entity } from '../Entity';

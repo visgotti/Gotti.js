@@ -1,16 +1,16 @@
 import Clock = require('@gamestdio/clock');
-import { Signal } from '@gamestdio/signals';
+import {Signal} from '@gamestdio/signals';
 
-import { StateContainer } from '@gamestdio/state-listener';
+import {StateContainer} from '@gamestdio/state-listener';
 import * as fossilDelta from 'fossil-delta';
 import * as msgpack from './msgpack';
 
-import { Connection } from './Connection';
-import { Protocol, StateProtocol } from './Protocol';
+import {Connection} from './Connection';
+import {Protocol, StateProtocol} from './Protocol';
 
-import { MessageQueue } from '../MessageQueue';
+import {PeerConnection} from "./PeerConnection";
 
-import { ClientProcess } from '../Process/Client';
+import {ClientProcess} from '../Process/Client';
 
 export enum AreaStatus {
     NOT_IN = 0,
@@ -44,6 +44,9 @@ export class Connector {
 
     // Public signals
     public onJoinConnector: Signal = new Signal();
+    public onEnabledP2P: Signal = new Signal();
+    public onNewP2PConnection: Signal = new Signal();
+    public onRemovedP2PConnection: Signal = new Signal();
 
     public onWrite: Signal = new Signal();
     public onListen: Signal = new Signal();
@@ -59,6 +62,9 @@ export class Connector {
     private areas: {[areaId: string]:  Area} = {};
 
     public connection: Connection;
+
+    public peerConnections: {[ playerIndex: number]: PeerConnection } = {};
+
     private _previousState: any;
 
     constructor() {}
@@ -70,7 +76,7 @@ export class Connector {
         this.messageQueue = process.messageQueue;
 
         let url = this.buildEndPoint(connectorURL, options);
-        this.connection = new Connection(url);
+        this.connection = new Connection(url, options.isWebRTCSupported);
         this.connection.onopen = () => {};
         this.connection.onmessage = this.onMessageCallback.bind(this);
         return new Promise((resolve, reject) => {
@@ -78,6 +84,36 @@ export class Connector {
                 return resolve({ areaData, joinData });
             })
         })
+    }
+
+    public startPeerConnection(peerIndex, signalData) {
+        let peerConnection = this.peerConnections[peerIndex];
+        if(!(peerConnection)) {
+            this.peerConnections[peerIndex] = new PeerConnection(this.connection, peerIndex);
+            peerConnection = this.peerConnections[peerIndex];
+            peerConnection.startSignaling();
+
+            peerConnection.onDataChannelOpen(() => {
+                peerConnection.onPeerMessage((peerIndex, data) => {
+                    this.messageQueue.dispatchPeerMessage(peerIndex, data[0], data[1], data[2], data[3])
+                })
+            });
+            peerConnection.onDataChannelClose(() => {
+                peerConnection.destroy();
+                delete this.peerConnections[peerIndex];
+            })
+        }
+        if(signalData.sdp) {
+            peerConnection.handleSDPSignal(signalData.sdp)
+        } else if (signalData.candidate) {
+            peerConnection.handleIceCandidateSignal(signalData.sdp)
+        }
+    }
+
+    public stopPeerConnection(peerIndex) {
+        const peerConnection = this.peerConnections[peerIndex]
+        peerConnection.destroy();
+        delete this.peerConnections[peerIndex];
     }
 
     public joinInitialArea(options?) {
@@ -98,6 +134,36 @@ export class Connector {
 
         } else {
             this.onLeave.dispatch();
+        }
+    }
+
+    public sendPeerMessage(peerIndex, message: any) {
+        if(this.peerConnections[peerIndex] && this.peerConnections[peerIndex].opened) {
+            this.peerConnections[peerIndex].send(message.type, message.data, message.to, message.from)
+        } else {// there was no peer connection so we relay it through our servers
+            this.connection.send([ Protocol.PEER_REMOTE_SYSTEM_MESSAGE, peerIndex, message.type, message.data, message.to, message.from]);
+        }
+    }
+
+    public sendAllPeersMessage(message: any) {
+        this.sendPeersMessage(message, Object.keys(this.peerConnections))
+    }
+
+    public sendPeersMessage(message: any, peerIndexes: any) {
+        let peerMessagePayload = [Protocol.PEER_REMOTE_SYSTEM_MESSAGE];
+        peerIndexes.forEach(peerIndex => {
+            if(this.peerConnections[peerIndex] && this.peerConnections[peerIndex].opened) {
+                this.peerConnections[peerIndex].send(message.type, message.data, message.to, message.from)
+            } else {// there was no peer connection so we relay it through our servers
+                peerMessagePayload = [...peerMessagePayload, peerIndex, message.type, message.data, message.to, message.from];
+            }
+        });
+        if(peerMessagePayload.length > 1) {
+            if(peerMessagePayload.length > 6) {
+                // multiple peers change the protocol for multiple peers
+                peerMessagePayload[0] = Protocol.PEERS_REMOTE_SYSTEM_MESSAGE
+            }
+            this.connection.send(peerMessagePayload);
         }
     }
 
@@ -148,7 +214,6 @@ export class Connector {
                 this.areas[message[1]].status = AreaStatus.LISTEN;
             }
             this.areas[message[1]].status = AreaStatus.WRITE;
-
             this.process.dispatchOnAreaWrite(message[1], this.writeAreaId === null, message[2]);
             this.writeAreaId = message[1];
         } else if (code === Protocol.ADD_CLIENT_AREA_LISTEN) {
@@ -173,7 +238,16 @@ export class Connector {
             } else if (updateType === StateProtocol.PATCH) {
                 this.patch(message[1], message[2]);
             }
-        }// else if (code === Protocol.LEAVE_ROOM) {
+        } else if (code === Protocol.SIGNAL_SUCCESS) {
+            // peerIndex, signalData
+            console.log('Connector, GOT SIGNAL SUCCESS FROM PLAYER', message[1], 'the signalData was', message[2]);
+            this.startPeerConnection(message[1], message[2]);
+        }else if (code === Protocol.PEER_REMOTE_SYSTEM_MESSAGE) { // in case were using a dispatch peer message without a p2p connection itll go through the web server
+            // [protocol, fromPeerPlayerIndex, msgType, msgData, msgTo, msgFrom]
+            this.messageQueue.dispatchPeerMessage(message[1], { type: message[2], data: message[3], to: message[4], from: message[5]})
+        }
+
+        // else if (code === Protocol.LEAVE_ROOM) {
          //   this.leave();
         //  }
     }

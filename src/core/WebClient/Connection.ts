@@ -1,12 +1,14 @@
 import WebSocketClient from '@gamestdio/websocket';
 import * as msgpack from './msgpack';
+import {Protocol} from './Protocol';
 
 export class Connection extends WebSocketClient {
 
     private _enqueuedCalls: any[] = [];
-
-    constructor(url, autoConnect: boolean = true) {
-        super(url, undefined, { connect: autoConnect });
+    private isWebRTCSupported: boolean;
+    constructor(url, isWebRTCSupported, autoConnect: boolean = true) {
+        super(url, undefined, { connect: autoConnect  });
+        this.isWebRTCSupported = isWebRTCSupported;
     }
 
     public onOpenCallback(event) {
@@ -14,11 +16,13 @@ export class Connection extends WebSocketClient {
 
         this.binaryType = 'arraybuffer';
 
+        if(this.isWebRTCSupported) {
+            this.send(Protocol.CLIENT_WEB_RTC_ENABLED)
+        }
         if (this._enqueuedCalls.length > 0) {
             for (const [method, args] of this._enqueuedCalls) {
                 this[method].apply(this, args);
             }
-
             // clear enqueued calls.
             this._enqueuedCalls = [];
         }
@@ -33,5 +37,4 @@ export class Connection extends WebSocketClient {
             this._enqueuedCalls.push(['send', [data]]);
         }
     }
-
 }

@@ -1,4 +1,4 @@
-import { Message, MessageQueue } from '../MessageQueue';
+import { Message, ClientMessageQueue } from '../ClientMessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { Entity } from '../Entity';
 import { Component } from '../Component';
@@ -7,7 +7,7 @@ declare abstract class System {
     onRemoteMessage(message: Message): void;
     globals: any;
     private _serverGameData;
-    protected messageQueue: MessageQueue | ServerMessageQueue;
+    protected messageQueue: ClientMessageQueue | ServerMessageQueue;
     protected dispatchLocal: Function;
     protected dispatchAllLocal: Function;
     protected dispatchLocalInstant: Function;
