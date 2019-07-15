@@ -26,8 +26,7 @@ export declare class Client {
     protected requestId: number;
     protected hostname: string;
     private token;
-    readonly isWebRTCSupported: boolean;
-    constructor(url: string, token: string);
+    constructor(url: string, token: string, disableWebRTC?: boolean);
     addGameProcess(gameType: any, process: ClientProcess): void;
     getConnectorData(gameType: any, options: any): Promise<unknown>;
     startGame(gameType: any, fps?: number, serverGameData?: any, gottiId?: any, host?: any, port?: any): Promise<unknown>;

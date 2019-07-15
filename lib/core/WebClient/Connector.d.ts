@@ -47,7 +47,7 @@ export declare class Connector {
     private _previousState;
     constructor();
     connect(gottiId: string, connectorURL: any, process: ClientProcess, options?: any): Promise<unknown>;
-    startPeerConnection(peerIndex: any, signalData: any): void;
+    startPeerConnection(peerIndex: any, signalData?: any): void;
     stopPeerConnection(peerIndex: any): void;
     joinInitialArea(options?: any): void;
     leave(): void;

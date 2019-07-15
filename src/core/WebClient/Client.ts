@@ -51,15 +51,14 @@ export class Client {
 
     private token: string;
 
-    readonly isWebRTCSupported: boolean;
-
-    constructor(url: string, token: string) {
+    constructor(url: string, token: string, disableWebRTC=false) {
         this.hostname = url;
-        this.options = {};
+
+        this.options = {
+            isWebRTCSupported: window.RTCPeerConnection && window.navigator.userAgent.indexOf("Edge") < 0 && !disableWebRTC
+        };
         this.token = token;
         this.connector = new Connector();
-
-        this.isWebRTCSupported = window.RTCPeerConnection && window.navigator.userAgent.indexOf("Edge") > -1;
     }
 
     public addGameProcess(gameType, process: ClientProcess) {
@@ -196,7 +195,7 @@ export class Client {
 
     private async joinConnector(gottiId, connectorURL) {
 
-        const options = await this.connector.connect(gottiId, connectorURL, this.runningProcess, { options: { isWebRTCSupported: this.isWebRTCSupported } });
+        const options = await this.connector.connect(gottiId, connectorURL, this.runningProcess,   this.options);
 
         this.joinedGame = true;
 

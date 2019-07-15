@@ -21,7 +21,7 @@ export declare class PeerConnection {
     handleIceCandidateSignal(candidate: any): void;
     private logError;
     startSignaling(): void;
-    onDataChannel(): void;
+    private onDataChannel;
     onDataChannelOpen(handler: any): void;
     private _onDataChannelOpen;
     private _onDataChannelOpenHandler;
@@ -29,7 +29,7 @@ export declare class PeerConnection {
     private _onDataChannelCloseHandler;
     private _onDataChannelClose;
     send(type: string | number, data: any, to: Array<string>, from?: string | number): void;
-    onPeerMessage(cb: any): void;
+    onPeerMessage(handler: any): void;
     private _onPeerMessageHandler;
     private _onPeerMessage;
     destroy(): void;

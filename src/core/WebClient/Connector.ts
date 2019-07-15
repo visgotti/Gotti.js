@@ -76,7 +76,7 @@ export class Connector {
         this.messageQueue = process.messageQueue;
 
         let url = this.buildEndPoint(connectorURL, options);
-        this.connection = new Connection(url, options.isWebRTCSupported);
+        this.connection = new Connection(url);
         this.connection.onopen = () => {};
         this.connection.onmessage = this.onMessageCallback.bind(this);
         return new Promise((resolve, reject) => {
@@ -86,7 +86,7 @@ export class Connector {
         })
     }
 
-    public startPeerConnection(peerIndex, signalData) {
+    public startPeerConnection(peerIndex, signalData: any={}) {
         let peerConnection = this.peerConnections[peerIndex];
         if(!(peerConnection)) {
             this.peerConnections[peerIndex] = new PeerConnection(this.connection, peerIndex);
@@ -106,12 +106,12 @@ export class Connector {
         if(signalData.sdp) {
             peerConnection.handleSDPSignal(signalData.sdp)
         } else if (signalData.candidate) {
-            peerConnection.handleIceCandidateSignal(signalData.sdp)
+            peerConnection.handleIceCandidateSignal(signalData.candidate)
         }
     }
 
     public stopPeerConnection(peerIndex) {
-        const peerConnection = this.peerConnections[peerIndex]
+        const peerConnection = this.peerConnections[peerIndex];
         peerConnection.destroy();
         delete this.peerConnections[peerIndex];
     }
@@ -244,7 +244,11 @@ export class Connector {
             this.startPeerConnection(message[1], message[2]);
         }else if (code === Protocol.PEER_REMOTE_SYSTEM_MESSAGE) { // in case were using a dispatch peer message without a p2p connection itll go through the web server
             // [protocol, fromPeerPlayerIndex, msgType, msgData, msgTo, msgFrom]
-            this.messageQueue.dispatchPeerMessage(message[1], { type: message[2], data: message[3], to: message[4], from: message[5]})
+            console.log('from peer was', message[1]);
+            console.log('msg type was', message[2]);
+            console.log('data was', message[3]);
+            console.log('to was', message[4]);
+            this.messageQueue.dispatchPeerMessage(message[1], message[2],  message[3], message[4], message[5])
         }
 
         // else if (code === Protocol.LEAVE_ROOM) {
