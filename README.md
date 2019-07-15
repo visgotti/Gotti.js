@@ -1,10 +1,29 @@
+ ## THIS IS A HEAVILY IN-DEVELOPMENT BRANCH
+ ### I'm currently Implementing WebRTC within my systems to allow for peer to peer gameplay.
+
+From a client system you will be able to do 
+
+    // pings relay server to notify the player you want to connect
+    this.addPeer(playerId) 
+    
+    // will send via WebRTC if available, or it will send via connector > relay (keeps track of which connector server a client is on) > connector > client  
+    this.dispatchToPeer(playerId, message) 
+    
+the goal is to allow for this api to work regardless if there's an existing 
+WebRTC connection, the backup will normally relay the message across servers from your computer to theirs.
+
+This will allow you to design your application without worrying about if the players browser
+supports WebRTC, your app will still work exactly the same either way (higher ping though). You'll just need to take into account performance
+and optimization for worse case scenario and everyone must relay or just use the regular connector > area for business logic. It's also my goal to try and make areas smart enough to not send redundant data if theres a peer connection between
+players but that's an issue for another day.
+
+ 
  Node.js <-> HTML5 Networked ECS framework
- 
- Client System Usage 
- 
+  
  # Gotti.js
 
 Gotti.js is a full stack javascript game engine framework.
+
 
 It's mostly used by inheriting from the core base classes and implementing abstract methods.
 
