@@ -7,6 +7,12 @@ export declare type JoinOptions = {
     requestId: number;
 } & any;
 import { ClientProcess } from '../Process/Client';
+export declare type ServerGameOptions = {
+    host: string;
+    port: number;
+    gottiId: string;
+    playerIndex: number;
+};
 export declare class Client {
     private runningProcess;
     private processes;
@@ -29,7 +35,8 @@ export declare class Client {
     constructor(url: string, token: string, disableWebRTC?: boolean);
     addGameProcess(gameType: any, process: ClientProcess): void;
     getConnectorData(gameType: any, options: any): Promise<unknown>;
-    startGame(gameType: any, fps?: number, serverGameData?: any, gottiId?: any, host?: any, port?: any): Promise<unknown>;
+    private validateServerOpts;
+    startGame(gameType: any, fps?: number, serverGameOpts?: ServerGameOptions, serverGameData?: any): Promise<unknown>;
     updateServerGameData(data: any): void;
     stopGame(): void;
     private startGameProcess;

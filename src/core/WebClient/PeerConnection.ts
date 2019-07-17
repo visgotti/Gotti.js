@@ -31,14 +31,21 @@ export class PeerConnection {
     private rtcPeerConnection;
     private dataChannel;
     private peerPlayerIndex: number = null;
+    private clientPlayerIndex: number = null;
+    readonly channelId: string;
 
     private registeredMessage: boolean = false;
     public opened: boolean = false;
     private connection: Connection;
 
-    constructor(connection: Connection, peerPlayerIndex: number, configOptions?: PeerConnectionConfig) {
+    constructor(connection: Connection, clientPlayerIndex, peerPlayerIndex: number, configOptions?: PeerConnectionConfig) {
         this.peerPlayerIndex = peerPlayerIndex;
+        this.clientPlayerIndex = clientPlayerIndex;
 
+        // create unique channel id for players by ordering by index then joining
+        this.channelId = [peerPlayerIndex, clientPlayerIndex].sort().join('-');
+
+        console.warn('the channel id was', this.channelId);
         this.connection = connection;
 
         if(configOptions) {
@@ -82,13 +89,15 @@ export class PeerConnection {
 
     public startSignaling() {
         this.rtcPeerConnection = new webkitRTCPeerConnection(this.config.rtcPeerConfig);
-        this.dataChannel = this.rtcPeerConnection.createDataChannel(`${this.peerPlayerIndex}_data`, this.config.dataChannelOptions);
+        this.dataChannel = this.rtcPeerConnection.createDataChannel(this.channelId, this.config.dataChannelOptions);
         this.rtcPeerConnection.ondatachannel = this.onDataChannel.bind(this);
         this.dataChannel.onopen = this._onDataChannelOpen.bind(this);
+        this.dataChannel.onmessage = this._onPeerMessage.bind(this);
         this.dataChannel.onclose = this._onDataChannelClose.bind(this);
 
         this.rtcPeerConnection.onicecandidate = (event) => {
             if(event.candidate) {
+                console.warn('onicecandidate:', event.candidate,'sending to,', this.peerPlayerIndex);
                 this.connection.send([Protocol.SIGNAL_REQUEST, this.peerPlayerIndex, { 'candidate': event.candidate }])
             }
         }
@@ -98,10 +107,17 @@ export class PeerConnection {
         }
     }
 
-    private onDataChannel() {
+    private onDataChannel(event) {
+        this.dataChannel = event.channel;
         if (this.dataChannel.readyState === 'open') {
             this._onDataChannelOpen();
+        } else if (this.dataChannel.readyState === 'close') {
+            this._onDataChannelClose();
         }
+
+        this.dataChannel.onopen = this._onDataChannelOpen.bind(this);
+        this.dataChannel.onmessage = this._onPeerMessage.bind(this);
+        this.dataChannel.onclose = this._onDataChannelClose.bind(this);
     }
 
     // functions for registering and calling data channel open
@@ -109,11 +125,8 @@ export class PeerConnection {
         this._onDataChannelOpenHandler = handler;
     }
     private _onDataChannelOpen() {
-        if(!this.opened) {
-            this.opened = true;
-            this._onDataChannelOpenHandler();
-            this.dataChannel.onmessage = this._onPeerMessage.bind(this);
-        }
+        this.opened = true;
+        this._onDataChannelOpenHandler();
     }
     private _onDataChannelOpenHandler(){};
     /////////////////////////////////////////////////////////////
@@ -126,31 +139,29 @@ export class PeerConnection {
     private _onDataChannelCloseHandler(){};
 
     private _onDataChannelClose() {
-        if(this.opened) {
-            this.opened = false;
-            this._onDataChannelCloseHandler()
-        }
+        console.log('CLOSE');
+        this.opened = false;
+        this._onDataChannelCloseHandler()
     };
     /////////////////////////////////////////////////////////////
 
     public send(type: string | number, data: any, to: Array<string>, from?: string | number) {
+        console.warn('attempting to send peer message', this.dataChannel);
         this.dataChannel.send(msgpack.encode([type, data, to, from]));
     }
 
     public onPeerMessage(handler) {
-        if(!this.registeredMessage) {
-            this.registeredMessage = true;
-            this._onPeerMessageHandler = handler;
-        }
+        this._onPeerMessageHandler = handler;
     }
 
-    private _onPeerMessageHandler(peerId, message) {};
+    private _onPeerMessageHandler(message) {};
 
     private _onPeerMessage(event) {
         const decoded = msgpack.decode(event.data);
-        console.log('got the peer message through web rtc!!!!!!!', decoded);
-        this._onPeerMessageHandler(this.peerPlayerIndex, decoded);
+        console.error('got the peer message through web rtc!!!!!!!', decoded);
+        this._onPeerMessageHandler(decoded);
     }
+
 
     public destroy() {
     }

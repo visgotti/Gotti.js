@@ -18,7 +18,7 @@ and optimization for worse case scenario and everyone must relay or just use the
 players but that's an issue for another day.
 
  
- Node.js <-> HTML5 Networked ECS framework
+Node.js <-> HTML5 Networked ECS framework
   
  # Gotti.js
 

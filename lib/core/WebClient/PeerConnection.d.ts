@@ -12,10 +12,12 @@ export declare class PeerConnection {
     private rtcPeerConnection;
     private dataChannel;
     private peerPlayerIndex;
+    private clientPlayerIndex;
+    readonly channelId: string;
     private registeredMessage;
     opened: boolean;
     private connection;
-    constructor(connection: Connection, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
+    constructor(connection: Connection, clientPlayerIndex: any, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
     sendSignal(desc: any): void;
     handleSDPSignal(sdp: any): void;
     handleIceCandidateSignal(candidate: any): void;

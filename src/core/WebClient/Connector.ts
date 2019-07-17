@@ -25,6 +25,11 @@ export interface Area {
     options: any,
 }
 
+export type ConnectorAuth = {
+    gottiId: string,
+    playerIndex: number,
+    connectorURL: string,
+}
 
 export class Connector {
     private messageQueue: any; //todo type
@@ -35,6 +40,7 @@ export class Connector {
     private writeAreaId: string | number = null;
 
     public gottiId: string;
+    public playerIndex: number;
     public sessionId: string;
 
     public options: any;
@@ -69,8 +75,11 @@ export class Connector {
 
     constructor() {}
 
-    public async connect(gottiId: string, connectorURL, process: ClientProcess, options: any = {}) {
+    public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, options: any = {}) {
+        const { gottiId, playerIndex, connectorURL } = connectorAuth;
+
         this.gottiId = gottiId;
+        this.playerIndex = playerIndex;
 
         this.process = process;
         this.messageQueue = process.messageQueue;
@@ -89,16 +98,25 @@ export class Connector {
     public startPeerConnection(peerIndex, signalData: any={}) {
         let peerConnection = this.peerConnections[peerIndex];
         if(!(peerConnection)) {
-            this.peerConnections[peerIndex] = new PeerConnection(this.connection, peerIndex);
+
+            console.warn('initializing our peer connection with the peer index as:', peerIndex);
+
+            this.peerConnections[peerIndex] = new PeerConnection(this.connection, this.playerIndex, peerIndex);
             peerConnection = this.peerConnections[peerIndex];
             peerConnection.startSignaling();
 
+
             peerConnection.onDataChannelOpen(() => {
-                peerConnection.onPeerMessage((peerIndex, data) => {
+                console.warn('ON DATA CHANNEL OPENE');
+                peerConnection.onPeerMessage((data) => {
+                    console.error(' running our peer message handler');
                     this.messageQueue.dispatchPeerMessage(peerIndex, data[0], data[1], data[2], data[3])
                 })
             });
+
+
             peerConnection.onDataChannelClose(() => {
+                console.warn('ON CLOSE the peer connections were', peerConnection.opened);
                 peerConnection.destroy();
                 delete this.peerConnections[peerIndex];
             })
@@ -138,6 +156,7 @@ export class Connector {
     }
 
     public sendPeerMessage(peerIndex, message: any) {
+        console.log('the peer connections was', this.peerConnections[peerIndex]);
         if(this.peerConnections[peerIndex] && this.peerConnections[peerIndex].opened) {
             this.peerConnections[peerIndex].send(message.type, message.data, message.to, message.from)
         } else {// there was no peer connection so we relay it through our servers
@@ -239,15 +258,15 @@ export class Connector {
                 this.patch(message[1], message[2]);
             }
         } else if (code === Protocol.SIGNAL_SUCCESS) {
-            // peerIndex, signalData
-            console.log('Connector, GOT SIGNAL SUCCESS FROM PLAYER', message[1], 'the signalData was', message[2]);
+            // fromPeerIndex, signalData
+            console.warn('Connector, GOT SIGNAL SUCCESS FROM PLAYER', message[1], 'the signalData was', message[2]);
             this.startPeerConnection(message[1], message[2]);
         }else if (code === Protocol.PEER_REMOTE_SYSTEM_MESSAGE) { // in case were using a dispatch peer message without a p2p connection itll go through the web server
             // [protocol, fromPeerPlayerIndex, msgType, msgData, msgTo, msgFrom]
-            console.log('from peer was', message[1]);
-            console.log('msg type was', message[2]);
-            console.log('data was', message[3]);
-            console.log('to was', message[4]);
+            console.warn('from peer was', message[1]);
+            console.warn('msg type was', message[2]);
+            console.warn('data was', message[3]);
+            console.warn('to was', message[4]);
             this.messageQueue.dispatchPeerMessage(message[1], message[2],  message[3], message[4], message[5])
         }
 
