@@ -38,6 +38,8 @@ export class PeerConnection {
     public opened: boolean = false;
     private connection: Connection;
 
+    private sentIce = false;
+
     constructor(connection: Connection, clientPlayerIndex, peerPlayerIndex: number, configOptions?: PeerConnectionConfig) {
         this.peerPlayerIndex = peerPlayerIndex;
         this.clientPlayerIndex = clientPlayerIndex;
@@ -96,8 +98,9 @@ export class PeerConnection {
         this.dataChannel.onclose = this._onDataChannelClose.bind(this);
 
         this.rtcPeerConnection.onicecandidate = (event) => {
-            if(event.candidate) {
+            if(event.candidate && !this.sentIce) {
                 console.warn('onicecandidate:', event.candidate,'sending to,', this.peerPlayerIndex);
+                this.sentIce = true;
                 this.connection.send([Protocol.SIGNAL_REQUEST, this.peerPlayerIndex, { 'candidate': event.candidate }])
             }
         }

@@ -17,6 +17,7 @@ export declare class PeerConnection {
     private registeredMessage;
     opened: boolean;
     private connection;
+    private sentIce;
     constructor(connection: Connection, clientPlayerIndex: any, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
     sendSignal(desc: any): void;
     handleSDPSignal(sdp: any): void;
