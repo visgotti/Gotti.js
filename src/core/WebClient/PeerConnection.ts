@@ -89,14 +89,29 @@ export class PeerConnection {
         throw new Error(err);
     }
 
+    
+    private onSendChannelOpen() {
+      console.log('Send channel is open');
+        /*
+      // look into this property sendChannel.bufferedAmountLowThreshold = lowWaterMark;
+      sendChannel.addEventListener('bufferedamountlow', (e) => {
+        console.log('BufferedAmountLow event:', e);
+        sendData();
+      });
+      */
+    }
+    // reference this https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/datatransfer/js/main.js
     public startSignaling() {
+        // this.localConnection = ''
         this.rtcPeerConnection = new webkitRTCPeerConnection(this.config.rtcPeerConfig);
+        // this.sendChannel = this.localConnection.createDataChannel'
         this.dataChannel = this.rtcPeerConnection.createDataChannel(this.channelId, this.config.dataChannelOptions);
+        // add send channel open and close listeners
         this.rtcPeerConnection.ondatachannel = this.onDataChannel.bind(this);
         this.dataChannel.onopen = this._onDataChannelOpen.bind(this);
         this.dataChannel.onmessage = this._onPeerMessage.bind(this);
         this.dataChannel.onclose = this._onDataChannelClose.bind(this);
-
+        // localconnection onicecandidate
         this.rtcPeerConnection.onicecandidate = (event) => {
             if(event.candidate && !this.sentIce) {
                 console.warn('onicecandidate:', event.candidate,'sending to,', this.peerPlayerIndex);
@@ -109,6 +124,13 @@ export class PeerConnection {
             this.rtcPeerConnection.createOffer(this.sendSignal.bind(this), this.logError.bind(this));
         }
     }
+/*
+    private maybeReset() {
+      if (this.localConnection === null && this.remoteConnection === null) {
+          
+      }
+    }*/
+
 
     private onDataChannel(event) {
         this.dataChannel = event.channel;
