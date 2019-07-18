@@ -1,5 +1,5 @@
 import { Connection } from "./Connection";
-
+import { ClientProcess } from "../Process/Client";
 import { Protocol } from './Protocol';
 
 export enum SocketType {
@@ -40,10 +40,12 @@ export class PeerConnection {
 
     private sentIce = false;
 
-    constructor(connection: Connection, clientPlayerIndex, peerPlayerIndex: number, configOptions?: PeerConnectionConfig) {
+    private process: ClientProcess;
+
+    constructor(connection: Connection, process: ClientProcess, clientPlayerIndex, peerPlayerIndex: number, configOptions?: PeerConnectionConfig) {
         this.peerPlayerIndex = peerPlayerIndex;
         this.clientPlayerIndex = clientPlayerIndex;
-
+        this.process = process;
         // create unique channel id for players by ordering by index then joining
         this.channelId = [peerPlayerIndex, clientPlayerIndex].sort().join('-');
 

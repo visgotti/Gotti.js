@@ -19,6 +19,9 @@ abstract class ClientSystem extends System {
 
     public isNetworked: boolean = false;
 
+    private pendingPeers: Array<number>;
+    private connectedPeers: Array<number>;
+
     constructor(name: string | number) {
         super(name);
         this.onRemoteMessage = this.onServerMessage.bind(this);
@@ -94,11 +97,31 @@ abstract class ClientSystem extends System {
     public onAreaListen?(areaId: string | number, options?): void;
     public onRemoveAreaListen?(areaId: string | number, options?): void;
 
-    // overrided
+    /**
+     * called when a peer makes a request from a system
+     * @param peerId - player index of the client youre connecting to.
+     * @param options - options sent over from the initial addPeer call.
+     * returns anything truthy for a succesfully connection or false to deny the connection
+     * the options will get passed to onPeerConnectionAccepted for the requester.
+     */
+    public onPeerConnectionRequested?(peerId, options?) : any | false;
+    public onPeerConnectionAccepted?(peerId, options?) : void;
+    public onPeerConnectionRejected?(peerId) : void;
+
+    public requestPeer(peerId: number, options?: any) {
+        if(!this.onPeerConnectionAccepted || !this.onPeerConnectionRequested) {
+            throw new Error(`Cannot add a peer from the system ${this.name} it does not implement both onPeerConnectionAccepted and onPeerConnectionRequested`);
+        }
+        this.addPeer(peerId, this.name, options);
+    }
+
+    public onPeerConnectionClosed?(peerId): void;
+
+    // overrided in process decoration
     public dispatchToPeer(toPeerId: string | number, message: Message) {};
     public dispatchToPeers(toPeerIds: string | number, message: Message) {};
     public dispatchToAllPeers(message: Message) {};
-    public addPeer(peerIndex: number) {};
+    public addPeer(peerIndex: number, systemName: string | number, options?) {};
     public removePeer(peerIndex: number) {};
     public getPeers(): Array<any> { return [] };
 }

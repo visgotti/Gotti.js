@@ -16,6 +16,8 @@ export class ClientProcess extends Process<ClientProcess> {
 
     public isNetworked: boolean = false;
 
+    public peers: Array<number> = [];
+
     constructor(client: WebClient, isNetworked: boolean, globals?: any, options?: ClientProcessOptions) {
         super(PROCESS_ENV.CLIENT, globals);
 
@@ -74,6 +76,49 @@ export class ClientProcess extends Process<ClientProcess> {
         for(let i = 0; i < length; i++) {
             const system = this.systems[this.systemNames[i]] as ClientSystem;
             system.onRemoveAreaListen && system.onRemoveAreaListen(areaId, options)
+        }
+    }
+
+    /**
+     * when we receive a peer connection request if the system doesnt have a onPeerConnectionRequested handler
+     * we automatically return false and fail the peer connection
+     * @param peerId
+     * @param systemName
+     * @param options
+     */
+    public onPeerConnectionRequested(peerId, systemName: number | string, options?: any) {
+        const system = this.systems[systemName] as ClientSystem;
+        if(system && system.onPeerConnectionRequested) {
+            return system.onPeerConnectionRequested(peerId, options)
+        }
+        return false;
+    }
+
+    /**
+     * If the peer returns their onPeerConnectionRequested with anything truthy it will
+     * be passed in to the systems onPeerConnectionAccepted as the options
+     * @param peerId
+     * @param systemName
+     * @param options
+     */
+    public onPeerConnectionAccepted(peerId, systemName: number | string, options?: any) {
+        const system = this.systems[systemName] as ClientSystem;
+        if(system && system.onPeerConnectionAccepted) {
+            system.onPeerConnectionAccepted(peerId, options)
+        }
+    }
+
+    /**
+     * If the peer returns their onPeerConnectionRequested with anything falsey or
+     * it was just not possible to begin with, this will get triggered.
+     * @param peerId
+     * @param systemName
+     * @param options
+     */
+    public onPeerConnectionRejected(peerId, systemName: number | string) {
+        const system = this.systems[systemName] as ClientSystem;
+        if(system && system.onPeerConnectionRejected) {
+            system.onPeerConnectionRejected(peerId)
         }
     }
 

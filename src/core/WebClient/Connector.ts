@@ -101,7 +101,7 @@ export class Connector {
 
             console.warn('initializing our peer connection with the peer index as:', peerIndex);
 
-            this.peerConnections[peerIndex] = new PeerConnection(this.connection, this.playerIndex, peerIndex);
+            this.peerConnections[peerIndex] = new PeerConnection(this.connection, this.process, this.playerIndex, peerIndex);
             peerConnection = this.peerConnections[peerIndex];
             peerConnection.startSignaling();
 
