@@ -9,6 +9,7 @@ export declare class ClientProcess extends Process<ClientProcess> {
     private fpsTickRate;
     messageQueue: ClientMessageQueue;
     isNetworked: boolean;
+    peers: Array<number>;
     constructor(client: WebClient, isNetworked: boolean, globals?: any, options?: ClientProcessOptions);
     /**
      *
@@ -25,11 +26,47 @@ export declare class ClientProcess extends Process<ClientProcess> {
      */
     dispatchOnAreaListen(areaId: any, state: any, options?: any): void;
     /**
+     * If a connected peer disconnects we trigger this function and then all of the systems
+     * @param peerId
+     * @param options
+     */
+    onPeerDisconnection(peerId: any, options?: any): void;
+    /**
+     * When a peer connection is accepted and the peers are connected
+     * @param peerId
+     * @param options
+     */
+    onPeerConnection(peerId: any, options?: any): void;
+    /**
      *
      * @param areaId - id of area that the client is now writing to.
      * @param options - options sent back from area when the client was removed.
      */
     dispatchOnRemoveAreaListen(areaId: any, options?: any): void;
+    /**
+     * when we receive a peer connection request if the system doesnt have a onPeerConnectionRequested handler
+     * we automatically return false and fail the peer connection
+     * @param peerId
+     * @param systemName
+     * @param options
+     */
+    onPeerConnectionRequested(peerId: any, systemName: number | string, options?: any): any;
+    /**
+     * If the peer returns their onPeerConnectionRequested with anything truthy it will
+     * be passed in to the systems onPeerConnectionAccepted as the options
+     * @param peerId
+     * @param systemName
+     * @param options
+     */
+    onPeerConnectionAccepted(peerId: any, systemName: number | string, options?: any): void;
+    /**
+     * If the peer returns their onPeerConnectionRequested with anything falsey or
+     * it was just not possible to begin with, this will get triggered.
+     * @param peerId
+     * @param systemName
+     * @param options
+     */
+    onPeerConnectionRejected(peerId: any, systemName: number | string): void;
     startLoop(fps?: number): void;
     stopLoop(): void;
     startSystem(systemName: any): void;

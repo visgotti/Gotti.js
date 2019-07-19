@@ -21,6 +21,7 @@ export declare type ConnectorAuth = {
     playerIndex: number;
     connectorURL: string;
 };
+declare type SystemName = string | number;
 export declare class Connector {
     private messageQueue;
     private id;
@@ -50,11 +51,16 @@ export declare class Connector {
     peerConnections: {
         [playerIndex: number]: PeerConnection;
     };
+    pendingPeerConnections: {
+        [playerIndex: number]: SystemName;
+    };
+    readonly connectedPeerIndexes: Array<number>;
     private _previousState;
     constructor();
     connect(connectorAuth: ConnectorAuth, process: ClientProcess, options?: any): Promise<unknown>;
-    startPeerConnection(peerIndex: any, signalData?: any): void;
-    stopPeerConnection(peerIndex: any): void;
+    handleRemoteOffer(peerIndex: any, systemName: any, signalData: any, options: any): void;
+    startPeerConnection(peerIndex: any, systemName: any, signalData?: any, options?: any): void;
+    stopPeerConnection(peerIndex: any, options?: any): void;
     joinInitialArea(options?: any): void;
     leave(): void;
     sendPeerMessage(peerIndex: any, message: any): void;
@@ -70,3 +76,4 @@ export declare class Connector {
     protected patch(areaId: any, binaryPatch: any): void;
     private buildEndPoint;
 }
+export {};

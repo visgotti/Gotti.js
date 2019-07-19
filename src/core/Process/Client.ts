@@ -67,6 +67,33 @@ export class ClientProcess extends Process<ClientProcess> {
     }
 
     /**
+     * If a connected peer disconnects we trigger this function and then all of the systems
+     * @param peerId
+     * @param options
+     */
+    public onPeerDisconnection(peerId, options?: any) {
+        const length = this.systemNames.length;
+        for(let i = 0; i < length; i++) {
+            const system = this.systems[this.systemNames[i]] as ClientSystem;
+            system.onPeerDisconnection && system.onPeerDisconnection(peerId, options)
+        }
+    }
+
+    /**
+     * When a peer connection is accepted and the peers are connected
+     * @param peerId
+     * @param options
+     */
+    public onPeerConnection(peerId, options?: any) {
+        const length = this.systemNames.length;
+        for(let i = 0; i < length; i++) {
+            const system = this.systems[this.systemNames[i]] as ClientSystem;
+            system.onPeerConnection && system.onPeerConnection(peerId, options)
+        }
+    }
+
+
+    /**
      *
      * @param areaId - id of area that the client is now writing to.
      * @param options - options sent back from area when the client was removed.

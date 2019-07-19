@@ -8,6 +8,8 @@ abstract class ClientSystem extends System {
     readonly name: string | number;
     private client: WebClient;
 
+    private _peers: Array<any>;
+
     // sends system message to server to be processed on next game tick
     protected dispatchToServer: (message: Message) => void;
 
@@ -19,13 +21,11 @@ abstract class ClientSystem extends System {
 
     public isNetworked: boolean = false;
 
-    private pendingPeers: Array<number>;
-    private connectedPeers: Array<number>;
-
     constructor(name: string | number) {
         super(name);
         this.onRemoteMessage = this.onServerMessage.bind(this);
     }
+
 
     /**
      * Initialize gets called by the process and
@@ -42,6 +42,8 @@ abstract class ClientSystem extends System {
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {
             this.globals = globalSystemVariables;
         }
+
+        this._peers = client.connector.connectedPeerIndexes;
 
         this.client = client;
         this.messageQueue = messageQueue;
@@ -60,9 +62,6 @@ abstract class ClientSystem extends System {
         this.dispatchToPeers = client.connector.sendPeersMessage.bind(client.connector);
         this.addPeer = client.connector.startPeerConnection.bind(client.connector);
         this.removePeer = client.connector.stopPeerConnection.bind(client.connector);
-        this.getPeers = () => {
-            return Object.keys(client.connector.peerConnections)
-        }
         this._onInit();
     }
 
@@ -97,6 +96,10 @@ abstract class ClientSystem extends System {
     public onAreaListen?(areaId: string | number, options?): void;
     public onRemoveAreaListen?(areaId: string | number, options?): void;
 
+    public onPeerConnection?(peerId, options?) : any | false;
+    public onPeerDisconnection?(peerId, options?) : void;
+
+
     /**
      * called when a peer makes a request from a system
      * @param peerId - player index of the client youre connecting to.
@@ -114,8 +117,26 @@ abstract class ClientSystem extends System {
         }
         this.addPeer(peerId, this.name, options);
     }
+    // channels combined of p2p up to 1 guy hosting 2 others
+
+    // connector server removes 2 others from area server.. start instance of area server on pc?????????????????????
+
+
+    // player 1    - area 1  - client 1 - player 3       player 4 > { x: y } player 5
+    // player 2    -                    - player 4
+
+
+
 
     public onPeerConnectionClosed?(peerId): void;
+
+    get peers() {
+        return this._peers;
+    }
+
+    public isPeer(playerIndex) {
+        return this._peers.indexOf(playerIndex) > -1;
+    }
 
     // overrided in process decoration
     public dispatchToPeer(toPeerId: string | number, message: Message) {};
@@ -123,7 +144,6 @@ abstract class ClientSystem extends System {
     public dispatchToAllPeers(message: Message) {};
     public addPeer(peerIndex: number, systemName: string | number, options?) {};
     public removePeer(peerIndex: number) {};
-    public getPeers(): Array<any> { return [] };
 }
 
 export default ClientSystem;

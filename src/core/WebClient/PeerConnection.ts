@@ -12,7 +12,6 @@ export interface PeerConnectionConfig {
 }
 
 import * as msgpack from './msgpack';
-import {messageType} from "tns-core-modules/trace";
 
 export class PeerConnection {
     private config: any = {

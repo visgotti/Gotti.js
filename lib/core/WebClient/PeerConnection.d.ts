@@ -1,4 +1,5 @@
 import { Connection } from "./Connection";
+import { ClientProcess } from "../Process/Client";
 export declare enum SocketType {
     UDP = 0,
     TCP = 1
@@ -18,7 +19,8 @@ export declare class PeerConnection {
     opened: boolean;
     private connection;
     private sentIce;
-    constructor(connection: Connection, clientPlayerIndex: any, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
+    private process;
+    constructor(connection: Connection, process: ClientProcess, clientPlayerIndex: any, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
     sendSignal(desc: any): void;
     handleSDPSignal(sdp: any): void;
     handleIceCandidateSignal(candidate: any): void;

@@ -31,6 +31,8 @@ export type ConnectorAuth = {
     connectorURL: string,
 }
 
+type SystemName = string | number;
+
 export class Connector {
     private messageQueue: any; //todo type
     private id: string;
@@ -70,6 +72,10 @@ export class Connector {
     public connection: Connection;
 
     public peerConnections: {[ playerIndex: number]: PeerConnection } = {};
+    // adds the system name that requested the peer connection so we call the correct handlers inside the system when we receive a response
+    public pendingPeerConnections: {[playerIndex: number]: SystemName } = {};
+
+    readonly connectedPeerIndexes: Array<number>;
 
     private _previousState: any;
 
@@ -95,18 +101,34 @@ export class Connector {
         })
     }
 
-    public startPeerConnection(peerIndex, signalData: any={}) {
+    public handleRemoteOffer(peerIndex,  systemName, signalData, options) {
+        if(!this.peerConnections[peerIndex]) {
+            const response = this.process.onPeerConnectionRequested(peerIndex, systemName, options);
+            if(response) {
+                this.connection.send([ Protocol.SIGNAL_FAILED, peerIndex]);
+                return;
+            }
+            this.startPeerConnection(peerIndex, systemName, signalData, options);
+        }
+    }
+
+    public startPeerConnection(peerIndex, systemName, signalData: any={}, options?) {
         let peerConnection = this.peerConnections[peerIndex];
         if(!(peerConnection)) {
-
             console.warn('initializing our peer connection with the peer index as:', peerIndex);
-
+            this.pendingPeerConnections[peerIndex] = systemName;
             this.peerConnections[peerIndex] = new PeerConnection(this.connection, this.process, this.playerIndex, peerIndex);
+
             peerConnection = this.peerConnections[peerIndex];
             peerConnection.startSignaling();
 
-
             peerConnection.onDataChannelOpen(() => {
+                if(!this.connectedPeerIndexes.includes(peerIndex)) {
+                    this.connectedPeerIndexes.push(peerIndex);
+                    this.process.onPeerConnection(peerIndex, options);
+                }
+                delete this.pendingPeerConnections[peerIndex];
+
                 console.warn('ON DATA CHANNEL OPENE');
                 peerConnection.onPeerMessage((data) => {
                     console.error(' running our peer message handler');
@@ -114,11 +136,10 @@ export class Connector {
                 })
             });
 
-
             peerConnection.onDataChannelClose(() => {
                 console.warn('ON CLOSE the peer connections were', peerConnection.opened);
                 peerConnection.destroy();
-                delete this.peerConnections[peerIndex];
+                this.stopPeerConnection(peerIndex);
             })
         }
         if(signalData.sdp) {
@@ -128,10 +149,28 @@ export class Connector {
         }
     }
 
-    public stopPeerConnection(peerIndex) {
+    public stopPeerConnection(peerIndex, options?) {
         const peerConnection = this.peerConnections[peerIndex];
-        peerConnection.destroy();
+
         delete this.peerConnections[peerIndex];
+
+        const pendingPeerConnectionSystem = this.pendingPeerConnections[peerIndex];
+
+        if(pendingPeerConnectionSystem !== null && pendingPeerConnectionSystem !== undefined) {
+            this.process.onPeerConnectionRejected(peerIndex, pendingPeerConnectionSystem)
+            delete this.pendingPeerConnections[peerIndex];
+        } else {
+            const inArrayIndex = this.connectedPeerIndexes.indexOf(peerIndex);
+            if(inArrayIndex > -1) {
+                // player was connected, trigger onPeerDisconnection
+                this.process.onPeerDisconnection(peerIndex, options);
+                this.connectedPeerIndexes.splice(inArrayIndex, 1);
+            }
+        }
+        if(peerConnection) {
+            peerConnection.destroy();
+            delete this.peerConnections[peerIndex];
+        }
     }
 
     public joinInitialArea(options?) {
@@ -261,20 +300,17 @@ export class Connector {
             // fromPeerIndex, signalData
             console.warn('Connector, GOT SIGNAL SUCCESS FROM PLAYER', message[1], 'the signalData was', message[2]);
             this.startPeerConnection(message[1], message[2]);
-        }else if (code === Protocol.PEER_REMOTE_SYSTEM_MESSAGE) { // in case were using a dispatch peer message without a p2p connection itll go through the web server
+        } else if (code === Protocol.PEER_REMOTE_SYSTEM_MESSAGE) { // in case were using a dispatch peer message without a p2p connection itll go through the web server
             // [protocol, fromPeerPlayerIndex, msgType, msgData, msgTo, msgFrom]
             console.warn('from peer was', message[1]);
             console.warn('msg type was', message[2]);
             console.warn('data was', message[3]);
             console.warn('to was', message[4]);
             this.messageQueue.dispatchPeerMessage(message[1], message[2],  message[3], message[4], message[5])
+        } else if(code === Protocol.SIGNAL_FAILED) {
+            this.stopPeerConnection(message[1]);
         }
-
-        // else if (code === Protocol.LEAVE_ROOM) {
-         //   this.leave();
-        //  }
     }
-
     protected setState( areaId: string, encodedState: Buffer ): void {
         const state = msgpack.decode(encodedState);
 
