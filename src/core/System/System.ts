@@ -64,8 +64,6 @@ abstract class System {
     public abstract update (delta) : void;
     public abstract clear() : void;
 
-    protected abstract addNetworkedFunctions(component: Component) : void;
-
     //overrided in ServerSystem and ClientSystem initialize function
     public initializeEntity(entity:Entity, data?: any) {};
     public destroyEntity(entity:Entity) {};

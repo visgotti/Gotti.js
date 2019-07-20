@@ -1,6 +1,5 @@
 import { Entity } from '../../src/core/Entity';
 import { Component } from '../../src/core/Component';
-import { NetworkComponent } from '../../src/core/NetworkComponentDecorator'
 import * as assert from 'assert';
 import * as mocha from 'mocha';
 import * as sinon from 'sinon';
@@ -17,16 +16,11 @@ export class TestComponent extends Component {
 }
 
 describe('Component', function() {
-        it('Component isNetworking is false by default construction', (done) => {
+        it('Component creates a component', (done) => {
             const component = new TestComponent();
             assert.ok(component);
-            assert.ok(!component.isNetworked);
+            assert.strictEqual(component.testProperty, 5);
+            assert.strictEqual(component.testMethod(), 5);
             done();
         });
-        it('NetworkComponent decorator sets isNetworked to true', (done) => {
-            const component = NetworkComponent(new TestComponent());
-            assert.ok(component);
-            assert.ok(component.isNetworked);
-            done();
-        })
 });

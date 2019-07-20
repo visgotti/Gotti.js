@@ -35,11 +35,6 @@ export class TestSystem extends System {
     initialize(...args: any[]): void {}
     onLocalMessage(message: any): void {}
     update(delta): void {}
-    addNetworkedFunctions(component: Component): void {
-        if(component.isNetworked) {
-            component.sendRemote = (message) => {};
-        }
-    }
 }
 
 describe('EntityManager', function() {
