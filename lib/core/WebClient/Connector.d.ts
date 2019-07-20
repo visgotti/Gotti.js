@@ -57,10 +57,14 @@ export declare class Connector {
     readonly connectedPeerIndexes: Array<number>;
     private _previousState;
     constructor();
+<<<<<<< HEAD
     connect(connectorAuth: ConnectorAuth, process: ClientProcess, options?: any): Promise<unknown>;
     handleRemoteOffer(peerIndex: any, systemName: any, signalData: any, options: any): void;
     startPeerConnection(peerIndex: any, systemName: any, signalData?: any, options?: any): void;
     stopPeerConnection(peerIndex: any, options?: any): void;
+=======
+    connect(gottiId: string, connectorURL: any, process: ClientProcess, options?: any): Promise<unknown>;
+>>>>>>> origin
     joinInitialArea(options?: any): void;
     leave(): void;
     sendPeerMessage(peerIndex: any, message: any): void;

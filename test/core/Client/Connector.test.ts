@@ -30,7 +30,7 @@ let onPeerDisconnectionProcessSpy;
 let onPeerDisconnectionSystemSpy;
 
 
-describe.only('WebClient/Connector', function() {
+describe('WebClient/Connector', function() {
     let client;
     let process;
     let connector;

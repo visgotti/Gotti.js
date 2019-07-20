@@ -6,22 +6,9 @@ export abstract class Component {
     public name: string | number;
     public setAttribute: Function = () => {};
     public setAttributeGetter: Function = () => {};
-    public isNetworked: boolean;
-
-    // sends message in timed send interval
-    public sendRemote: Function = (message) => {};
-    // sends message as soon as function is called
-    //TODO: no immediate from server to client yet will work same as sendRemote on server
-    public sendRemoteImmediate: Function = (message) => {};
-
-    // only works for server components
-    public broadcastRemote: Function = (message) => {};
-
-    public onRemote: Function = (message) => {};
     public entityId: string | number;
 
-    constructor(name: string | number, isNetworked=false){
-        this.isNetworked = isNetworked;
+    constructor(name: string | number){
         if (typeof(name) === 'undefined')
         {
             throw "Component: Invalid component name";

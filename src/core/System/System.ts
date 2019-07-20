@@ -64,15 +64,25 @@ abstract class System {
     public abstract update (delta) : void;
     public abstract clear() : void;
 
-    protected abstract addNetworkedFunctions(component: Component) : void;
-
     //overrided in ServerSystem and ClientSystem initialize function
     public initializeEntity(entity:Entity, data?: any) {};
     public destroyEntity(entity:Entity) {};
 
     // optional
-    public onEntityRemovedComponent(entity) {};
-    public onEntityAddedComponent(entity) {};
+    /**
+     * triggered when we remove a component from an entity
+     * also triggered on destroyEntity MUST destroy entity with this.destroyEntity
+     * @param entity - entity we removed component from
+     * @param component - component we removed from entity
+     */
+    public onEntityRemovedComponent(entity, component: Component) {};
+    /**
+     * triggered whenever we add a component to an entity
+     * MUST initialize entity with this.initializeEntity
+     * @param entity - entity we added component to
+     * @param component - component we added to entity
+     */
+    public onEntityAddedComponent(entity, component: Component) {};
     public onInit() {};
     public onStop() {};
     public onStart() {};

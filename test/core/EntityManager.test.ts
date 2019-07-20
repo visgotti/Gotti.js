@@ -35,11 +35,6 @@ export class TestSystem extends System {
     initialize(...args: any[]): void {}
     onLocalMessage(message: any): void {}
     update(delta): void {}
-    addNetworkedFunctions(component: Component): void {
-        if(component.isNetworked) {
-            component.sendRemote = (message) => {};
-        }
-    }
 }
 
 describe('EntityManager', function() {
@@ -72,8 +67,10 @@ describe('EntityManager', function() {
             entityManager.initializeEntity(entity);
             // shouldnt have called it yet since we didnt add the component
             sinon.assert.callCount(spy, 0);
-            entity.addComponent(new TestComponent());
+            const testComponent = new TestComponent(); // mock out so we dont add component so we can reference it in test
+            entity.addComponent(testComponent);
             sinon.assert.calledOnce(spy);
+            assert.strictEqual(spy.calledWith(entity, testComponent), true);
         });
     });
     describe('After initialized, onEntityRemovedComponent is called by entityManager.destroyEntity', () => {
@@ -82,6 +79,17 @@ describe('EntityManager', function() {
             entity = entityManager.initializeEntity(new TestEntity());
             entityManager.destroyEntity(entity);
             sinon.assert.calledOnce(spy);
+        });
+        it('calls onEntityRemovedComponent with the Entity and Component as params when called', () => {
+            let spy = sinon.spy(testSystem, 'onEntityRemovedComponent');
+            const testComponent = new TestComponent(); // mock out so we dont add component so we can reference it in test
+            entity = new TestEntity();
+            entity.initialize = () => {};
+            entity = entityManager.initializeEntity(entity);
+            entity.addComponent(testComponent);
+            entityManager.destroyEntity(entity);
+            sinon.assert.calledOnce(spy);
+            assert.strictEqual(spy.calledWith(entity, testComponent), true);
         });
     });
     describe('After initialized, onEntityRemovedComponent is called by entity.destroy()', () => {

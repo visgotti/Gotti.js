@@ -35,8 +35,12 @@ export declare class Client {
     constructor(url: string, token: string, disableWebRTC?: boolean);
     addGameProcess(gameType: any, process: ClientProcess): void;
     getConnectorData(gameType: any, options: any): Promise<unknown>;
+<<<<<<< HEAD
     private validateServerOpts;
     startGame(gameType: any, fps?: number, serverGameOpts?: ServerGameOptions, serverGameData?: any): Promise<unknown>;
+=======
+    startGame(gameType: any, fps?: number, serverGameData?: any, gottiId?: any, host?: any, port?: any): Promise<unknown>;
+>>>>>>> origin
     updateServerGameData(data: any): void;
     stopGame(): void;
     private startGameProcess;
