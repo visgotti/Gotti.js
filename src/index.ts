@@ -13,3 +13,5 @@ export {  Client } from './core/WebClient/Client';
 export { NetworkComponent } from './core/NetworkComponentDecorator';
 
 export { Message } from './core/MessageQueue';
+
+export { GOTTI_SERVER_PLAYER } from './core/EntityTypes';
