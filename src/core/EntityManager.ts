@@ -25,7 +25,7 @@ export class EntityManager {
             oldAddComponent.call(entity, component);
             const system = this.systemMap[component.name];
             if(system) {
-                system.onEntityAddedComponent(entity);
+                system.onEntityAddedComponent(entity, component);
                 if(component.isNetworked) {
                     system.addNetworkedFunctions(component);
                 }
@@ -34,11 +34,11 @@ export class EntityManager {
 
         const oldRemoveComponent = entity.removeComponent;
         entity.removeComponent = (componentName: string) => {
-            oldRemoveComponent.call(entity, componentName);
             const system = this.systemMap[componentName];
             if(system) {
-                system.onEntityRemovedComponent(entity);
+                system.onEntityRemovedComponent(entity, entity.getComponent(componentName));
             }
+            oldRemoveComponent.call(entity, componentName);
         };
         entity.initialize(data);
         return entity;

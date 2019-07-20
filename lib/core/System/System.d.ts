@@ -27,8 +27,20 @@ declare abstract class System {
     protected abstract addNetworkedFunctions(component: Component): void;
     initializeEntity(entity: Entity, data?: any): void;
     destroyEntity(entity: Entity): void;
-    onEntityRemovedComponent(entity: any): void;
-    onEntityAddedComponent(entity: any): void;
+    /**
+     * triggered when we remove a component from an entity
+     * also triggered on destroyEntity MUST destroy entity with this.destroyEntity
+     * @param entity - entity we removed component from
+     * @param component - component we removed from entity
+     */
+    onEntityRemovedComponent(entity: any, component: Component): void;
+    /**
+     * triggered whenever we add a component to an entity
+     * MUST initialize entity with this.initializeEntity
+     * @param entity - entity we added component to
+     * @param component - component we added to entity
+     */
+    onEntityAddedComponent(entity: any, component: Component): void;
     onInit(): void;
     onStop(): void;
     onStart(): void;

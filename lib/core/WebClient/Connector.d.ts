@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import Clock = require('@gamestdio/clock');
 import { Signal } from '@gamestdio/signals';
 import { StateContainer } from '@gamestdio/state-listener';
@@ -38,7 +39,7 @@ export declare class Connector {
     connection: Connection;
     private _previousState;
     constructor();
-    connect(gottiId: string, connectorURL: any, process: ClientProcess, options?: any): Promise<{}>;
+    connect(gottiId: string, connectorURL: any, process: ClientProcess, options?: any): Promise<unknown>;
     joinInitialArea(options?: any): void;
     leave(): void;
     sendSystemMessage(message: any): void;
