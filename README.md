@@ -93,17 +93,7 @@ It's mostly used by inheriting from the core base classes and implementing abstr
         setPositionByDeltas(dX, dY) {
             this.x += dX;
             this.y += dY;
-           
-            this.sendRemote({
-                type: MESSAGES.CLIENT_POSITION_UPDATE,
-                to: [SYSTEM.POSITION],
-                data: [this.x, this.y]
-            })
-         /*  dispatches to client or to server if we 
-             wrapped the component in the NetworkComponent
-             decorator and correctly used initializeEntity on 
-             the entity our component lives on  */
-        }
+        
      }
      
      
@@ -113,16 +103,6 @@ It's mostly used by inheriting from the core base classes and implementing abstr
     // read more about setAttribute and setAttributeGetter in entity methods documentation
     // since theyre the same functions for whatever entity the component lives on
     
-    sendRemote(message) // { type, to, data, from? }
-    // if component wrapped in NetworkedComponent and is on server it will send to the client of
-    // whatever the component is attached to, so only use on server if its a component on a player entity 
-    // or any entity where the id is the clientId of a client
-    // if called on client it will dispatch normally and be retrieved on server normally
-    sendRemoteImmediate(message) // exact same as above for server side until immediate messaging 
-                                 // is implemented, but client side we dispatch the message
-                                 // as soon as its called and not at the end of the loop
-     
-    broadcastMessage(message) // only works on server side, will send message to all local clients
 #Entities
 ##Creating an Entity
 #### adding PositionComponent
