@@ -18,6 +18,7 @@ export declare class PeerConnection {
     private dataChannel;
     onConnected: Signal;
     onDisconnected: Signal;
+    onMessage: Signal;
     connected: boolean;
     private connectOptions;
     constructor(connection: Connection, clientPlayerIndex: any, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
@@ -36,8 +37,6 @@ export declare class PeerConnection {
     acceptConnection(responseData: any): void;
     private onConnectionClose;
     send(type: string | number, data: any, to: Array<string>, from?: string | number): void;
-    onPeerMessage(handler: any): void;
-    private _onPeerMessageHandler;
-    private _onPeerMessage;
+    private onPeerMessage;
     destroy(): void;
 }

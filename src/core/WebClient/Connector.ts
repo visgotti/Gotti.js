@@ -111,6 +111,7 @@ export class Connector {
                     return;
                 }
                 this.peerConnections[peerIndex] = new PeerConnection(this.connection, this.playerIndex, peerIndex);
+                this.setupPeerConnection(this.peerConnections[peerIndex], peerIndex);
                 this.peerConnections[peerIndex].acceptConnection(response);
             } else {
                 throw new Error('handle peer connection request error');
@@ -138,8 +139,10 @@ export class Connector {
         let peerConnection = this.peerConnections[peerIndex];
         if(!(peerConnection)) {
             peerConnection = new PeerConnection(this.connection, this.playerIndex, peerIndex);
-            peerConnection.requestConnection(systemName, requestOptions);
             this.setupPeerConnection(peerConnection, peerIndex);
+
+
+            peerConnection.requestConnection(systemName, requestOptions);
             this.peerConnections[peerIndex] = peerConnection;
             this.pendingPeerRequests[peerIndex] = systemRequestCallback;
         } else {
@@ -169,7 +172,7 @@ export class Connector {
     }
 
     public sendPeerMessage(peerIndex, message: any) {
-        console.log('the peer connections was', this.peerConnections[peerIndex]);
+        console.error('send message, the peer connections was', this.peerConnections[peerIndex]);
         if(this.peerConnections[peerIndex] && this.peerConnections[peerIndex].connected) {
             this.peerConnections[peerIndex].send(message.type, message.data, message.to, message.from)
         } else {// there was no peer connection so we relay it through our servers
@@ -364,7 +367,7 @@ export class Connector {
             this.handlePeerFailure(peerIndex, errorOptions)
         });
 
-        peerConnection.onPeerMessage((data) => {
+        peerConnection.onMessage.add((data) => {
             console.error(' running our peer message handler');
             this.messageQueue.dispatchPeerMessage(peerIndex, data[0], data[1], data[2], data[3])
         })

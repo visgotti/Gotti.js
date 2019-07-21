@@ -45,6 +45,7 @@ export class PeerConnection {
   //  public onPeerMessage: Signal = new Signal();
     public onConnected: Signal = new Signal();
     public onDisconnected: Signal = new Signal();
+    public onMessage: Signal = new Signal();
 
     public connected: boolean = false;
 
@@ -87,7 +88,7 @@ export class PeerConnection {
         this.dataChannel.binaryType = 'arraybuffer';
         this.dataChannel.onopen = this.onDataChannelOpen.bind(this);
         this.dataChannel.onclose = this.onConnectionClose.bind(this);
-        this.dataChannel.onmessage = this._onPeerMessage.bind(this);
+        this.dataChannel.onmessage = this.onPeerMessage.bind(this);
     }
 
     public handleSDPSignal(sdp) {
@@ -179,19 +180,14 @@ export class PeerConnection {
     }
 
     public send(type: string | number, data: any, to: Array<string>, from?: string | number) {
+        console.log('sending message type:', type);
         this.dataChannel.send(msgpack.encode([type, data, to, from]));
     }
 
-    public onPeerMessage(handler) {
-        this._onPeerMessageHandler = handler;
-    }
-
-    private _onPeerMessageHandler(message) {};
-
-    private _onPeerMessage(event) {
+    private onPeerMessage(event) {
         const decoded = msgpack.decode(event.data);
-        console.error('got the peer message through web rtc!!!!!!!', decoded);
-        this._onPeerMessageHandler(decoded);
+        console.log('decoded message', decoded);
+        this.onMessage.dispatch(decoded);
     }
 
     public destroy() {
