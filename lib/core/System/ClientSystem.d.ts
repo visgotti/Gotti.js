@@ -31,7 +31,7 @@ declare abstract class ClientSystem extends System {
     onAreaWrite?(areaId: string | number, isInitial: boolean, options?: any): void;
     onAreaListen?(areaId: string | number, options?: any): void;
     onRemoveAreaListen?(areaId: string | number, options?: any): void;
-    onPeerConnection?(peerId: any, options?: any): any | false;
+    onPeerConnection?(peerId: any, options?: any): void;
     onPeerDisconnection?(peerId: any, options?: any): void;
     /**
      * called when a peer makes a request from a system
@@ -40,17 +40,14 @@ declare abstract class ClientSystem extends System {
      * returns anything truthy for a succesfully connection or false to deny the connection
      * the options will get passed to onPeerConnectionAccepted for the requester.
      */
-    onPeerConnectionRequested?(peerId: any, options?: any): any | false;
-    onPeerConnectionAccepted?(peerId: any, options?: any): void;
-    onPeerConnectionRejected?(peerId: any): void;
-    requestPeer(peerId: number, options?: any): void;
-    onPeerConnectionClosed?(peerId: any): void;
+    onPeerConnectionRequest?(peerId: any, options?: any): any | false;
+    requestPeer(peerId: number, options?: any): Promise<unknown>;
     readonly peers: any[];
     isPeer(playerIndex: any): boolean;
+    private _requestPeer;
     dispatchToPeer(toPeerId: string | number, message: Message): void;
     dispatchToPeers(toPeerIds: string | number, message: Message): void;
     dispatchToAllPeers(message: Message): void;
-    addPeer(peerIndex: number, systemName: string | number, options?: any): void;
     removePeer(peerIndex: number): void;
 }
 export default ClientSystem;

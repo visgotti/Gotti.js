@@ -32,12 +32,6 @@ export declare class ClientProcess extends Process<ClientProcess> {
      */
     onPeerDisconnection(peerId: any, options?: any): void;
     /**
-     * When a peer connection is accepted and the peers are connected
-     * @param peerId
-     * @param options
-     */
-    onPeerConnection(peerId: any, options?: any): void;
-    /**
      *
      * @param areaId - id of area that the client is now writing to.
      * @param options - options sent back from area when the client was removed.
@@ -50,23 +44,13 @@ export declare class ClientProcess extends Process<ClientProcess> {
      * @param systemName
      * @param options
      */
-    onPeerConnectionRequested(peerId: any, systemName: number | string, options?: any): any;
+    onPeerConnectionRequest(peerId: any, systemName: number | string, options?: any): any;
     /**
-     * If the peer returns their onPeerConnectionRequested with anything truthy it will
-     * be passed in to the systems onPeerConnectionAccepted as the options
+     * When a peer connection is accepted and the peers are connected
      * @param peerId
-     * @param systemName
      * @param options
      */
-    onPeerConnectionAccepted(peerId: any, systemName: number | string, options?: any): void;
-    /**
-     * If the peer returns their onPeerConnectionRequested with anything falsey or
-     * it was just not possible to begin with, this will get triggered.
-     * @param peerId
-     * @param systemName
-     * @param options
-     */
-    onPeerConnectionRejected(peerId: any, systemName: number | string): void;
+    onPeerConnection(peerId: any, options?: any): void;
     startLoop(fps?: number): void;
     stopLoop(): void;
     startSystem(systemName: any): void;

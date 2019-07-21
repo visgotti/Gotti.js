@@ -33,6 +33,7 @@ export declare const enum Protocol {
     SIGNAL_REQUEST = 111,
     SIGNAL_SUCCESS = 112,
     SIGNAL_FAILED = 113,
+    PEER_CONNECTION_REQUEST = 114,
     WS_SERVER_DISCONNECT = 4201,
     WS_TOO_MANY_CLIENTS = 4202
 }

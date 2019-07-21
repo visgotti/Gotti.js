@@ -80,20 +80,6 @@ export class ClientProcess extends Process<ClientProcess> {
     }
 
     /**
-     * When a peer connection is accepted and the peers are connected
-     * @param peerId
-     * @param options
-     */
-    public onPeerConnection(peerId, options?: any) {
-        const length = this.systemNames.length;
-        for(let i = 0; i < length; i++) {
-            const system = this.systems[this.systemNames[i]] as ClientSystem;
-            system.onPeerConnection && system.onPeerConnection(peerId, options)
-        }
-    }
-
-
-    /**
      *
      * @param areaId - id of area that the client is now writing to.
      * @param options - options sent back from area when the client was removed.
@@ -113,39 +99,24 @@ export class ClientProcess extends Process<ClientProcess> {
      * @param systemName
      * @param options
      */
-    public onPeerConnectionRequested(peerId, systemName: number | string, options?: any) {
+    public onPeerConnectionRequest(peerId, systemName: number | string, options?: any) {
         const system = this.systems[systemName] as ClientSystem;
-        if(system && system.onPeerConnectionRequested) {
-            return system.onPeerConnectionRequested(peerId, options)
+        if(system && system.onPeerConnectionRequest) {
+            return system.onPeerConnectionRequest(peerId, options)
         }
         return false;
     }
 
     /**
-     * If the peer returns their onPeerConnectionRequested with anything truthy it will
-     * be passed in to the systems onPeerConnectionAccepted as the options
+     * When a peer connection is accepted and the peers are connected
      * @param peerId
-     * @param systemName
      * @param options
      */
-    public onPeerConnectionAccepted(peerId, systemName: number | string, options?: any) {
-        const system = this.systems[systemName] as ClientSystem;
-        if(system && system.onPeerConnectionAccepted) {
-            system.onPeerConnectionAccepted(peerId, options)
-        }
-    }
-
-    /**
-     * If the peer returns their onPeerConnectionRequested with anything falsey or
-     * it was just not possible to begin with, this will get triggered.
-     * @param peerId
-     * @param systemName
-     * @param options
-     */
-    public onPeerConnectionRejected(peerId, systemName: number | string) {
-        const system = this.systems[systemName] as ClientSystem;
-        if(system && system.onPeerConnectionRejected) {
-            system.onPeerConnectionRejected(peerId)
+    public onPeerConnection(peerId, options?: any) {
+        const length = this.systemNames.length;
+        for(let i = 0; i < length; i++) {
+            const system = this.systems[this.systemNames[i]] as ClientSystem;
+            system.onPeerConnection && system.onPeerConnection(peerId, options)
         }
     }
 

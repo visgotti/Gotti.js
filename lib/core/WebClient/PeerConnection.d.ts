@@ -1,5 +1,4 @@
 import { Connection } from "./Connection";
-import { ClientProcess } from "../Process/Client";
 export declare enum SocketType {
     UDP = 0,
     TCP = 1
@@ -8,31 +7,34 @@ export interface PeerConnectionConfig {
     iceServerURLs?: Array<string>;
     socketType?: SocketType;
 }
+import { Signal } from "@gamestdio/signals";
 export declare class PeerConnection {
-    private config;
-    private rtcPeerConnection;
-    private dataChannel;
-    private peerPlayerIndex;
-    private clientPlayerIndex;
+    readonly peerPlayerIndex: number;
+    readonly clientPlayerIndex: number;
     readonly channelId: string;
-    private registeredMessage;
-    opened: boolean;
     private connection;
-    private sentIce;
-    private process;
-    constructor(connection: Connection, process: ClientProcess, clientPlayerIndex: any, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
-    sendSignal(desc: any): void;
+    private config;
+    private peerConnection;
+    private dataChannel;
+    onConnected: Signal;
+    onDisconnected: Signal;
+    connected: boolean;
+    private connectOptions;
+    constructor(connection: Connection, clientPlayerIndex: any, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
+    private onDataChannelOpen;
+    private setupDataChannel;
     handleSDPSignal(sdp: any): void;
     handleIceCandidateSignal(candidate: any): void;
+    private handleLocalDescription;
+    private handleInitialLocalDescription;
     private logError;
-    startSignaling(): void;
-    private onDataChannel;
-    onDataChannelOpen(handler: any): void;
-    private _onDataChannelOpen;
-    private _onDataChannelOpenHandler;
-    onDataChannelClose(handler: any): void;
-    private _onDataChannelCloseHandler;
-    private _onDataChannelClose;
+    private onIceCandidate;
+    requestConnection(systemName: any, requestOptions?: any): void;
+    /**
+     * used for incoming signal requests
+     */
+    acceptConnection(responseData: any): void;
+    private onConnectionClose;
     send(type: string | number, data: any, to: Array<string>, from?: string | number): void;
     onPeerMessage(handler: any): void;
     private _onPeerMessageHandler;

@@ -30,7 +30,7 @@ let onPeerDisconnectionProcessSpy;
 let onPeerDisconnectionSystemSpy;
 
 
-describe.only('WebClient/Connector', function() {
+describe('WebClient/Connector', function() {
     let client;
     let process;
     let connector;
@@ -38,7 +38,8 @@ describe.only('WebClient/Connector', function() {
     let system2;
 
     before('stubs out PeerConnection methods', () => {
-        sinon.stub(PeerConnection.prototype, 'startSignaling');
+        sinon.stub(PeerConnection.prototype, 'requestConnection');
+        sinon.stub(PeerConnection.prototype, 'acceptConnection');
     })
 
     beforeEach('creates mock process and client then gets connector from client and stubs out networked functions with spies', (done) => {
@@ -67,39 +68,12 @@ describe.only('WebClient/Connector', function() {
         });
     });
 
-    describe('connector.startPeerConnection', () => {
+    describe('connector.requestPeerConnection', () => {
         it('Should add a pending connection and an actual connection that isnt opened', () => {
-            connector.startPeerConnection(10, dummySystemName, {}, { foo: "bar" });
-            assert.strictEqual(connector.pendingPeerConnections[10], dummySystemName);
+            const cb = () => {};
+            connector.requestPeerConnection(10, dummySystemName, {}, cb);
+            assert.deepStrictEqual(connector.pendingPeerRequests[10], cb);
             assert.strictEqual(10 in connector.peerConnections, true);
-        })
-    });
-
-    describe('connector.stopPeerConnection', () => {
-        beforeEach('adds process to connector and starts a peer connection', () => {
-            connector.process = process;
-            connector.startPeerConnection(10, dummySystemName, {}, { foo: "bar" });
-            assert.strictEqual(connector.pendingPeerConnections[10], dummySystemName);
-            assert.strictEqual(10 in connector.peerConnections, true);
-
-            onPeerConnectionRejectedProcessSpy = sinon.spy(process, 'onPeerConnectionRejected');
-            onPeerConnectionRejectedSystemSpy = sinon.spy(system, 'onPeerConnectionRejected')
-            onPeerConnectionRejectedSystemSpy2 = sinon.spy(system2, 'onPeerConnectionRejected')
-        });
-        it('calls which removes pendingPeerConnections peerConnections', () => {
-            connector.stopPeerConnection(10);
-            assert.strictEqual(10 in connector.pendingPeerConnections, false);
-            assert.strictEqual(10 in connector.peerConnections, false);
-            sinon.assert.calledOnce(onPeerConnectionRejectedProcessSpy);
-            sinon.assert.calledWithExactly(onPeerConnectionRejectedProcessSpy, 10, dummySystemName);
-            sinon.assert.calledOnce(onPeerConnectionRejectedSystemSpy);
-            sinon.assert.calledWithExactly(onPeerConnectionRejectedSystemSpy, 10);
-        });
-        it('doesnt trigger on any systems other than the one where the request came from', () => {
-            connector.stopPeerConnection(10);
-            assert.strictEqual(10 in connector.pendingPeerConnections, false);
-            assert.strictEqual(10 in connector.peerConnections, false);
-            sinon.assert.callCount(onPeerConnectionRejectedSystemSpy2, 0);
         })
     });
 });

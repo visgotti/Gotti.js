@@ -49,6 +49,7 @@ export const enum Protocol {
     SIGNAL_REQUEST= 111,
     SIGNAL_SUCCESS= 112,
     SIGNAL_FAILED=113,
+    PEER_CONNECTION_REQUEST=114,
 
         // WebSocket error codes
     WS_SERVER_DISCONNECT = 4201,
