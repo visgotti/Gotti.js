@@ -172,33 +172,20 @@ export class Connector {
     }
 
     public sendPeerMessage(peerIndex, message: any) {
-        console.error('send message, the peer connections was', this.peerConnections[peerIndex]);
-        if(this.peerConnections[peerIndex] && this.peerConnections[peerIndex].connected) {
-            this.peerConnections[peerIndex].send(message.type, message.data, message.to, message.from)
-        } else {// there was no peer connection so we relay it through our servers
-            this.connection.send([ Protocol.PEER_REMOTE_SYSTEM_MESSAGE, peerIndex, message.type, message.data, message.to, message.from]);
-        }
+        this.peerConnections[peerIndex].send(message.type, message.data, message.to, message.from)
     }
 
     public sendAllPeersMessage(message: any) {
-        this.sendPeersMessage(message, Object.keys(this.peerConnections))
+        let len = this.connectedPeerIndexes.length;
+        while(len--) {
+            this.peerConnections[this.connectedPeerIndexes[len]].send(message.type, message.data, message.to, message.from)
+        }
     }
 
-    public sendPeersMessage(message: any, peerIndexes: any) {
-        let peerMessagePayload = [Protocol.PEER_REMOTE_SYSTEM_MESSAGE];
-        peerIndexes.forEach(peerIndex => {
-            if(this.peerConnections[peerIndex] && this.peerConnections[peerIndex].connected) {
-                this.peerConnections[peerIndex].send(message.type, message.data, message.to, message.from)
-            } else {// there was no peer connection so we relay it through our servers
-                peerMessagePayload = [...peerMessagePayload, peerIndex, message.type, message.data, message.to, message.from];
-            }
-        });
-        if(peerMessagePayload.length > 1) {
-            if(peerMessagePayload.length > 6) {
-                // multiple peers change the protocol for multiple peers
-                peerMessagePayload[0] = Protocol.PEERS_REMOTE_SYSTEM_MESSAGE
-            }
-            this.connection.send(peerMessagePayload);
+    public sendPeersMessage(peerIndexes: Array<number>, message: any) {
+        let len = peerIndexes.length;
+        while(len--) {
+            this.peerConnections[peerIndexes[len]].send(message.type, message.data, message.to, message.from)
         }
     }
 
@@ -350,9 +337,7 @@ export class Connector {
 
     private setupPeerConnection(peerConnection, peerIndex) {
         peerConnection.onConnected.add((options) => {
-            console.warn('DOING ON CONNECTED DISPATCH');
             if(!this.connectedPeerIndexes.includes(peerIndex)) {
-                console.log('and it wasnt already connected');
                 if(this.pendingPeerRequests[peerIndex]) {
                     this.pendingPeerRequests[peerIndex](null, options)
                 }
@@ -368,7 +353,6 @@ export class Connector {
         });
 
         peerConnection.onMessage.add((data) => {
-            console.error(' running our peer message handler');
             this.messageQueue.dispatchPeerMessage(peerIndex, data[0], data[1], data[2], data[3])
         })
     }

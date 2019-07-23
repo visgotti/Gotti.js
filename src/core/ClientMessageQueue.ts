@@ -213,7 +213,7 @@ export class ClientMessageQueue {
                 console.error('trying to add peer message', type, 'to a nonexistent system name', to);
                 continue;
             }
-            this._systems[this.systemNames[i]].onPeerMessage(fromPeer, { type, data, from});
+            this._systems[to[i]].onPeerMessage(fromPeer, { type, data, from});
         }
     }
 

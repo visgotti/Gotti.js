@@ -170,7 +170,6 @@ export class PeerConnection {
         }
     }
 
-
     private onConnectionClose() {
         if(this.connected) {
             this.connected = false;
@@ -180,13 +179,11 @@ export class PeerConnection {
     }
 
     public send(type: string | number, data: any, to: Array<string>, from?: string | number) {
-        console.log('sending message type:', type);
         this.dataChannel.send(msgpack.encode([type, data, to, from]));
     }
 
     private onPeerMessage(event) {
         const decoded = msgpack.decode(event.data);
-        console.log('decoded message', decoded);
         this.onMessage.dispatch(decoded);
     }
 

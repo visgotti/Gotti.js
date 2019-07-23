@@ -62,7 +62,7 @@ export declare class Connector {
     leave(): void;
     sendPeerMessage(peerIndex: any, message: any): void;
     sendAllPeersMessage(message: any): void;
-    sendPeersMessage(message: any, peerIndexes: any): void;
+    sendPeersMessage(peerIndexes: Array<number>, message: any): void;
     sendSystemMessage(message: any): void;
     sendImmediateSystemMessage(message: any): void;
     readonly hasJoined: boolean;

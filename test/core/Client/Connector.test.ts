@@ -52,7 +52,6 @@ describe('WebClient/Connector', function() {
 
         connector = new Connector();
 
-
         done();
     });
 
