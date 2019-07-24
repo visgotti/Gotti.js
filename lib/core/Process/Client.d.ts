@@ -50,7 +50,8 @@ export declare class ClientProcess extends Process<ClientProcess> {
      * @param peerId
      * @param options
      */
-    onPeerConnection(peerId: any, options?: any): void;
+    onPeerConnection(peerIndex: number, options?: any): void;
+    onPeerMissedPing(peerIndex: number, missedPings: number): void;
     startLoop(fps?: number): void;
     stopLoop(): void;
     startSystem(systemName: any): void;

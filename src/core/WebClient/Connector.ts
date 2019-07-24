@@ -12,6 +12,8 @@ import {PeerConnection} from "./PeerConnection";
 
 import {ClientProcess} from '../Process/Client';
 
+import { encode } from './msgpack';
+
 export enum AreaStatus {
     NOT_IN = 0,
     LISTEN = 1,
@@ -110,6 +112,7 @@ export class Connector {
                     this.connection.send([ Protocol.SIGNAL_FAILED, peerIndex]);
                     return;
                 }
+                console.log('the peer connections was', this.peerConnections)
                 this.peerConnections[peerIndex] = new PeerConnection(this.connection, this.playerIndex, peerIndex);
                 this.setupPeerConnection(this.peerConnections[peerIndex], peerIndex);
                 this.peerConnections[peerIndex].acceptConnection(response);
@@ -137,11 +140,9 @@ export class Connector {
 
     public requestPeerConnection(peerIndex: number, systemName: string | number,  requestOptions, systemRequestCallback) {
         let peerConnection = this.peerConnections[peerIndex];
-        if(!(peerConnection)) {
+        if(!(peerConnection)){
             peerConnection = new PeerConnection(this.connection, this.playerIndex, peerIndex);
             this.setupPeerConnection(peerConnection, peerIndex);
-
-
             peerConnection.requestConnection(systemName, requestOptions);
             this.peerConnections[peerIndex] = peerConnection;
             this.pendingPeerRequests[peerIndex] = systemRequestCallback;
@@ -172,20 +173,22 @@ export class Connector {
     }
 
     public sendPeerMessage(peerIndex, message: any) {
-        this.peerConnections[peerIndex].send(message.type, message.data, message.to, message.from)
+        this.peerConnections[peerIndex].send(msgpack.encode(message.type, message.data, message.to, message.from))
     }
 
     public sendAllPeersMessage(message: any) {
         let len = this.connectedPeerIndexes.length;
-        while(len--) {
-            this.peerConnections[this.connectedPeerIndexes[len]].send(message.type, message.data, message.to, message.from)
+        const encoded = msgpack.encode([message.type, message.data, message.to, message.from]);
+        for(let i = 0; i < len; i++) {
+            this.peerConnections[this.connectedPeerIndexes[i]].send(encoded)
         }
     }
 
     public sendPeersMessage(peerIndexes: Array<number>, message: any) {
         let len = peerIndexes.length;
-        while(len--) {
-            this.peerConnections[peerIndexes[len]].send(message.type, message.data, message.to, message.from)
+        const encoded = msgpack.encode([message.type, message.data, message.to, message.from]);
+        for(let i = 0; i < len; i++) {
+            this.peerConnections[peerIndexes[i]].send(encoded)
         }
     }
 
@@ -354,6 +357,10 @@ export class Connector {
 
         peerConnection.onMessage.add((data) => {
             this.messageQueue.dispatchPeerMessage(peerIndex, data[0], data[1], data[2], data[3])
-        })
+        });
+
+        peerConnection.onMissedPing.add((concurrentMissedPings: number) => {
+            this.process.onPeerMissedPing(peerIndex, concurrentMissedPings);
+        });
     }
 }

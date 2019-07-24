@@ -112,11 +112,19 @@ export class ClientProcess extends Process<ClientProcess> {
      * @param peerId
      * @param options
      */
-    public onPeerConnection(peerId, options?: any) {
+    public onPeerConnection(peerIndex: number, options?: any) {
         const length = this.systemNames.length;
         for(let i = 0; i < length; i++) {
             const system = this.systems[this.systemNames[i]] as ClientSystem;
-            system.onPeerConnection && system.onPeerConnection(peerId, options)
+            system.onPeerConnection && system.onPeerConnection(peerIndex, options)
+        }
+    }
+
+    public onPeerMissedPing(peerIndex: number, missedPings: number) {
+        const length = this.systemNames.length;
+        for(let i = 0; i < length; i++) {
+            const system = this.systems[this.systemNames[i]] as ClientSystem;
+            system.onPeerMissedPing && system.onPeerMissedPing(peerIndex, missedPings)
         }
     }
 

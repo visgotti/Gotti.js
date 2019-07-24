@@ -21,6 +21,8 @@ abstract class ClientSystem extends System {
 
     public isNetworked: boolean = false;
 
+    private _peerMap: any;
+
     constructor(name: string | number) {
         super(name);
         this.onRemoteMessage = this.onServerMessage.bind(this);
@@ -44,7 +46,7 @@ abstract class ClientSystem extends System {
         }
 
         this._peers = client.connector.connectedPeerIndexes;
-
+        this._peerMap = client.connector.peerConnections;
         this.client = client;
         this.messageQueue = messageQueue;
         this.messageQueue.addSystem(this);
@@ -95,9 +97,27 @@ abstract class ClientSystem extends System {
     public onAreaListen?(areaId: string | number, options?): void;
     public onRemoveAreaListen?(areaId: string | number, options?): void;
 
-    public onPeerConnection?(peerId, options?) : void;
-    public onPeerDisconnection?(peerId, options?) : void;
+    /**
+     * Fired when a we succesfully connect to a peer player.
+     * @param peerIndex - player index of connected player
+     * @param options - options passed in either from either requestPeer or
+     *                  returned from onPeerConnectionRequest
+     */
+    public onPeerConnection?(peerIndex: number, options?) : void;
 
+    /**
+     *
+     * @param peerIndex - player index of disconnected peer
+     * @param options - not implemented yet
+     */
+    public onPeerDisconnection?(peerIndex: number, options?) : void;
+
+    /**
+     * Fired when a we succesfully connect to a peer player.
+     * @param peerIndex - player index of connected player
+     * @param  missedPings - number of consecutive pings missed from a connected peer
+     */
+    public onPeerMissedPing?(peerIndex: number, missedPings: number): void;
 
     /**
      * called when a peer makes a request from a system
@@ -106,14 +126,20 @@ abstract class ClientSystem extends System {
      * returns anything truthy for a succesfully connection or false to deny the connection
      * the options will get passed to onPeerConnectionAccepted for the requester.
      */
-    public onPeerConnectionRequest?(peerId, options?) : any | false;
+    public onPeerConnectionRequest?(peerIndex: number , options?) : any | false;
 
-    public async requestPeer(peerId: number, options?: any) {
+    /**
+     * triggers onPeerConnectionRequest on peer players computer
+     * if the request went through
+     * @param peerIndex
+     * @param options - options passed into onPeerConnectionRequest options param for player youre requesting to.
+     */
+    public async requestPeer(peerIndex: number, options?: any) {
         if(!this.onPeerConnectionRequest) {
             throw new Error(`Cannot add a peer from the system ${this.name} it does not implement onPeerConnectionRequest`);
         }
         return new Promise((resolve, reject) => {
-            this._requestPeer(peerId, this.name, options, (err, options) => {
+            this._requestPeer(peerIndex, this.name, options, (err, options) => {
                 if(err) {
                     return reject(err);
                 } else {
@@ -130,6 +156,14 @@ abstract class ClientSystem extends System {
 
     public isPeer(playerIndex) {
         return this._peers.indexOf(playerIndex) > -1;
+    }
+
+    public getPeerPing(playerIndex) {
+        const peerConnection = this._peerMap[playerIndex];
+        if(peerConnection && peerConnection.connected) {
+            return peerConnection.ping;
+        }
+        return null;
     }
 
     // overrided in process decoration

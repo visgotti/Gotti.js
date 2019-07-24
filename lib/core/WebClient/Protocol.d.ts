@@ -37,6 +37,15 @@ export declare const enum Protocol {
     WS_SERVER_DISCONNECT = 4201,
     WS_TOO_MANY_CLIENTS = 4202
 }
+export declare enum PeerDisconnectionReasons {
+    PEER_PLAYER_DISCONNECTED_FROM_SERVER = 0,
+    PEER_PLAYER_TIMED_OUT = 1,
+    PEER_MANUALLY_CLOSED = 2
+}
+export declare enum PEER_TO_PEER_PROTOCOLS {
+    PING = 0,
+    PONG = 1
+}
 export declare enum StateProtocol {
     SET = 0,
     PATCH = 1

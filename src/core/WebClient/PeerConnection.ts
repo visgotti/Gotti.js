@@ -1,23 +1,38 @@
+import {Connection} from "./Connection";
+
+import { PEER_TO_PEER_PROTOCOLS, Protocol} from './Protocol';
+import * as msgpack from './msgpack';
+import {Signal} from "@gamestdio/signals";
+import Timeout = NodeJS.Timeout;
+import Timer = NodeJS.Timer;
+import {clear} from "tns-core-modules/application-settings";
+
 if(typeof window !== 'undefined') {
     import('webrtc-adapter');
 }
-
-import { Connection } from "./Connection";
-
-import { Protocol } from './Protocol';
 
 export enum SocketType {
     UDP,
     TCP
 }
 export interface PeerConnectionConfig {
-    iceServerURLs?: Array<string>,
+    iceServers?: Array<RTCIceServer>,
     socketType?: SocketType,
+    timeout?: number,
+    retries?: number,
+    retryTimeout?: number,
 }
 
-import * as msgpack from './msgpack';
-import {messageType} from "tns-core-modules/trace";
-import {Signal} from "@gamestdio/signals";
+const defaultConfig = {
+    iceServers: [{
+        'urls': ['stun:stun.l.google.com:19302']
+    }],
+    socketType: SocketType.UDP,
+    timeout: 3000,
+    retries: 3,
+    retryTimeout: 1000,
+};
+
 
 export class PeerConnection {
     readonly peerPlayerIndex: number;
@@ -26,19 +41,13 @@ export class PeerConnection {
 
     private connection: Connection;
 
-    private config: any = {
-        rtcPeerConfig: {
-            'iceServers': [{
-                'url': 'stun:stun.l.google.com:19302'
-            }],
-        },
-        dataChannelOptions: {
-            ordered: false,
-            maxRetransmitTime: 1000,
-        },
-        socketType: SocketType.UDP,
-    };
+    private config: PeerConnectionConfig = defaultConfig;
 
+    private last5Pings: Array<number> = [];
+    private initiator: boolean;
+
+    private pingInterval: Timer = null;
+    private sentPingAt: number;
     private peerConnection: RTCPeerConnection;
     private dataChannel: RTCDataChannel;
 
@@ -46,39 +55,42 @@ export class PeerConnection {
     public onConnected: Signal = new Signal();
     public onDisconnected: Signal = new Signal();
     public onMessage: Signal = new Signal();
-
+    public onMissedPing: Signal = new Signal();
     public connected: boolean = false;
 
-    private connectOptions: any = null;
+    private ping: number = 0;
 
-    constructor(connection: Connection, clientPlayerIndex, peerPlayerIndex: number, configOptions?: PeerConnectionConfig) {
+    private missedPings: number = 0;
+
+    private seq: number = 0;
+
+    constructor(connection: Connection, clientPlayerIndex: number, peerPlayerIndex: number, configOptions?: PeerConnectionConfig) {
         this.peerPlayerIndex = peerPlayerIndex;
         this.clientPlayerIndex = clientPlayerIndex;
+
+        if(configOptions) {
+            Object.keys(configOptions).forEach(key => {
+                if(this.config.hasOwnProperty(key)) {
+                    this.config[key] = configOptions[key];
+                }
+            });
+        }
+
 
         // create unique channel id for players by ordering by index then joining
         this.channelId = [peerPlayerIndex, clientPlayerIndex].sort().join('-');
 
         console.warn('the channel id was', this.channelId);
         this.connection = connection;
-
-        if(configOptions) {
-            if(configOptions.iceServerURLs) {
-                this.config.rtcPeerConfig.iceServers = configOptions.iceServerURLs.map(url => {
-                    return { url }
-                })
-            }
-            if(configOptions.socketType === SocketType.TCP) {
-                this.config.dataChannelOptions = {
-                    ordered: true
-                }
-            }
-        }
     }
 
     private onDataChannelOpen() {
         if(!this.connected) {
             console.warn('onDataChannelOpen');
             this.connected = true;
+            if(!this.pingInterval) {
+                this.startPinging();
+            }
             this.onConnected.dispatch();
         }
     }
@@ -94,7 +106,7 @@ export class PeerConnection {
     public handleSDPSignal(sdp) {
         this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp)).then(() => {
             if (this.peerConnection.remoteDescription.type === 'offer') {
-                console.warn('handleSDPSignal creating answer in handleSDPSignal')
+                console.warn('handleSDPSignal creating answer in handleSDPSignal');
                 this.peerConnection.createAnswer().then(desc => {
                     this.handleLocalDescription(desc)
                 })
@@ -131,7 +143,6 @@ export class PeerConnection {
         if (candidate === null) {
             return false;
         } // Ignore null candidates
-        console.warn('onIceCandidate')
         this.connection.send([Protocol.SIGNAL_REQUEST, this.peerPlayerIndex, { candidate }]);
         return true;
     }
@@ -139,7 +150,13 @@ export class PeerConnection {
     // reference this https://github.com/webrtc/samples/blob/gh-pages/src/content/datachannel/datatransfer/js/main.js
     public requestConnection(systemName, requestOptions?) {
         console.warn('requestConnection requesting connection from system:', systemName);
-        this.peerConnection = new RTCPeerConnection(this.config.rtcPeerConfig);
+        this.initiator = true;
+        const config = {
+            'iceServers': this.config.iceServers,
+        } as RTCConfiguration;
+
+        console.log('config was', config)
+        this.peerConnection = new RTCPeerConnection(config);
         this.peerConnection.addEventListener('icecandidate', this.onIceCandidate.bind(this));
 
         this.peerConnection.onnegotiationneeded = () => {
@@ -151,7 +168,10 @@ export class PeerConnection {
            });
         };
 
-        this.dataChannel = this.peerConnection.createDataChannel(this.channelId);
+        this.dataChannel = this.peerConnection.createDataChannel(this.channelId, {
+            ordered: this.config.socketType === SocketType.TCP
+        });
+
         this.setupDataChannel();
     }
 
@@ -160,8 +180,9 @@ export class PeerConnection {
      */
     public acceptConnection(responseData: any) {
         console.warn('acceptConnection requesting connection from system:');
+        this.initiator = false;
 
-        this.peerConnection = new RTCPeerConnection(this.config.rtcPeerConfig);
+        this.peerConnection = new RTCPeerConnection({ iceServers: this.config['iceServers'] });
         this.peerConnection.addEventListener('icecandidate',  this.onIceCandidate.bind(this));
 
         this.peerConnection.ondatachannel = event => {
@@ -172,21 +193,82 @@ export class PeerConnection {
 
     private onConnectionClose() {
         if(this.connected) {
+            if(this.pingInterval) {
+                clearInterval(this.pingInterval);
+                this.pingInterval = null;
+            }
+            console.error('on connection close being fired :]')
             this.connected = false;
             this.peerConnection.close();
             this.onDisconnected.dispatch();
         }
     }
+    private startPinging() {
+        let lastSent = this.seq;
+        this.sentPingAt = Date.now();
+        this.dataChannel.send(msgpack.encode([PEER_TO_PEER_PROTOCOLS.PING, this.seq]));
+        this.pingInterval = setInterval(() => {
+            // this.seq should increase by 1 by the time we get back here
+            if(lastSent !== this.seq - 1) {
+                this.missedPings++;
+                this.seq = 0;
+                lastSent = 0;
+                this.onMissedPing.dispatch(this.missedPings);
+            } else {
+                this.missedPings = 0;
+                lastSent++;
+            }
+            this.sentPingAt = Date.now();
+            this.dataChannel.send(msgpack.encode([PEER_TO_PEER_PROTOCOLS.PING, this.seq]));
+        }, this.config.timeout);
+    }
 
-    public send(type: string | number, data: any, to: Array<string>, from?: string | number) {
-        this.dataChannel.send(msgpack.encode([type, data, to, from]));
+    public send(message){
+        this.dataChannel.send(message);
+    }
+
+    private handlePong(seq) {
+        let ping = Date.now() - this.sentPingAt;
+        if(seq === this.seq) { // we good they sent back our seq
+            this.seq++;
+            if(this.seq === 10) {
+                this.destroy();
+            }
+            if (this.last5Pings.length > 4) {
+                // micro optimization hand implemented shift
+                this.last5Pings[5] = this.last5Pings[4];
+                this.last5Pings[4] = this.last5Pings[3];
+                this.last5Pings[3] = this.last5Pings[2];
+                this.last5Pings[2] = this.last5Pings[1];
+                this.last5Pings[1] = this.last5Pings[0];
+                this.last5Pings[0]  = ping;
+                this.ping = (this.last5Pings[0] + this.last5Pings[1] + this.last5Pings[2] + this.last5Pings[3] + this.last5Pings[4]) / 5;
+            } else {
+                this.last5Pings.push(ping);
+                const total = this.last5Pings.reduce((acc, c) => acc + c, 0);
+                this.ping = total / this.last5Pings.length;
+            }
+            console.log('the ping became', this.ping);
+        } else {
+            throw new Error(`INVALID SEQUENCE ${seq} SENT BACK WHEN WE EXPECTED ${this.seq}`);
+        }
     }
 
     private onPeerMessage(event) {
         const decoded = msgpack.decode(event.data);
-        this.onMessage.dispatch(decoded);
+        if(decoded.length < 3) {
+            if(decoded[0] === PEER_TO_PEER_PROTOCOLS.PING) {
+                this.dataChannel.send(msgpack.encode([PEER_TO_PEER_PROTOCOLS.PONG, decoded[1]]));
+            } else if (decoded[0] === PEER_TO_PEER_PROTOCOLS.PONG) {
+                this.handlePong(decoded[1]);
+            }
+        } else {
+            this.onMessage.dispatch(decoded);
+        }
     }
 
     public destroy() {
+        console.warn('trying to close peer connection!!!!');
+        this.peerConnection.close();
     }
 }
