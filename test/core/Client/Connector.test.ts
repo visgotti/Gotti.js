@@ -74,6 +74,27 @@ describe('WebClient/Connector', function() {
             assert.deepStrictEqual(connector.pendingPeerRequests[10], cb);
             assert.strictEqual(10 in connector.peerConnections, true);
         })
+
+        /*
+        it.only('testing encoding and decoding times', () => {
+            let start = Date.now();
+            let encoded = [];
+            for(let i = 0; i < 20; i++) {
+                encoded.push(msgpack.encode([234, 234324, 224, 234, 234,[5345,3345345,24323, 234234,234,324234,234234,234234234234],[234234234,234234234],{ x: 21042345, y: 21042345, sequence: 100324, other: "yes", okay: "nooo2" }, 345345]))
+            }
+            console.log('it took', Date.now() - start, 'to encode');
+
+            start = Date.now();
+            let decoded = [];
+            for(let i = 0; i < encoded.length; i++) {
+                decoded.push(msgpack.decode(encoded[i]));
+            }
+            console.log('it took', Date.now() - start, 'to decode');
+
+            assert.strictEqual(true, true);
+        })
+
+         */
     });
 });
 

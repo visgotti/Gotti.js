@@ -42,7 +42,7 @@ export class PeerConnection {
     private connection: Connection;
 
     private config: PeerConnectionConfig = defaultConfig;
-
+    private queuedIceCandidates: Array<any> = [];
     private last5Pings: Array<number> = [];
     private initiator: boolean;
 
@@ -59,6 +59,8 @@ export class PeerConnection {
     public connected: boolean = false;
 
     private ping: number = 0;
+
+    private remoteDescriptionSet: boolean = false;
 
     private missedPings: number = 0;
 
@@ -103,26 +105,44 @@ export class PeerConnection {
         this.dataChannel.onmessage = this.onPeerMessage.bind(this);
     }
 
+    private applyQueuedIceCandidates() {
+        for(let i = 0; i < this.queuedIceCandidates.length; i++) {
+            console.log('APPLYING ICE CANIDATE QUEUE CUZ WE GOT REMOTE DESCRIPTION')
+            this.peerConnection.addIceCandidate(new RTCIceCandidate(this.queuedIceCandidates[i]));
+        }
+        this.queuedIceCandidates.length = 0;
+    }
+
     public handleSDPSignal(sdp) {
         this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp)).then(() => {
+            console.warn('GOT SDP SIGNAL')
             if (this.peerConnection.remoteDescription.type === 'offer') {
                 console.warn('handleSDPSignal creating answer in handleSDPSignal');
                 this.peerConnection.createAnswer().then(desc => {
                     this.handleLocalDescription(desc)
                 })
             }
+            this.remoteDescriptionSet = true;
+            this.applyQueuedIceCandidates();
         });
     };
 
     public handleIceCandidateSignal(candidate) {
-        console.warn('handleInceCandidateSignal');
-        this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        if(this.remoteDescriptionSet) {
+            console.warn('applying ice candidate cuz we rdy');
+            this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } else {
+            console.warn('received ice candidate but adding to queue');
+            this.queuedIceCandidates.push(candidate);
+        }
     }
 
     private handleLocalDescription(desc) {
         this.peerConnection.setLocalDescription(desc).then(() => {
             console.warn('handleLocalDescription sending local description');
             this.connection.send([Protocol.SIGNAL_REQUEST, this.peerPlayerIndex, { sdp: this.peerConnection.localDescription}])
+        }).catch(err => {
+            console.error(err);
         });
       }
 
@@ -131,6 +151,8 @@ export class PeerConnection {
             //peerIndex, signalData, systemName, incomingRequestOptions?
             console.warn('handleInitialLocalDescription sending initial local description which was', this.peerConnection.localDescription, 'the request options was', requestOptions);
             this.connection.send([Protocol.PEER_CONNECTION_REQUEST, this.peerPlayerIndex, { sdp: this.peerConnection.localDescription}, systemName, requestOptions]);
+        }).catch(err => {
+            console.error(err);
         });
     }
 
@@ -155,7 +177,6 @@ export class PeerConnection {
             'iceServers': this.config.iceServers,
         } as RTCConfiguration;
 
-        console.log('config was', config)
         this.peerConnection = new RTCPeerConnection(config);
         this.peerConnection.addEventListener('icecandidate', this.onIceCandidate.bind(this));
 
@@ -231,9 +252,6 @@ export class PeerConnection {
         let ping = Date.now() - this.sentPingAt;
         if(seq === this.seq) { // we good they sent back our seq
             this.seq++;
-            if(this.seq === 10) {
-                this.destroy();
-            }
             if (this.last5Pings.length > 4) {
                 // micro optimization hand implemented shift
                 this.last5Pings[5] = this.last5Pings[4];

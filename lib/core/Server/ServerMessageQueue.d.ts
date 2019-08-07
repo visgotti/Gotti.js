@@ -57,6 +57,7 @@ export declare class ServerMessageQueue {
      * @param message
      */
     instantDispatchAll(type: any, data: any, from: any): void;
+    addMasterMessage(message: any): void;
     dispatch(systemName: any): void;
 }
 export {};

@@ -73,13 +73,14 @@ export abstract class Entity {
     }
 
     public getAttributes() {
-        let len = this.attributeGetters.length;
-        while(len--) {
-            const array = this.attributeGetters[len];
+        const len = this.attributeGetters.length;
+        for(let i = 0; i < len; i++) {
+            const array = this.attributeGetters[i];
             this.attributes[array[0]] = array[1]();
         }
         return this.attributes;
     }
+
 
     // checks if the compnentName is referenced in the entity.
     public hasComponent(componentName){

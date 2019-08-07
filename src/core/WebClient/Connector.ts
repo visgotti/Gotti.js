@@ -112,7 +112,6 @@ export class Connector {
                     this.connection.send([ Protocol.SIGNAL_FAILED, peerIndex]);
                     return;
                 }
-                console.log('the peer connections was', this.peerConnections)
                 this.peerConnections[peerIndex] = new PeerConnection(this.connection, this.playerIndex, peerIndex);
                 this.setupPeerConnection(this.peerConnections[peerIndex], peerIndex);
                 this.peerConnections[peerIndex].acceptConnection(response);

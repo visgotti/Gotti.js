@@ -26,19 +26,16 @@ export class EntityManager {
             const system = this.systemMap[component.name];
             if(system) {
                 system.onEntityAddedComponent(entity);
-                if(component.isNetworked) {
-                    system.addNetworkedFunctions(component);
-                }
             }
         };
 
         const oldRemoveComponent = entity.removeComponent;
         entity.removeComponent = (componentName: string) => {
-            oldRemoveComponent.call(entity, componentName);
             const system = this.systemMap[componentName];
             if(system) {
                 system.onEntityRemovedComponent(entity);
             }
+            oldRemoveComponent.call(entity, componentName);
         };
         entity.initialize(data);
         return entity;

@@ -234,6 +234,13 @@ export class ServerMessageQueue {
         }
     }
 
+    public addMasterMessage(message: any) {
+        for(let i = 0; i < this.systemNames.length; i++) {
+            const systemName = this.systemNames[i];
+            this._systems[systemName].onMasterMessage && this._systems[systemName].onMasterMessage(message);
+        }
+    }
+
     public dispatch(systemName) {
         let i: number, system: ServerSystem, msg: Message, serverMsg: Array<string | Message>;
 

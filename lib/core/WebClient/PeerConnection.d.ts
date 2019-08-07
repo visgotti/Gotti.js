@@ -17,6 +17,7 @@ export declare class PeerConnection {
     readonly channelId: string;
     private connection;
     private config;
+    private queuedIceCandidates;
     private last5Pings;
     private initiator;
     private pingInterval;
@@ -29,11 +30,13 @@ export declare class PeerConnection {
     onMissedPing: Signal;
     connected: boolean;
     private ping;
+    private remoteDescriptionSet;
     private missedPings;
     private seq;
     constructor(connection: Connection, clientPlayerIndex: number, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
     private onDataChannelOpen;
     private setupDataChannel;
+    private applyQueuedIceCandidates;
     handleSDPSignal(sdp: any): void;
     handleIceCandidateSignal(candidate: any): void;
     private handleLocalDescription;
@@ -47,7 +50,7 @@ export declare class PeerConnection {
     acceptConnection(responseData: any): void;
     private onConnectionClose;
     private startPinging;
-    send(type: string | number, data: any, to: Array<string>, from?: string | number): void;
+    send(message: any): void;
     private handlePong;
     private onPeerMessage;
     destroy(): void;
