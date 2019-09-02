@@ -1,34 +1,33 @@
 //TODO: split this into server and client message queue
 
-import ServerSystem from '../System/ServerSystem';
+import ClientSystem from "./System/ClientSystem";
 
 export interface Message {
     type: string | number,
     data: any,
-    to: Array<string | number>
+    to?: Array<string | number>
     from?: string | number,
 }
 
 type SystemName = string | number;
-type ServerSystemMessageLookup = { [systemName: string]: Array<Array<string | Message>> }
-type SystemMessageLookup = { [systemName: string]: Array<Message> }
-type SystemLookup = { [systemName: string]: ServerSystem }
 
-export class ServerMessageQueue {
+type SystemMessageLookup = { [systemName: string]: Array<Message> }
+type PeerSystemMessageLookup = { [systemName: string]: Array<Message> }
+type SystemLookup = { [systemName: string]: ClientSystem }
+
+export class ClientMessageQueue {
     private engineSystemMessageGameSystemHooks = {};
     private systemNames: Array<string | number>;
     private _systems: SystemLookup;
     private _messages: SystemMessageLookup;
-    private _clientMessages: ServerSystemMessageLookup;
-    private _areaMessages: ServerSystemMessageLookup;
+    private _remoteMessages?: SystemMessageLookup;
 
     constructor() {
         this._systems = {} as SystemLookup;
         this.systemNames = [];
 
         this._messages = {} as SystemMessageLookup;
-        this._clientMessages = {} as ServerSystemMessageLookup;
-        this._areaMessages = {} as ServerSystemMessageLookup;
+        this._remoteMessages = {} as SystemMessageLookup;
     }
 
     get systems() {
@@ -39,12 +38,8 @@ export class ServerMessageQueue {
         return this._messages;
     }
 
-    get clientMessages() {
-        return this._clientMessages;
-    }
-
-    get areaMessages() {
-        return this._areaMessages;
+    get remoteMessages() {
+        return this._remoteMessages;
     }
 
     /**
@@ -56,7 +51,7 @@ export class ServerMessageQueue {
         if(listeningSystemNames) {
             const length = listeningSystemNames.length;
             for(let i = 0; i < length; i++) {
-                this._messages[listeningSystemNames[length]].push(message);
+                this._messages[listeningSystemNames[i]].push(message);
             }
         }
     }
@@ -105,10 +100,9 @@ export class ServerMessageQueue {
             } catch(err){}
         }
 
+
         this._messages[systemName].length = 0;
         delete this._messages[systemName];
-        delete this._clientMessages[systemName];
-        delete this._areaMessages[systemName];
         delete this._systems[systemName];
 
         const index = this.systemNames.indexOf(systemName);
@@ -121,14 +115,12 @@ export class ServerMessageQueue {
         for(let systemName in this._systems) {
             delete this._systems[systemName];
             this._messages[systemName].length = 0;
-            this._clientMessages[systemName].length = 0;
-            this._areaMessages[systemName].length = 0;
-
             delete this._messages[systemName];
-            delete this._areaMessages[systemName];
-            delete this._clientMessages[systemName];
 
             this.systemNames.length = 0;
+
+            this._remoteMessages[systemName].length = 0;
+            delete this._remoteMessages[systemName];
         }
     }
 
@@ -138,91 +130,55 @@ export class ServerMessageQueue {
         }
     }
 
-    public addSystem(system: ServerSystem) {
+    public addSystem(system: ClientSystem) {
         this._systems[system.name] = system;
         this._messages[system.name] = [];
-        this._clientMessages[system.name] = [];
-        this._areaMessages[system.name] = [];
+        this._remoteMessages[system.name] = [];
         this.systemNames.push(system.name);
     }
 
     public add(message: Message) {
-        for (let i = 0; i < message.to.length; i++) {
+        for(let i = 0; i < message.to.length; i++) {
             if(!(message.to[i] in this._systems)) {
                 console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
                 continue;
             }
-            this._messages[message.to[i]].push(message);
+            this.messages[message.to[i]].push(message);
         }
         this.gameSystemHook(message, this.engineSystemMessageGameSystemHooks[message.type]);
-    }
-
-    public addClientMessage(clientId, message: Message) {
-        for(let i = 0; i < message.to.length; i++) {
-            if(!(message.to[i] in this._systems)) {
-                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
-                continue;
-            }
-            this._clientMessages[message.to[i]].push([clientId, message]);
-        }
     };
 
-    public addAreaMessage(areaId, message: Message) {
-        for(let i = 0; i < message.to.length; i++) {
-            if(!(message.to[i] in this._systems)) {
-                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
-                continue;
-            }
-            this._areaMessages[message.to[i]].push([areaId, message]);
-        }
-    };
-
-    /**
-     * Adds message to every system even if they dont have a registered handler //TODO: possible inclusion/exclusion options in system
-     */
-     public addAll(message: Message) {
+    public addAll(message: Message) {
         const systemsLength = this.systemNames.length;
         for(let i = 0; i < systemsLength; i++) {
             this.messages[this.systemNames[i]].push(message);
         }
     };
 
-    public instantClientDispatch(clientId, message: Message) {
-        const messageToLength = message.to.length;
-        for(let i = 0; i < messageToLength; i++) {
-            if(!(message.to[i] in this._systems)) {
-                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
-                continue;
-            }
-            this._systems[message.to[i]].onClientMessage(clientId, message);
-        }
-    }
-
-    public instantAreaDispatch(areaId, message: Message) {
-        const messageToLength = message.to.length;
-        for(let i = 0; i < messageToLength; i++) {
-            if(!(message.to[i] in this._systems)) {
-                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
-                continue;
-            }
-            this._systems[message.to[i]].onAreaMessage(areaId, message);
-        }
-    }
-
     /**
      * used for sending a message instantly to other systems versus waiting for next tick in the game loop.
      * @param message
      */
-    public instantDispatch(message: Message) {
+    public instantDispatch(message: Message, isRemoteMessage=false) {
         const messageToLength = message.to.length;
-        for(let i = 0; i < messageToLength; i++) {
-            if(!(message.to[i] in this._systems)) {
-                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
-                continue;
+        if(isRemoteMessage) {
+            for(let i = 0; i < messageToLength; i++) {
+                if(!(message.to[i] in this._systems)) {
+                    console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                    continue;
+                }
+                this._systems[message.to[i]].onRemoteMessage(message);
             }
-            this._systems[message.to[i]].onLocalMessage(message);
+        } else {
+            for(let i = 0; i < messageToLength; i++) {
+                if(!(message.to[i] in this._systems)) {
+                    console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                    continue;
+                }
+                this._systems[message.to[i]].onLocalMessage(message);
+            }
+            this.gameSystemHook(message, this.engineSystemMessageGameSystemHooks[message.type]);
         }
-        this.gameSystemHook(message, this.engineSystemMessageGameSystemHooks[message.type]);
     }
     /**
      * used for sending a message instantly to all other systems
@@ -234,15 +190,35 @@ export class ServerMessageQueue {
         }
     }
 
-    public addMasterMessage(message: any) {
-        for(let i = 0; i < this.systemNames.length; i++) {
-            const systemName = this.systemNames[i];
-            this._systems[systemName].onMasterMessage && this._systems[systemName].onMasterMessage(message);
+    /**
+     * Queues message to be handled in either the onClientMessage handler or onServerMessage system handler
+     */
+    public addRemote(type, data, to, from) {
+        for(let i = 0; i < to.length; i++) {
+            if(!(to[i] in this._systems)) {
+                console.error('trying to dispatch message', type, 'to a nonexistent system name', to);
+                continue;
+            }
+            this._remoteMessages[to[i]].push({ type, data, to, from });
+        }
+    }
+
+    /**
+     * Queues message to be handled on the onPeerMessage
+     * @param systemName
+     */
+    public dispatchPeerMessage(fromPeer, type, data, to, from) {
+        for(let i = 0; i < to.length; i++) {
+            if(!(to[i] in this._systems)) {
+                console.error('trying to add peer message', type, 'to a nonexistent system name', to);
+                continue;
+            }
+            this._systems[to[i]].onPeerMessage(fromPeer, { type, data, from});
         }
     }
 
     public dispatch(systemName) {
-        let i: number, system: ServerSystem, msg: Message, serverMsg: Array<string | Message>;
+        let i: number, system: ClientSystem, msg: Message;
 
         for(i = 0; this._messages[systemName].length; i++){
             msg = this._messages[systemName][i];
@@ -256,27 +232,15 @@ export class ServerMessageQueue {
             i--;
         }
 
-        for(i = 0; this._areaMessages[systemName].length; i++){
-            serverMsg = this._areaMessages[systemName][i];
-            if(serverMsg) {
+        for(i = 0; this._remoteMessages[systemName].length; i++){
+            msg = this._remoteMessages[systemName][i];
+            if(msg) {
                 system = this._systems[systemName];
                 if (system) {
-                    system.onAreaMessage(serverMsg[0], serverMsg[1])
+                    system.onRemoteMessage(msg)
                 }
             }
-            this._areaMessages[systemName].splice(i, 1);
-            i--;
-        }
-
-        for(i = 0; this._clientMessages[systemName].length; i++){
-            serverMsg = this._clientMessages[systemName][i];
-            if(serverMsg) {
-                system = this._systems[systemName];
-                if (system) {
-                    system.onClientMessage(serverMsg[0], serverMsg[1])
-                }
-            }
-            this._clientMessages[systemName].splice(i, 1);
+            this._remoteMessages[systemName].splice(i, 1);
             i--;
         }
     }

@@ -1,16 +1,18 @@
 import Clock = require('@gamestdio/clock');
-import { Signal } from '@gamestdio/signals';
+import {Signal} from '@gamestdio/signals';
 
-import { StateContainer } from '@gamestdio/state-listener';
+import {StateContainer} from '@gamestdio/state-listener';
 import * as fossilDelta from 'fossil-delta';
 import * as msgpack from './msgpack';
 
-import { Connection } from './Connection';
-import { Protocol, StateProtocol } from './Protocol';
+import {Connection} from './Connection';
+import {Protocol, StateProtocol} from './Protocol';
 
-import { MessageQueue } from '../MessageQueue';
+import {PeerConnection} from "./PeerConnection";
 
-import { ClientProcess } from '../Process/Client';
+import {ClientProcess} from '../Process/Client';
+
+import { encode } from './msgpack';
 
 export enum AreaStatus {
     NOT_IN = 0,
@@ -25,6 +27,13 @@ export interface Area {
     options: any,
 }
 
+export type ConnectorAuth = {
+    gottiId: string,
+    playerIndex: number,
+    connectorURL: string,
+}
+
+type SystemName = string | number;
 
 export class Connector {
     private messageQueue: any; //todo type
@@ -35,6 +44,7 @@ export class Connector {
     private writeAreaId: string | number = null;
 
     public gottiId: string;
+    public playerIndex: number;
     public sessionId: string;
 
     public options: any;
@@ -44,6 +54,9 @@ export class Connector {
 
     // Public signals
     public onJoinConnector: Signal = new Signal();
+    public onEnabledP2P: Signal = new Signal();
+    public onNewP2PConnection: Signal = new Signal();
+    public onRemovedP2PConnection: Signal = new Signal();
 
     public onWrite: Signal = new Signal();
     public onListen: Signal = new Signal();
@@ -59,12 +72,22 @@ export class Connector {
     private areas: {[areaId: string]:  Area} = {};
 
     public connection: Connection;
+
+    public peerConnections: {[ playerIndex: number]: PeerConnection } = {};
+    // adds the system name that requested the peer connection so we call the correct handlers inside the system when we receive a response
+    private pendingPeerRequests: {[playerIndex: number ]: (err: any, options: any) => void } = {};
+
+    readonly connectedPeerIndexes: Array<number> = [];
+
     private _previousState: any;
 
     constructor() {}
 
-    public async connect(gottiId: string, connectorURL, process: ClientProcess, options: any = {}) {
+    public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, options: any = {}) {
+        const { gottiId, playerIndex, connectorURL } = connectorAuth;
+
         this.gottiId = gottiId;
+        this.playerIndex = playerIndex;
 
         this.process = process;
         this.messageQueue = process.messageQueue;
@@ -78,6 +101,53 @@ export class Connector {
                 return resolve({ areaData, joinData });
             })
         })
+    }
+
+    private handlePeerConnectionRequest(peerIndex, signalData, systemName, incomingRequestOptions?) {
+        if(!(this.peerConnections[peerIndex])) {
+            // this check may be redundant
+            if(!this.pendingPeerRequests[peerIndex]) {
+                const response = this.process.onPeerConnectionRequest(peerIndex, systemName, incomingRequestOptions);
+                if(!response) { // our system requester invalidated the connection.
+                    this.connection.send([ Protocol.SIGNAL_FAILED, peerIndex]);
+                    return;
+                }
+                this.peerConnections[peerIndex] = new PeerConnection(this.connection, this.playerIndex, peerIndex);
+                this.setupPeerConnection(this.peerConnections[peerIndex], peerIndex);
+                this.peerConnections[peerIndex].acceptConnection(response);
+            } else {
+                throw new Error('handle peer connection request error');
+            }
+        }
+        this.handleSignalData(peerIndex, signalData);
+    }
+
+    private handleSignalData(peerIndex, signalData) {
+        const peerConnection = this.peerConnections[peerIndex];
+
+        if(!peerConnection) {
+            console.error('Attempting to handle signal data for non existent peer:', peerIndex);
+            return;
+        }
+
+        if(signalData.sdp) {
+            peerConnection.handleSDPSignal(signalData.sdp)
+        } else if (signalData.candidate) {
+            peerConnection.handleIceCandidateSignal(signalData.candidate)
+        }
+    }
+
+    public requestPeerConnection(peerIndex: number, systemName: string | number,  requestOptions, systemRequestCallback) {
+        let peerConnection = this.peerConnections[peerIndex];
+        if(!(peerConnection)){
+            peerConnection = new PeerConnection(this.connection, this.playerIndex, peerIndex);
+            this.setupPeerConnection(peerConnection, peerIndex);
+            peerConnection.requestConnection(systemName, requestOptions);
+            this.peerConnections[peerIndex] = peerConnection;
+            this.pendingPeerRequests[peerIndex] = systemRequestCallback;
+        } else {
+            throw new Error(`Already existing peer connection for peer:, ${peerIndex}`);
+        }
     }
 
     public joinInitialArea(options?) {
@@ -98,6 +168,26 @@ export class Connector {
 
         } else {
             this.onLeave.dispatch();
+        }
+    }
+
+    public sendPeerMessage(peerIndex, message: any) {
+        this.peerConnections[peerIndex].send(msgpack.encode(message.type, message.data, message.to, message.from))
+    }
+
+    public sendAllPeersMessage(message: any) {
+        let len = this.connectedPeerIndexes.length;
+        const encoded = msgpack.encode([message.type, message.data, message.to, message.from]);
+        for(let i = 0; i < len; i++) {
+            this.peerConnections[this.connectedPeerIndexes[i]].send(encoded)
+        }
+    }
+
+    public sendPeersMessage(peerIndexes: Array<number>, message: any) {
+        let len = peerIndexes.length;
+        const encoded = msgpack.encode([message.type, message.data, message.to, message.from]);
+        for(let i = 0; i < len; i++) {
+            this.peerConnections[peerIndexes[i]].send(encoded)
         }
     }
 
@@ -148,7 +238,6 @@ export class Connector {
                 this.areas[message[1]].status = AreaStatus.LISTEN;
             }
             this.areas[message[1]].status = AreaStatus.WRITE;
-
             this.process.dispatchOnAreaWrite(message[1], this.writeAreaId === null, message[2]);
             this.writeAreaId = message[1];
         } else if (code === Protocol.ADD_CLIENT_AREA_LISTEN) {
@@ -173,11 +262,24 @@ export class Connector {
             } else if (updateType === StateProtocol.PATCH) {
                 this.patch(message[1], message[2]);
             }
-        }// else if (code === Protocol.LEAVE_ROOM) {
-         //   this.leave();
-        //  }
+        } else if(code === Protocol.PEER_CONNECTION_REQUEST) {
+            // peerIndex, signalData, systemName, incomingRequestOptions?
+            this.handlePeerConnectionRequest(message[1], message[2], message[3], message[4]);
+        } else if (code === Protocol.SIGNAL_SUCCESS) {
+            // fromPeerIndex, signalData
+            console.warn('Connector, GOT SIGNAL SUCCESS FROM PLAYER', message[1], 'the signalData was', message[2]);
+            this.handleSignalData(message[1], message[2]);
+        } else if (code === Protocol.PEER_REMOTE_SYSTEM_MESSAGE) { // in case were using a dispatch peer message without a p2p connection itll go through the web server
+            // [protocol, fromPeerPlayerIndex, msgType, msgData, msgTo, msgFrom]
+            console.warn('from peer was', message[1]);
+            console.warn('msg type was', message[2]);
+            console.warn('data was', message[3]);
+            console.warn('to was', message[4]);
+            this.messageQueue.dispatchPeerMessage(message[1], message[2],  message[3], message[4], message[5])
+        } else if(code === Protocol.SIGNAL_FAILED) {
+            this.handlePeerFailure(message[1]);
+        }
     }
-
     protected setState( areaId: string, encodedState: Buffer ): void {
         const state = msgpack.decode(encodedState);
 
@@ -210,5 +312,54 @@ export class Connector {
             params.push(`${name}=${options[name]}`);
         }
         return `ws://${URL}/?${params.join('&')}`;
+    }
+
+    private handlePeerFailure(peerIndex, options?: any) {
+        const peerConnection = this.peerConnections[peerIndex];
+        if(!peerConnection) {
+            console.error(`Peer failure for peerIndex ${peerIndex} did not have a correlated peer connection.`);
+        };
+
+        // check to see if we have a pending request so we can initiate the callback
+        if(this.pendingPeerRequests[peerIndex]) {
+            this.pendingPeerRequests[peerIndex](true, options);
+            delete this.pendingPeerRequests[peerIndex];
+        }
+
+        const index = this.connectedPeerIndexes.indexOf(peerIndex);
+        if(index > -1) {
+            this.connectedPeerIndexes.splice(index, 1);
+            this.process.peers = this.connectedPeerIndexes;
+            this.process.onPeerDisconnection(peerIndex, options);
+        }
+
+        delete this.peerConnections[peerIndex];
+        peerConnection.destroy();
+    }
+
+    private setupPeerConnection(peerConnection, peerIndex) {
+        peerConnection.onConnected.add((options) => {
+            if(!this.connectedPeerIndexes.includes(peerIndex)) {
+                if(this.pendingPeerRequests[peerIndex]) {
+                    this.pendingPeerRequests[peerIndex](null, options)
+                }
+
+                this.connectedPeerIndexes.push(peerIndex);
+                this.process.peers = this.connectedPeerIndexes;
+                this.process.onPeerConnection(peerIndex, options);
+            }
+        });
+
+        peerConnection.onDisconnected.add((errorOptions?) => {
+            this.handlePeerFailure(peerIndex, errorOptions)
+        });
+
+        peerConnection.onMessage.add((data) => {
+            this.messageQueue.dispatchPeerMessage(peerIndex, data[0], data[1], data[2], data[3])
+        });
+
+        peerConnection.onMissedPing.add((concurrentMissedPings: number) => {
+            this.process.onPeerMissedPing(peerIndex, concurrentMissedPings);
+        });
     }
 }

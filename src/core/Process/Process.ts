@@ -5,7 +5,7 @@ export enum PROCESS_ENV {
     SERVER = 1,
 }
 
-import { MessageQueue, Message } from '../MessageQueue'
+import { ClientMessageQueue, Message } from '../ClientMessageQueue'
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import System from '../System/System';
 import ClientSystem from '../System/ClientSystem';
@@ -26,7 +26,7 @@ export type SystemLookup <T extends string | number>  = {
  * serverGameData - data that should contain information for systems that are dynamically driven ie weaponStatsData
  */
 export abstract class Process<T> {
-    public messageQueue: MessageQueue | ServerMessageQueue;
+    public messageQueue: ClientMessageQueue | ServerMessageQueue;
     public entityManager: EntityManager;
 
     public globals: any;
@@ -65,7 +65,7 @@ export abstract class Process<T> {
 
         this.stoppedSystems = new Set() as Set<string | number>;
 
-        this.messageQueue = processEnv === PROCESS_ENV.SERVER ? new ServerMessageQueue() : new MessageQueue();
+        this.messageQueue = processEnv === PROCESS_ENV.SERVER ? new ServerMessageQueue() : new ClientMessageQueue();
         this.entityManager = new EntityManager(this.systems);
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? server : client;
     }

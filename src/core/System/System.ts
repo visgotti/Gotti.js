@@ -1,4 +1,4 @@
-import { Message, MessageQueue } from '../MessageQueue';
+import { Message, ClientMessageQueue } from '../ClientMessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { Entity } from '../Entity';
 import { Component } from '../Component';
@@ -10,7 +10,7 @@ abstract class System {
     public globals: any;
     private _serverGameData: any;
 
-    protected messageQueue: MessageQueue | ServerMessageQueue;
+    protected messageQueue: ClientMessageQueue | ServerMessageQueue;
 
     protected dispatchLocal: Function;
     protected dispatchAllLocal: Function;
@@ -83,6 +83,7 @@ abstract class System {
      * @param component - component we added to entity
      */
     public onEntityAddedComponent(entity, component: Component) {};
+
     public onInit() {};
     public onStop() {};
     public onStart() {};

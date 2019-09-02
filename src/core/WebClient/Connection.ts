@@ -1,12 +1,12 @@
 import WebSocketClient from '@gamestdio/websocket';
 import * as msgpack from './msgpack';
+import {Protocol} from './Protocol';
 
 export class Connection extends WebSocketClient {
 
     private _enqueuedCalls: any[] = [];
-
     constructor(url, autoConnect: boolean = true) {
-        super(url, undefined, { connect: autoConnect });
+        super(url, undefined, { connect: autoConnect  });
     }
 
     public onOpenCallback(event) {
@@ -18,7 +18,6 @@ export class Connection extends WebSocketClient {
             for (const [method, args] of this._enqueuedCalls) {
                 this[method].apply(this, args);
             }
-
             // clear enqueued calls.
             this._enqueuedCalls = [];
         }
@@ -33,5 +32,4 @@ export class Connection extends WebSocketClient {
             this._enqueuedCalls.push(['send', [data]]);
         }
     }
-
 }

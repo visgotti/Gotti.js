@@ -1,5 +1,5 @@
 import { Client as WebClient } from '../../../src/core/WebClient/Client';
-import { MessageQueue } from '../../../src/core/MessageQueue';
+import { ClientMessageQueue } from '../../../src/core/ClientMessageQueue';
 import { EntityManager} from "../../../src/core/EntityManager";
 import { createDummyClientSystem, system_names, Messages } from '../../mocks';
 
@@ -21,7 +21,7 @@ describe('ClientSystem', function() {
     let mockSystem3_onLocalMessageSpy;
 
     beforeEach('Creates dummy systems and inits a web client', (done) => {
-        messageQueue = new MessageQueue();
+        messageQueue = new ClientMessageQueue();
         entityManager = new EntityManager({});
         client = new WebClient('/', '');
 

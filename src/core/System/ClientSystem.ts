@@ -1,12 +1,14 @@
 import System from "./System";
 import { Client as WebClient } from '../WebClient/Client';
-import { Message, MessageQueue } from '../MessageQueue';
+import { Message, ClientMessageQueue } from '../ClientMessageQueue';
 import {EntityManager} from "../EntityManager";
 import { Component } from "../Component";
 
 abstract class ClientSystem extends System {
     readonly name: string | number;
     private client: WebClient;
+
+    private _peers: Array<any>;
 
     // sends system message to server to be processed on next game tick
     protected dispatchToServer: (message: Message) => void;
@@ -19,10 +21,13 @@ abstract class ClientSystem extends System {
 
     public isNetworked: boolean = false;
 
+    private _peerMap: any;
+
     constructor(name: string | number) {
         super(name);
         this.onRemoteMessage = this.onServerMessage.bind(this);
     }
+
 
     /**
      * Initialize gets called by the process and
@@ -33,13 +38,15 @@ abstract class ClientSystem extends System {
      * @param messageQueue
      * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
-    public initialize(client, messageQueue: MessageQueue, entityManager: EntityManager, isNetworked, globalSystemVariables: {[reference: string]: any})
+    public initialize(client, messageQueue: ClientMessageQueue, entityManager: EntityManager, isNetworked, globalSystemVariables: {[reference: string]: any})
     {
         this.isNetworked = isNetworked;
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {
             this.globals = globalSystemVariables;
         }
 
+        this._peers = client.connector.connectedPeerIndexes;
+        this._peerMap = client.connector.peerConnections;
         this.client = client;
         this.messageQueue = messageQueue;
         this.messageQueue.addSystem(this);
@@ -51,10 +58,17 @@ abstract class ClientSystem extends System {
         this.dispatchToServer = client.sendSystemMessage.bind(client);
         this.immediateDispatchToServer = client.sendImmediateSystemMessage.bind(client);
         this.initialized = true;
+
+        this.dispatchToPeer = client.connector.sendPeerMessage.bind(client.connector);
+        this.dispatchToAllPeers = client.connector.sendAllPeersMessage.bind(client.connector);
+        this.dispatchToPeers = client.connector.sendPeersMessage.bind(client.connector);
+        this._requestPeer = client.connector.requestPeerConnection.bind(client.connector);
+      //  this.removePeer = client.connector.stopPeerConnection.bind(client.connector);
         this._onInit();
     }
 
     public abstract onServerMessage(message: Message);
+    public abstract onPeerMessage(peerId: number | string, message: Message);
 
     public addListenStatePaths(path: string | Array<string>) {
         if (Array.isArray(path)) {
@@ -73,6 +87,83 @@ abstract class ClientSystem extends System {
     public onAreaWrite?(areaId: string | number, isInitial: boolean, options?): void;
     public onAreaListen?(areaId: string | number, options?): void;
     public onRemoveAreaListen?(areaId: string | number, options?): void;
+
+    /**
+     * Fired when a we succesfully connect to a peer player.
+     * @param peerIndex - player index of connected player
+     * @param options - options passed in either from either requestPeer or
+     *                  returned from onPeerConnectionRequest
+     */
+    public onPeerConnection?(peerIndex: number, options?) : void;
+
+    /**
+     *
+     * @param peerIndex - player index of disconnected peer
+     * @param options - not implemented yet
+     */
+    public onPeerDisconnection?(peerIndex: number, options?) : void;
+
+    /**
+     * Fired when a we succesfully connect to a peer player.
+     * @param peerIndex - player index of connected player
+     * @param  missedPings - number of consecutive pings missed from a connected peer
+     */
+    public onPeerMissedPing?(peerIndex: number, missedPings: number): void;
+
+    /**
+     * called when a peer makes a request from a system
+     * @param peerId - player index of the client youre connecting to.
+     * @param options - options sent over from the initial addPeer call.
+     * returns anything truthy for a succesfully connection or false to deny the connection
+     * the options will get passed to onPeerConnectionAccepted for the requester.
+     */
+    public onPeerConnectionRequest?(peerIndex: number , options?) : any | false;
+
+    /**
+     * triggers onPeerConnectionRequest on peer players computer
+     * if the request went through
+     * @param peerIndex
+     * @param options - options passed into onPeerConnectionRequest options param for player youre requesting to.
+     */
+    public async requestPeer(peerIndex: number, options?: any) {
+        if(!this.onPeerConnectionRequest) {
+            throw new Error(`Cannot add a peer from the system ${this.name} it does not implement onPeerConnectionRequest`);
+        }
+        return new Promise((resolve, reject) => {
+            this._requestPeer(peerIndex, this.name, options, (err, options) => {
+                if(err) {
+                    return reject(err);
+                } else {
+                    options = options ? options : true;
+                    return resolve(options);
+                }
+            });
+        });
+    }
+
+    get peers() {
+        return this._peers;
+    }
+
+    public isPeer(playerIndex) {
+        return this._peers.indexOf(playerIndex) > -1;
+    }
+
+    public getPeerPing(playerIndex) {
+        const peerConnection = this._peerMap[playerIndex];
+        if(peerConnection && peerConnection.connected) {
+            return peerConnection.ping;
+        }
+        return null;
+    }
+
+    // overrided in process decoration
+    private _requestPeer(peerIndex: number, systemName: string | number, options: any, callback: Function) {};
+
+    public dispatchToPeer(toPeerId: string | number, message: Message) {};
+    public dispatchToPeers(toPeerIds: string | number, message: Message) {};
+    public dispatchToAllPeers(message: Message) {};
+    public removePeer(peerIndex: number) {};
 }
 
 export default ClientSystem;

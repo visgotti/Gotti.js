@@ -1,14 +1,15 @@
 import { Process } from './Process';
 import { Client as WebClient } from '../WebClient/Client';
-import { MessageQueue } from '../MessageQueue';
+import { ClientMessageQueue } from '../ClientMessageQueue';
 interface ClientProcessOptions {
     fpsTickRate?: number;
 }
 export declare class ClientProcess extends Process<ClientProcess> {
     client: WebClient;
     private fpsTickRate;
-    messageQueue: MessageQueue;
+    messageQueue: ClientMessageQueue;
     isNetworked: boolean;
+    peers: Array<number>;
     constructor(client: WebClient, isNetworked: boolean, globals?: any, options?: ClientProcessOptions);
     /**
      *
@@ -25,11 +26,32 @@ export declare class ClientProcess extends Process<ClientProcess> {
      */
     dispatchOnAreaListen(areaId: any, state: any, options?: any): void;
     /**
+     * If a connected peer disconnects we trigger this function and then all of the systems
+     * @param peerId
+     * @param options
+     */
+    onPeerDisconnection(peerId: any, options?: any): void;
+    /**
      *
      * @param areaId - id of area that the client is now writing to.
      * @param options - options sent back from area when the client was removed.
      */
     dispatchOnRemoveAreaListen(areaId: any, options?: any): void;
+    /**
+     * when we receive a peer connection request if the system doesnt have a onPeerConnectionRequested handler
+     * we automatically return false and fail the peer connection
+     * @param peerId
+     * @param systemName
+     * @param options
+     */
+    onPeerConnectionRequest(peerId: any, systemName: number | string, options?: any): any;
+    /**
+     * When a peer connection is accepted and the peers are connected
+     * @param peerId
+     * @param options
+     */
+    onPeerConnection(peerIndex: number, options?: any): void;
+    onPeerMissedPing(peerIndex: number, missedPings: number): void;
     startLoop(fps?: number): void;
     stopLoop(): void;
     startSystem(systemName: any): void;

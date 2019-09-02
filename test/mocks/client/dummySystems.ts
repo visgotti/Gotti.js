@@ -16,6 +16,10 @@ export class DummySystem1 extends ClientSystem {
     public onMessage(message) {};
     public onComponentAdded(entity) {};
     public onComponentRemoved(entity) {};
+    public onPeerMessage(peerId: number | string, message: any) {}
+    public onPeerConnectionRejected(peerId, options?) {};
+    public onPeerConnectionRequested(peerId, options?) {};
+
     public clear() {};
 }
 
@@ -33,6 +37,10 @@ export class DummySystem2 extends ClientSystem {
     public onMessage(message) {};
     public onComponentAdded(entity) {};
     public onComponentRemoved(entity) {};
+    public onPeerMessage(peerId: number | string, message: any) {}
+    public onPeerConnectionRejected(peerId, options?) {};
+    public onPeerConnectionRequested(peerId, options?) {};
+
     public clear() {};
 }
 
@@ -50,5 +58,9 @@ export class DummySystem3 extends ClientSystem {
     public onMessage(message) {};
     public onComponentAdded(entity) {};
     public onComponentRemoved(entity) {};
+    public onPeerMessage(peerId: number | string, message: any) {}
+    public onPeerConnectionRejected(peerId, options?) {};
+    public onPeerConnectionRequested(peerId, options?) {};
+
     public clear() {};
 }

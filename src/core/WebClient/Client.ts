@@ -2,13 +2,26 @@ import { Signal } from '@gamestdio/signals';
 import * as msgpack from './msgpack';
 
 import { Protocol } from './Protocol';
-import { Connector } from './Connector';
+import {Connector, ConnectorAuth} from './Connector';
 import ClientSystem from './../System/ClientSystem';
-import { MessageQueue, Message } from './../MessageQueue';
+import { ClientMessageQueue, Message } from '../ClientMessageQueue';
 
 export type JoinOptions = { retryTimes: number, requestId: number } & any;
 
 import { ClientProcess } from '../Process/Client';
+
+interface Window {
+    RTCPeerConnection?: any;
+    navigator?: any;
+}
+declare var window: Window;
+
+export type ServerGameOptions = {
+    host: string,
+    port: number,
+    gottiId: string,
+    playerIndex: number,
+}
 
 export class Client {
     private runningProcess: ClientProcess = null;
@@ -32,7 +45,7 @@ export class Client {
     public gameTypes: Array<string> = [];
     public gameRegions: Array<string> = [];
 
-    private _messageQueue: MessageQueue = null;
+    private _messageQueue: ClientMessageQueue = null;
 
     private joinedGame = false;
 
@@ -44,9 +57,12 @@ export class Client {
 
     private token: string;
 
-    constructor(url: string, token: string) {
+    constructor(url: string, token: string, disableWebRTC=false) {
         this.hostname = url;
-        this.options = {};
+
+        this.options = {
+            isWebRTCSupported: window.RTCPeerConnection && window.navigator.userAgent.indexOf("Edge") < 0 && !disableWebRTC
+        };
         this.token = token;
         this.connector = new Connector();
     }
@@ -70,7 +86,12 @@ export class Client {
         })
     }
 
-    public async startGame(gameType, fps=60, serverGameData?, gottiId?, host?, port?) {
+    private validateServerOpts(serverGameOpts: ServerGameOptions) {
+        console.log('server game opts were', serverGameOpts);
+        return serverGameOpts.gottiId && serverGameOpts.playerIndex && serverGameOpts.host && serverGameOpts.port
+    }
+
+    public async startGame(gameType, fps=60, serverGameOpts?: ServerGameOptions, serverGameData?: any) {
         return new Promise((resolve, reject) => {
             const process = this.processes[gameType];
 
@@ -85,9 +106,15 @@ export class Client {
             this.startGameProcess(process, fps);
 
             if(process.isNetworked) {
-                this.joinConnector(gottiId, `${host}:${port}`).then(joinOptions => {
-                    return resolve(joinOptions);
-                });
+                if(this.validateServerOpts(serverGameOpts)){
+                    const { gottiId, playerIndex, host, port } = serverGameOpts;
+                    this.joinConnector(gottiId, playerIndex, `${host}:${port}`).then(joinOptions => {
+                        return resolve(joinOptions);
+                    });
+                } else {
+                    throw new Error('Invalid server game opts for server connection.')
+                }
+
             } else {
                 return resolve();
             }
@@ -183,9 +210,11 @@ export class Client {
         this.connector.joinInitialArea(clientOptions);
     }
 
-    private async joinConnector(gottiId, connectorURL) {
+    private async joinConnector(gottiId, playerIndex, connectorURL) {
 
-        const options = await this.connector.connect(gottiId, connectorURL, this.runningProcess);
+        const joinOpts = { gottiId, playerIndex, connectorURL } as ConnectorAuth;
+
+        const options = await this.connector.connect(joinOpts, this.runningProcess, this.options);
 
         this.joinedGame = true;
 

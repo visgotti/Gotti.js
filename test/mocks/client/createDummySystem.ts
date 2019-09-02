@@ -15,6 +15,8 @@ class DummySystem extends ClientSystem {
     public clear() {};
     public onComponentAdded(entity) {};
     public onComponentRemoved(entity) {};
+    public onPeerMessage(peerId: number | string, message: any) {};
+    public onPeerConnectionRejected(peerId, options?) {};
 }
 
 export function createDummyClientSystem(name) {

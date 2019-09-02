@@ -1,7 +1,7 @@
 import System from "./System";
 import { Component } from "../Component";
 import { Client as WebClient } from '../WebClient/Client';
-import { Message } from '../MessageQueue';
+import { Message } from '../ClientMessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { EntityManager } from '../EntityManager';
 import { Entity } from '../Entity';
@@ -42,10 +42,14 @@ abstract class ServerSystem extends System {
     public abstract onAreaMessage(areaId, message);
     public abstract onClientMessage(client, message);
 
+    // optional
+    public onMasterMessage?(message) : any | false;
+
     public dispatchToAreas(message: Message, toAreaIds?: Array<string>) {};
     public dispatchToClient(clientUid: string, message: Message) {};
     public dispatchToAllClients(message: Message) {};
-    public dispatchToLocalClients(message: Message) {}
+    public dispatchToLocalClients(message: Message) {};
+    public dispatchToMaster(message) {};
 }
 
 export default ServerSystem;

@@ -4,13 +4,8 @@ export declare abstract class Component {
     name: string | number;
     setAttribute: Function;
     setAttributeGetter: Function;
-    isNetworked: boolean;
-    sendRemote: Function;
-    sendRemoteImmediate: Function;
-    broadcastRemote: Function;
-    onRemote: Function;
     entityId: string | number;
-    constructor(name: string | number, isNetworked?: boolean);
+    constructor(name: string | number);
     onAdded(entity: Entity): void;
     onRemoved(entity: Entity): void;
 }
