@@ -30,7 +30,6 @@ export abstract class Component {
         this.componentMethods = Object.getOwnPropertyNames(parentObj).filter(p => {
             return p !== "constructor" && p !== "prototype" && p !== 'onAdded' && p !== 'onRemoved'
         });
-        this.entityId = parentObj.id;
         this.name = name;
     }
 

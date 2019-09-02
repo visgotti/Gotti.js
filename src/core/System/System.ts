@@ -71,8 +71,8 @@ abstract class System {
     public destroyEntity(entity:Entity) {};
 
     // optional
-    public onEntityRemovedComponent(entity) {};
-    public onEntityAddedComponent(entity) {};
+    public onEntityRemovedComponent(entity, component) {};
+    public onEntityAddedComponent(entity, component) {};
     public onInit() {};
     public onStop() {};
     public onStart() {};

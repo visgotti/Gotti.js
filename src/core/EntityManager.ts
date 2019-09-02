@@ -25,7 +25,7 @@ export class EntityManager {
             oldAddComponent.call(entity, component);
             const system = this.systemMap[component.name];
             if(system) {
-                system.onEntityAddedComponent(entity);
+                system.onEntityAddedComponent(entity, component);
             }
         };
 
@@ -33,7 +33,7 @@ export class EntityManager {
         entity.removeComponent = (componentName: string) => {
             const system = this.systemMap[componentName];
             if(system) {
-                system.onEntityRemovedComponent(entity);
+                system.onEntityRemovedComponent(entity, entity.getComponent(componentName));
             }
             oldRemoveComponent.call(entity, componentName);
         };

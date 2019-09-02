@@ -38,6 +38,11 @@ describe('Entity', function() {
             assert.strictEqual(Object.keys(testEntity.components).length, 1);
             done();
         });
+        it('Adds the entityId to the test component', () => {
+            const component = new TestComponent();
+            testEntity.addComponent(component);
+            assert.strictEqual(component.entityId, testEntity.id);
+        });
         it('throws an error if we try adding duplicate components', (done) => {
             testEntity.addComponent(new TestComponent());
             assert.throws(() => {    testEntity.addComponent(new TestComponent()); });

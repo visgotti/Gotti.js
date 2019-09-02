@@ -52,6 +52,7 @@ export abstract class Entity {
         component.setAttribute = this.setAttribute.bind(this);
         component.setAttributeGetter = this.setAttributeGetter.bind(this);
         component.onAdded(this);
+        component.entityId = this.id;
         this.componentNames.push(component.name);
     }
 
