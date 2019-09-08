@@ -56,6 +56,10 @@ abstract class System {
         throw new Error('removeMessageListener must be called after the systems onInit function is executed');
     };
 
+    public getSystemComponent(entity: Entity) {
+        return entity.getComponent(this.name);
+    }
+
     // if its a local message on server side it triggers onLocalServerMessage, if its a local
     // message on client it triggers onLocalClientMessage;
     public abstract onLocalMessage(message: Message) : void;
