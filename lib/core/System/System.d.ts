@@ -20,6 +20,7 @@ declare abstract class System {
     protected _onInit(): void;
     addMessageListener(messageName: string | number): void;
     removeMessageListener(messageName: string | number): void;
+    getSystemComponent(entity: Entity): any;
     abstract onLocalMessage(message: Message): void;
     abstract initialize(...args: any[]): void;
     abstract update(delta: any): void;
