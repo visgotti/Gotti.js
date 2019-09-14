@@ -139,6 +139,7 @@ describe('Client Process with no globals', function() {
         })
     });
 
+
     describe('clientProcess.serverGameData', () => {
         it('calls the onServerDataUpdated method on started systems', () => {
             const onServerDataUpdatedSystemSpy1 = sinon.spy(clientProcess.startedSystems[0], 'onServerDataUpdated');
@@ -155,6 +156,47 @@ describe('Client Process with no globals', function() {
         })
     })
 });
+describe('Client Process with plugins', function() {
+
+    const plugin = {
+        name: "testPlugin",
+        props() {
+            return {
+                "testprop": "test"
+            }
+        },
+        methods: {
+          test() {
+              return this.testprop
+          }  
+        }
+    }
+    let clientProcess;
+    beforeEach(() => {
+        clientProcess = createDummyNetworkClientProcess();
+        clientProcess.addSystem(DummySystem1);
+        clientProcess.addSystem(DummySystem2);
+        clientProcess.addSystem(DummySystem3);
+    })
+    describe('clientProcess.installPlugin', () => {
+        
+      
+        it('adds plugin to all systems if no names are specified as second params', (done) => {
+            clientProcess.installPlugin(plugin);
+            assert.deepStrictEqual(clientProcess.systems[system_names[0]].$.test(), "test");
+            assert.deepStrictEqual(clientProcess.systems[system_names[1]].$.test(), "test");
+            assert.deepStrictEqual(clientProcess.systems[system_names[2]].$.test(), "test");
+            done();
+        })
+        it('adds plugin to all systems only to system names specified', (done) => {
+            clientProcess.installPlugin(plugin, [system_names[0], system_names[1]]);
+            assert.deepStrictEqual(clientProcess.systems[system_names[0]].$.test(), "test");
+            assert.deepStrictEqual(clientProcess.systems[system_names[1]].$.test(), "test");
+            assert.deepStrictEqual(clientProcess.systems[system_names[2]].$.test, undefined);
+            done();
+        })
+    });
+})
 
 describe('Client Process with globals', function() {
 
