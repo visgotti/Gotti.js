@@ -220,10 +220,10 @@ export class PeerConnection {
             }
             console.error('on connection close being fired :]')
             this.connected = false;
-            this.peerConnection.close();
             this.onDisconnected.dispatch();
         }
     }
+
     private startPinging() {
         let lastSent = this.seq;
         this.sentPingAt = Date.now();
