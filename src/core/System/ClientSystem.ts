@@ -63,7 +63,7 @@ abstract class ClientSystem extends System {
         this.dispatchToAllPeers = client.connector.sendAllPeersMessage.bind(client.connector);
         this.dispatchToPeers = client.connector.sendPeersMessage.bind(client.connector);
         this._requestPeer = client.connector.requestPeerConnection.bind(client.connector);
-      //  this.removePeer = client.connector.stopPeerConnection.bind(client.connector);
+        this.removePeer = client.connector.stopPeerConnection.bind(client.connector);
         this._onInit();
     }
 
