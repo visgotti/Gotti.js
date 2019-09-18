@@ -1,9 +1,12 @@
 import {EntityManager} from "../EntityManager";
 
+import { Plugin, IPlugin } from "../Plugin/Plugin";
+
 export enum PROCESS_ENV {
     CLIENT = 0,
     SERVER = 1,
 }
+
 
 import { ClientMessageQueue, Message } from '../ClientMessageQueue'
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
@@ -72,6 +75,20 @@ export abstract class Process<T> {
 
     public addGlobal(key: string, value: any) {
         this.globals[key] = value;
+    }
+
+    public installPlugin(iPlugin: IPlugin, systemNames: Array<string | number>) {
+        const plugin = new Plugin(iPlugin);
+        if(!systemNames) {
+            systemNames = this.systemNames;
+        }
+        for(let i = 0; i < systemNames.length; i++) {
+            const system = this.systems[systemNames[i]];
+            if(!system) {
+                throw new Error(`Trying to install plugin: ${plugin.name} on undefined system: ${systemNames[i]}`)
+            }
+            plugin.applyToSystem(system)
+        }
     }
 
     set serverGameData(data) {

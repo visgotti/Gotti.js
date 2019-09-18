@@ -8,6 +8,9 @@ abstract class System {
     public onRemoteMessage(message: Message) {};
 
     public globals: any;
+
+    public $: any = {};
+
     private _serverGameData: any;
 
     protected messageQueue: ClientMessageQueue | ServerMessageQueue;
