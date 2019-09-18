@@ -1,4 +1,5 @@
 import { EntityManager } from "../EntityManager";
+import { IPlugin } from "../Plugin/Plugin";
 export declare enum PROCESS_ENV {
     CLIENT = 0,
     SERVER = 1
@@ -35,6 +36,7 @@ export declare abstract class Process<T> {
     stoppedSystems: Set<string | number>;
     constructor(processEnv: PROCESS_ENV, globals?: {});
     addGlobal(key: string, value: any): void;
+    installPlugin(iPlugin: IPlugin, systemNames: Array<string | number>): void;
     serverGameData: any;
     addSystem(SystemConstructor: ISystem, ...args: Array<any>): ServerSystem | ClientSystem;
     protected _stopAllSystems(): void;

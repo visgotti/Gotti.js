@@ -1,19 +1,30 @@
+import System from "../System/System";
 declare type PluginMethod = (...args: any[]) => any;
+declare type KeyValuePair = {
+    [key: string]: any;
+};
 declare type PluginProps = () => any;
-interface Plugin {
+export interface IPlugin {
     name: string;
     props?: PluginProps;
     methods?: {
         [methodName: string]: PluginMethod;
     };
 }
-declare class InstalledPlugin {
+export declare class Plugin {
     readonly name: string;
-    props: PluginProps;
+    propMethod: PluginProps;
     methods: {
         [methodName: string]: PluginMethod;
     };
-    constructor(plugin: Plugin);
+    private _props;
+    props: KeyValuePair;
+    private propNames;
+    private methodNames;
+    constructor(plugin: IPlugin);
+    private applyProps;
+    private applyMethods;
+    applyToSystem(system: System): void;
 }
-export declare function installPlugin(plugin: Plugin): InstalledPlugin;
+export declare function installPlugin(system: System, plugin: Plugin): void;
 export {};

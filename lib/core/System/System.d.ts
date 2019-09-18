@@ -6,6 +6,7 @@ declare abstract class System {
     protected initialized: boolean;
     onRemoteMessage(message: Message): void;
     globals: any;
+    $: any;
     private _serverGameData;
     protected messageQueue: ClientMessageQueue | ServerMessageQueue;
     protected dispatchLocal: Function;

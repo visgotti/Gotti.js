@@ -150,6 +150,12 @@ export class Connector {
         }
     }
 
+    public stopPeerConnection(peerIndex) {
+        if (this.peerConnections[peerIndex]) {
+            this.peerConnections[peerIndex].destroy();
+        }
+    }
+
     public joinInitialArea(options?) {
         if(!this.connection ) {
             throw new Error('No connection, can not join an initial area');
