@@ -53,7 +53,12 @@ export abstract class Process<T> {
 
     public stoppedSystems: Set<string | number>;
 
-    constructor(processEnv: PROCESS_ENV, globals={}) {
+    private pluginInit: Array<{
+        plugin: Plugin,
+        systems: Array<string | number>
+    }> = [];
+
+    constructor(processEnv: PROCESS_ENV, globals={}, plugins=[]) {
         this.globals = globals;
         this.processEnv = processEnv;
         this.systems = {} as SystemLookup<string | number>;
@@ -80,8 +85,25 @@ export abstract class Process<T> {
     public installPlugin(iPlugin: IPlugin, systemNames: Array<string | number>) {
         const plugin = new Plugin(iPlugin);
         if(!systemNames) {
-            systemNames = this.systemNames;
+            systemNames = [...this.systemNames];
         }
+
+        const bufferedSystemNames = [...systemNames];
+
+        // apply to started systems then buffer the rest
+        let indexDiff = 0;
+        for(let i = 0; i < systemNames.length; i++) {
+            const system = this.systems[systemNames[i]];
+            if(system) {
+                plugin.applyToSystem(system);
+                bufferedSystemNames.splice(i - indexDiff, 1);
+                indexDiff++;
+            }
+        }
+        this.pluginInit.push({ plugin, systems: bufferedSystemNames });
+
+
+        /*
         for(let i = 0; i < systemNames.length; i++) {
             const system = this.systems[systemNames[i]];
             if(!system) {
@@ -89,6 +111,8 @@ export abstract class Process<T> {
             }
             plugin.applyToSystem(system)
         }
+
+         */
     }
 
     set serverGameData(data) {
@@ -115,6 +139,11 @@ export abstract class Process<T> {
         this.systemInitializedOrder.set(system.name, this.systemInitializedOrder.size);
 
         this.stoppedSystems.add(system.name);
+        this.pluginInit.forEach(({ plugin, systems }) => {
+            if(systems.includes(system.name)) {
+                plugin.applyToSystem(system);
+            }
+        });
         return system;
     }
 

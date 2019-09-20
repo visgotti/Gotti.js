@@ -34,7 +34,8 @@ export declare abstract class Process<T> {
     startedSystemsLookup: Set<string | number>;
     startedSystems: Array<ServerSystem | ClientSystem>;
     stoppedSystems: Set<string | number>;
-    constructor(processEnv: PROCESS_ENV, globals?: {});
+    private pluginInit;
+    constructor(processEnv: PROCESS_ENV, globals?: {}, plugins?: any[]);
     addGlobal(key: string, value: any): void;
     installPlugin(iPlugin: IPlugin, systemNames: Array<string | number>): void;
     serverGameData: any;
