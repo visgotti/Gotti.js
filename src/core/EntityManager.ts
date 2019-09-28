@@ -25,6 +25,7 @@ export class EntityManager {
             oldAddComponent.call(entity, component);
             const system = this.systemMap[component.name];
             if(system) {
+                component.$ = system.$;
                 system.onEntityAddedComponent(entity, component);
             }
         };

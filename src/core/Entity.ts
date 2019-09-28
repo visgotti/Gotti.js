@@ -1,6 +1,8 @@
 import { Component } from './Component';
 
-export abstract class Entity {
+const EventEmitter = require('eventemitter3');
+
+export abstract class Entity extends EventEmitter {
     public id: string | number;
     public type: string | number;
     public components: any;
@@ -10,6 +12,7 @@ export abstract class Entity {
     public attributeGetters: Array<Array<any>> = [];
 
     constructor(id, type){
+        super();
         // Generate a pseudo random ID
         this.id = id;
         this.type = type;
@@ -40,14 +43,16 @@ export abstract class Entity {
 
         for(var i = 0; i < component.componentMethods.length; i++) {
             let propertyName = component.componentMethods[i];
-            if(this[propertyName] !== undefined){
+            if (this[propertyName] !== undefined) {
                 throw (`Duplicated property ${propertyName} names in component ${component.name} attached to an entity. Component properties must be unique`);
             }
-            if(component[propertyName] instanceof Function) {
+            if (component[propertyName] instanceof Function) {
                 this[propertyName] = component[propertyName].bind(component);
             }
         }
 
+        console.log('binding component.emit to', this.emit);
+        component.emit = this.emit.bind(this);
         // attach setAttribute to component
         component.setAttribute = this.setAttribute.bind(this);
         component.setAttributeGetter = this.setAttributeGetter.bind(this);

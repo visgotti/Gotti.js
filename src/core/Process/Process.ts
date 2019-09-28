@@ -53,6 +53,8 @@ export abstract class Process<T> {
 
     public stoppedSystems: Set<string | number>;
 
+    private initializedPlugins: Array<Plugin>;
+
     private pluginInit: Array<{
         plugin: Plugin,
         systems: Array<string | number>
@@ -83,7 +85,10 @@ export abstract class Process<T> {
     }
 
     public installPlugin(iPlugin: IPlugin, systemNames: Array<string | number>) {
-        const plugin = new Plugin(iPlugin);
+        let foundPlugin = this.pluginInit.find(p => iPlugin.name === p.plugin.name);
+
+        const plugin = foundPlugin ? foundPlugin.plugin : new Plugin(iPlugin);
+
         if(!systemNames) {
             systemNames = [...this.systemNames];
         }
@@ -100,7 +105,11 @@ export abstract class Process<T> {
                 indexDiff++;
             }
         }
-        this.pluginInit.push({ plugin, systems: bufferedSystemNames });
+        if(foundPlugin) {
+            foundPlugin.systems = [...foundPlugin.systems, ...bufferedSystemNames].filter((v, i, a) => a.indexOf(v) === i); // makes sure we dont duplicate system buffers
+        } else {
+            this.pluginInit.push({ plugin, systems: bufferedSystemNames });
+        }
 
 
         /*
@@ -129,6 +138,10 @@ export abstract class Process<T> {
             throw `Duplicate systen name ${system.name}`;
             return null;
         }
+
+        system['installPlugin'] = (iPlugin: IPlugin) => {
+            this.installPlugin(iPlugin, [system.name])
+        };
 
         this.systemInitializer(system);
         this.systems[system.name] = system;
@@ -218,4 +231,9 @@ export abstract class Process<T> {
 
     public abstract startLoop (framesPerSecond: number): void;
     public abstract stopLoop(): void;
+}
+
+
+function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
 }

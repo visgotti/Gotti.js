@@ -70,4 +70,21 @@ describe('ClientSystem', function() {
             done();
         });
     });
+
+    describe('clientSystem.installPlugin', () => {
+        const plugin = {
+            name: "testPlugin",
+            props() {
+                return {
+                    "testprop": "test"
+                }
+            },
+            methods: {
+                test() {
+                    return this.testprop
+                }
+            }
+        }
+    })
+
 });

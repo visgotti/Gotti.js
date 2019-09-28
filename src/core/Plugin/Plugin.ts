@@ -1,4 +1,6 @@
-import System from "../System/System";
+import System, { SystemPlug } from "../System/System";
+
+const EventEmitter = require('eventemitter3');
 
 type PluginMethod = (...args: any[]) => any;
 
@@ -20,6 +22,8 @@ export class Plugin  {
     private _props: KeyValuePair = {};
     public props: KeyValuePair = {};
 
+    private systemPlugs: Array<SystemPlug> = [];
+
     private propNames: Array<string> = [];
     private methodNames: Array<string> = [];
 
@@ -29,6 +33,12 @@ export class Plugin  {
         const methods = plugin.methods ? plugin.methods : null;
         createProps && this.applyProps(createProps());
         methods && this.applyMethods(methods);
+    }
+
+    public emit (eventName, payload) {
+        for(let i = 0; i < this.systemPlugs.length; i++) {
+            this.systemPlugs[i].emit(eventName, payload);
+        }
     }
 
     private applyProps(props) {
@@ -81,6 +91,7 @@ export class Plugin  {
             this[key] = method;
         }
     }
+
     public applyToSystem(system: System) {
         for(let i = 0; i < this.propNames.length; i++) {
             const propName = this.propNames[i];
@@ -94,7 +105,7 @@ export class Plugin  {
                 set: () => {
                     throw new Error(`System ${system.name} cannot set plugin prop: ${propName}, only the plugin ${this.name} can mutate the prop.`)
                 }
-            })
+            });
         }
 
         for(let i = 0; i < this.methodNames.length; i++) {
@@ -104,6 +115,8 @@ export class Plugin  {
             }
             system.$[methodName] = this.methods[methodName];
         }
+
+        this.systemPlugs.push(system.$);
     }
 }
 

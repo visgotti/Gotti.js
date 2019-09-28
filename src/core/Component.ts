@@ -1,5 +1,7 @@
 import { Entity } from './Entity';
 
+import { SystemPlug } from './System/System';
+
 export abstract class Component {
     // name of functions an entity gets by applying the component.
     public componentMethods: Array<string> = [];
@@ -7,6 +9,10 @@ export abstract class Component {
     public setAttribute: Function = () => {};
     public setAttributeGetter: Function = () => {};
     public entityId: string | number;
+
+    public $: SystemPlug;
+
+    readonly emitions: [];
 
     constructor(name: string | number){
         if (typeof(name) === 'undefined')
@@ -19,9 +25,10 @@ export abstract class Component {
         });
         this.name = name;
     }
-
+    public emit(event: string, payload: any) {};
     public onAdded(entity: Entity) {};
     public onRemoved(entity: Entity) {};
+
 };
 
 /*

@@ -179,8 +179,6 @@ describe('Client Process with plugins', function() {
         clientProcess.addSystem(DummySystem3);
     })
     describe('clientProcess.installPlugin', () => {
-        
-      
         it('adds plugin to all systems if no names are specified as second params', (done) => {
             clientProcess.installPlugin(plugin);
             assert.deepStrictEqual(clientProcess.systems[system_names[0]].$.test(), "test");
@@ -194,6 +192,12 @@ describe('Client Process with plugins', function() {
             assert.deepStrictEqual(clientProcess.systems[system_names[1]].$.test(), "test");
             assert.deepStrictEqual(clientProcess.systems[system_names[2]].$.test, undefined);
             done();
+        });
+        it('adds plugins to system if we use system.installPlugin', () => {
+            clientProcess.systems[system_names[0]].installPlugin(plugin);
+            assert.deepStrictEqual(clientProcess.systems[system_names[0]].$.test(), "test");
+            assert.deepStrictEqual(clientProcess.systems[system_names[1]].$.test, undefined);
+            assert.deepStrictEqual(clientProcess.systems[system_names[2]].$.test, undefined);
         })
     });
 })

@@ -21,6 +21,9 @@ const TestPlugin = {
         },
         add(number) {
              this.testNumber+=number;
+        },
+        testEmit() {
+            this.emit("test", "testPayload")
         }
     }
 }
@@ -34,7 +37,7 @@ describe('Plugin', function() {
         it('Adds all the props to the plugin', () => {
             console.log('the testPlugin.props was', testPlugin.props);
             assert.strictEqual(testPlugin.props.testString, "test");
-            assert.strictEqual(testPlugin.props.testNumber, 0); 
+            assert.strictEqual(testPlugin.props.testNumber, 0);
             assert.strictEqual(testPlugin.testString, "test");
             assert.strictEqual(testPlugin.testNumber, 0);
         });
@@ -63,25 +66,26 @@ describe('installPlugin', function() {
         testSystem2 = createDummyClientSystem(system_names[1]);
         installPlugin(testSystem1, testPlugin);
         installPlugin(testSystem2, testPlugin);
-    })
+    });
     it('adds plugin properties to a system', () => {
         assert.strictEqual(testSystem1.$.testString, "test");
         assert.strictEqual(testSystem1.$.testNumber, 0);
 
         assert.strictEqual(testSystem2.$.testString, "test");
         assert.strictEqual(testSystem2.$.testNumber, 0);
-    })
+    });
+
     it('throws error if system tries to set property', () => {
         try {
             testSystem1.$.testString = "newTestString"
         } catch(err) {
             assert.strictEqual(err.message, `System ${testSystem1.name} cannot set plugin prop: testString, only the plugin TestPlugin can mutate the prop.`)
         }
-    })
+    });
     it('Basic method on the system works', () => {
         assert.strictEqual(testSystem1.$.test(), "test");
         assert.strictEqual(testSystem2.$.test(), "test");
-    })
+    });
     it('Methods that change props persist across systems', () => {
         testSystem1.$.add(10);
         assert.strictEqual(testSystem1.$.testNumber, 10);
@@ -89,15 +93,25 @@ describe('installPlugin', function() {
         testSystem2.$.add(10);
         assert.strictEqual(testSystem1.$.testNumber, 20);
         assert.strictEqual(testSystem2.$.testNumber, 20);
-    })
+    });
     it('Property and methods work from implemented system', () => {
         const system = new ImplementedSystem();
         installPlugin(system, testPlugin);
         assert.strictEqual(system.testNumberProperty(), 0);
         system.testAddProperty(5);
         assert.strictEqual(system.testNumberProperty(), 5);
-    })
-})
+    });
+    it('Handles plugin event emits', (done) => {
+        const system = new ImplementedSystem();
+        installPlugin(system, testPlugin);
+
+        system.$.on('test', (payload) => {
+            assert.strictEqual(payload, "testPayload");
+            done();
+        });
+        system.$.testEmit();
+    });
+});
 
 class ImplementedSystem extends ClientSystem {
     public onServerMessage(message) {

@@ -2,6 +2,13 @@ import { Message, ClientMessageQueue } from '../ClientMessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { Entity } from '../Entity';
 import { Component } from '../Component';
+
+import * as EventEmitter from "eventemitter3";
+
+export interface SystemPlug extends EventEmitter {
+    [key: string]: any,
+}
+
 abstract class System {
     protected initialized: boolean;
 
@@ -9,7 +16,7 @@ abstract class System {
 
     public globals: any;
 
-    public $: any = {};
+    public $: SystemPlug = new EventEmitter();
 
     private _serverGameData: any;
 
