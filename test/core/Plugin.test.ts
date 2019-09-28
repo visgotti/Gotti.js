@@ -51,7 +51,7 @@ describe('Plugin', function() {
             assert.strictEqual(testPlugin.testNumber, 2);
         });
     })
-})
+});
 
 describe('installPlugin', function() {
     let testPlugin;
