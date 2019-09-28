@@ -4,6 +4,7 @@ import { Entity } from '../Entity';
 import { Component } from '../Component';
 
 import * as EventEmitter from "eventemitter3";
+import {IPlugin} from "../Plugin/Plugin";
 
 export interface SystemPlug extends EventEmitter {
     [key: string]: any,
@@ -13,6 +14,9 @@ abstract class System {
     protected initialized: boolean;
 
     public onRemoteMessage(message: Message) {};
+
+    // overrided in process addSystem function
+    public installPlugin(plugin: IPlugin) {};
 
     public globals: any;
 

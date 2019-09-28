@@ -2,11 +2,17 @@ import { Message, ClientMessageQueue } from '../ClientMessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { Entity } from '../Entity';
 import { Component } from '../Component';
+import * as EventEmitter from "eventemitter3";
+import { IPlugin } from "../Plugin/Plugin";
+export interface SystemPlug extends EventEmitter {
+    [key: string]: any;
+}
 declare abstract class System {
     protected initialized: boolean;
     onRemoteMessage(message: Message): void;
+    installPlugin(plugin: IPlugin): void;
     globals: any;
-    $: any;
+    $: SystemPlug;
     private _serverGameData;
     protected messageQueue: ClientMessageQueue | ServerMessageQueue;
     protected dispatchLocal: Function;

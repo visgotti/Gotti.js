@@ -19,9 +19,11 @@ export declare class Plugin {
     };
     private _props;
     props: KeyValuePair;
+    private systemPlugs;
     private propNames;
     private methodNames;
     constructor(plugin: IPlugin);
+    emit(eventName: any, payload: any): void;
     private applyProps;
     private applyMethods;
     applyToSystem(system: System): void;

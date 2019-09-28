@@ -34,6 +34,7 @@ export declare abstract class Process<T> {
     startedSystemsLookup: Set<string | number>;
     startedSystems: Array<ServerSystem | ClientSystem>;
     stoppedSystems: Set<string | number>;
+    private initializedPlugins;
     private pluginInit;
     constructor(processEnv: PROCESS_ENV, globals?: {}, plugins?: any[]);
     addGlobal(key: string, value: any): void;
