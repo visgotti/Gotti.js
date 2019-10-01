@@ -88,7 +88,9 @@ export abstract class Process<T> {
         let foundPlugin = this.pluginInit.find(p => iPlugin.name === p.plugin.name);
 
         const plugin = foundPlugin ? foundPlugin.plugin : new Plugin(iPlugin);
-
+        if(!foundPlugin) {
+            plugin.initialize();
+        }
         if(!systemNames) {
             systemNames = [...this.systemNames];
         }
@@ -110,7 +112,6 @@ export abstract class Process<T> {
         } else {
             this.pluginInit.push({ plugin, systems: bufferedSystemNames });
         }
-
 
         /*
         for(let i = 0; i < systemNames.length; i++) {

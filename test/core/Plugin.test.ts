@@ -35,7 +35,6 @@ describe('Plugin', function() {
     })
     describe('installed plugin', () => {
         it('Adds all the props to the plugin', () => {
-            console.log('the testPlugin.props was', testPlugin.props);
             assert.strictEqual(testPlugin.props.testString, "test");
             assert.strictEqual(testPlugin.props.testNumber, 0);
             assert.strictEqual(testPlugin.testString, "test");

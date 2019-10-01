@@ -7,11 +7,12 @@ type PluginMethod = (...args: any[]) => any;
 type KeyValuePair = { [key: string]: any }
 
 type PluginProps = () => any;
-
+type PluginInit = () => any;
 export interface IPlugin {
     name: string,
     props?: PluginProps;
-    methods? :  {[methodName: string]: PluginMethod },
+    methods?:  {[methodName: string]: PluginMethod },
+    init?: PluginInit
 }
 
 export class Plugin  {
@@ -27,12 +28,16 @@ export class Plugin  {
     private propNames: Array<string> = [];
     private methodNames: Array<string> = [];
 
+    public initialize: Function = () => {};
     constructor(plugin: IPlugin) {
         this.name = plugin.name;
         const createProps = plugin.props ? plugin.props : null;
         const methods = plugin.methods ? plugin.methods : null;
         createProps && this.applyProps(createProps());
         methods && this.applyMethods(methods);
+        if(plugin.hasOwnProperty('init')) {
+            this.initialize = plugin.init;
+        }
     }
 
     public emit (eventName, payload) {

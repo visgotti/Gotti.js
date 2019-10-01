@@ -266,7 +266,6 @@ export class PeerConnection {
                 const total = this.last5Pings.reduce((acc, c) => acc + c, 0);
                 this.ping = total / this.last5Pings.length;
             }
-            console.log('the ping became', this.ping);
         } else {
             throw new Error(`INVALID SEQUENCE ${seq} SENT BACK WHEN WE EXPECTED ${this.seq}`);
         }

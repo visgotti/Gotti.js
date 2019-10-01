@@ -160,6 +160,7 @@ describe('Client Process with plugins', function() {
 
     const plugin = {
         name: "testPlugin",
+        init() {},
         props() {
             return {
                 "testprop": "test"
@@ -198,6 +199,11 @@ describe('Client Process with plugins', function() {
             assert.deepStrictEqual(clientProcess.systems[system_names[0]].$.test(), "test");
             assert.deepStrictEqual(clientProcess.systems[system_names[1]].$.test, undefined);
             assert.deepStrictEqual(clientProcess.systems[system_names[2]].$.test, undefined);
+        })
+        it('executes init', () => {
+            const initSpy = sinon.spy(plugin, 'init');
+            clientProcess.installPlugin(plugin);
+            sinon.assert.callCount(initSpy, 1);
         })
     });
 })
