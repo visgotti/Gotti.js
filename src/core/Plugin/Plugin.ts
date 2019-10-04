@@ -27,9 +27,12 @@ export class Plugin  {
 
     private propNames: Array<string> = [];
     private methodNames: Array<string> = [];
-
+    private globals: any = {};
     public initialize: Function = () => {};
-    constructor(plugin: IPlugin) {
+    constructor(plugin: IPlugin, globals?: any) {
+        if(globals) {
+            this.globals = globals;
+        }
         this.name = plugin.name;
         const createProps = plugin.props ? plugin.props : null;
         const methods = plugin.methods ? plugin.methods : null;

@@ -87,7 +87,7 @@ export abstract class Process<T> {
     public installPlugin(iPlugin: IPlugin, systemNames: Array<string | number>) {
         let foundPlugin = this.pluginInit.find(p => iPlugin.name === p.plugin.name);
 
-        const plugin = foundPlugin ? foundPlugin.plugin : new Plugin(iPlugin);
+        const plugin = foundPlugin ? foundPlugin.plugin : new Plugin(iPlugin, this.globals);
         if(!foundPlugin) {
             plugin.initialize();
         }
