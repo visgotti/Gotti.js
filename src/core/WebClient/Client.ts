@@ -6,6 +6,10 @@ import {Connector, ConnectorAuth} from './Connector';
 import ClientSystem from './../System/ClientSystem';
 import { ClientMessageQueue, Message } from '../ClientMessageQueue';
 
+const GOTTI_AUTH_KEY = '__gotti_auth__';
+const GOTTI_AUTH_ID = '__gotti_auth_id__';
+const GOTTI_GATE_PASS = '__gotti_gate_pass__';
+
 export type JoinOptions = { retryTimes: number, requestId: number } & any;
 
 import { ClientProcess } from '../Process/Client';
@@ -57,6 +61,8 @@ export class Client {
 
     private token: string;
 
+    private authId: string;
+
     constructor(url: string, token: string, disableWebRTC=false) {
         this.hostname = url;
 
@@ -72,18 +78,6 @@ export class Client {
             throw new Error(`Duplicate named game process: ${gameType}`)
         }
         this.processes[gameType] = process;
-    }
-
-    public async getConnectorData(gameType, options) {
-        return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}/gate`, this.token, { gameType, options }, (err, data) => {
-                if (err) {
-                    return reject(`Error requesting game ${err}`);
-                } else {
-                    return resolve(data);
-                }
-            });
-        })
     }
 
     private validateServerOpts(serverGameOpts: ServerGameOptions) {
@@ -153,9 +147,32 @@ export class Client {
         this.runningProcess = null;
     }
 
-    public async getGateData() {
+    public authenticate(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
-            httpGetAsync(`${this.hostname}/gate`, this.token, (err, data) => {
+            httpPostAsync(`${this.hostname}/gotti_authenticate`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+                if (err) {
+                    return reject(`Error requesting game ${err}`);
+                } else {
+                    const { auth, authId } = data;
+                    if(authId) {
+                        this.authId = authId;
+                        return resolve(auth);
+                    } else {
+                        reject(`Error from auth server`)
+                    }
+                }
+            });
+        });
+    }
+
+    public async getGateData(clientOptions?) {
+        if(!this.authId) {
+            throw new Error(`You are not authenticated`)
+        }
+        return new Promise((resolve, reject) => {
+            httpPostAsync(`${this.hostname}/gateData`, null, {
+                [GOTTI_AUTH_ID]: this.authId
+            }, (err, data) => {
                 if(err) {
                     return reject(`Error getting gate data ${err}`);
                 }
@@ -167,6 +184,19 @@ export class Client {
         })
     }
 
+    public async requestGame(gameType, options) {
+        return new Promise((resolve, reject) => {
+            httpPostAsync(`${this.hostname}/gate`, this.token, { gameType, options }, (err, data) => {
+                if (err) {
+                    return reject(`Error requesting game ${err}`);
+                } else {
+                    this.startGame(gameType, 60, options).then((joinOptions) => {
+                        return resolve(joinOptions);
+                    });
+                }
+            });
+        })
+    }
 
     /**
      * can dispatch process messages from within a client system using

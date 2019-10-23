@@ -24,8 +24,9 @@ export declare class Plugin {
     private systemPlugs;
     private propNames;
     private methodNames;
+    private globals;
     initialize: Function;
-    constructor(plugin: IPlugin);
+    constructor(plugin: IPlugin, globals?: any);
     emit(eventName: any, payload: any): void;
     private applyProps;
     private applyMethods;
