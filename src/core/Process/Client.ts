@@ -18,6 +18,9 @@ export class ClientProcess extends Process<ClientProcess> {
 
     public peers: Array<number> = [];
 
+    public clientId: number;
+    public gottiId: string;
+
     constructor(client: WebClient, isNetworked: boolean, globals?: any, options?: ClientProcessOptions) {
         super(PROCESS_ENV.CLIENT, globals);
 
@@ -35,6 +38,15 @@ export class ClientProcess extends Process<ClientProcess> {
         // add messageQueue to client which is created in the super constructor.
         this.systemInitializer = this.initializerFactory(this);
 //   this.room.onMessageQueueRelay.add(this.onMessageQueueRelay.bind(this))
+    }
+
+    public setClientIds(gottiId, clientId) {
+        this.gottiId = gottiId;
+        this.clientId = clientId;
+        this.startedSystems.forEach(system => {
+            system['gottiId'] = gottiId;
+            system['clientId'] = clientId;
+        });
     }
 
     // runs abstract area status update functions if the system implements it

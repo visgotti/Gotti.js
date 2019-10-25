@@ -66,6 +66,7 @@ export class Connector {
     public onError: Signal = new Signal();
     public onLeave: Signal = new Signal();
     public onOpen: Signal = new Signal();
+    public onInitialArea: Signal = new Signal();
 
     private process: ClientProcess;
 
@@ -244,7 +245,11 @@ export class Connector {
                 this.areas[message[1]].status = AreaStatus.LISTEN;
             }
             this.areas[message[1]].status = AreaStatus.WRITE;
-            this.process.dispatchOnAreaWrite(message[1], this.writeAreaId === null, message[2]);
+            const isInitial = this.writeAreaId === null;
+            if(isInitial) {
+                this.onInitialArea.dispatch({ areaId: message[1], areaOptions: message[2]})
+            }
+            this.process.dispatchOnAreaWrite(message[1], isInitial, message[2]);
             this.writeAreaId = message[1];
         } else if (code === Protocol.ADD_CLIENT_AREA_LISTEN) {
             // areaId, options?

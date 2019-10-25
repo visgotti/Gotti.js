@@ -55,6 +55,16 @@ export const enum Protocol {
     WS_SERVER_DISCONNECT = 4201,
     WS_TOO_MANY_CLIENTS = 4202,
 }
+export const GOTTI_GET_GAMES_OPTIONS = '__GOTTI_GET_GAMES_OPTIONS__';
+export const GOTTI_GATE_AUTH_ID = '__GOTTI_GATE_AUTH_ID__';
+export const GOTTI_AUTH_KEY = 'GOTTI_AUTH_KEY';
+
+export const GOTTI_HTTP_ROUTES = {
+    AUTHENTICATE: '/gotti_authenticate',
+    REGISTER: '/gotti_register',
+    GET_GAMES: '/gotti_games',
+    JOIN_GAME: '/gotti_join_game'
+}
 
 export enum PeerDisconnectionReasons {
     PEER_PLAYER_DISCONNECTED_FROM_SERVER,

@@ -1,14 +1,10 @@
 import { Signal } from '@gamestdio/signals';
 import * as msgpack from './msgpack';
 
-import { Protocol } from './Protocol';
+import { Protocol, GOTTI_GET_GAMES_OPTIONS, GOTTI_GATE_AUTH_ID, GOTTI_AUTH_KEY, GOTTI_HTTP_ROUTES } from './Protocol';
 import {Connector, ConnectorAuth} from './Connector';
 import ClientSystem from './../System/ClientSystem';
 import { ClientMessageQueue, Message } from '../ClientMessageQueue';
-
-const GOTTI_AUTH_KEY = '__gotti_auth__';
-const GOTTI_AUTH_ID = '__gotti_auth_id__';
-const GOTTI_GATE_PASS = '__gotti_gate_pass__';
 
 export type JoinOptions = { retryTimes: number, requestId: number } & any;
 
@@ -18,13 +14,14 @@ interface Window {
     RTCPeerConnection?: any;
     navigator?: any;
 }
+
 declare var window: Window;
 
 export type ServerGameOptions = {
     host: string,
     port: number,
     gottiId: string,
-    playerIndex: number,
+    clientId: number,
 }
 
 export class Client {
@@ -81,8 +78,7 @@ export class Client {
     }
 
     private validateServerOpts(serverGameOpts: ServerGameOptions) {
-        console.log('server game opts were', serverGameOpts);
-        return serverGameOpts.gottiId && serverGameOpts.playerIndex && serverGameOpts.host && serverGameOpts.port
+        return serverGameOpts.gottiId && serverGameOpts.hasOwnProperty('clientId') && serverGameOpts.host && serverGameOpts.port
     }
 
     public async startGame(gameType, fps=60, serverGameOpts?: ServerGameOptions, serverGameData?: any) {
@@ -101,14 +97,14 @@ export class Client {
 
             if(process.isNetworked) {
                 if(this.validateServerOpts(serverGameOpts)){
-                    const { gottiId, playerIndex, host, port } = serverGameOpts;
-                    this.joinConnector(gottiId, playerIndex, `${host}:${port}`).then(joinOptions => {
+                    const { gottiId, clientId, host, port } = serverGameOpts;
+                    this.joinConnector(gottiId, clientId, `${host}:${port}`).then(joinOptions => {
+                        process.setClientIds(gottiId, clientId);
                         return resolve(joinOptions);
                     });
                 } else {
                     throw new Error('Invalid server game opts for server connection.')
                 }
-
             } else {
                 return resolve();
             }
@@ -149,29 +145,50 @@ export class Client {
 
     public authenticate(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}/gotti_authenticate`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.AUTHENTICATE}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
-                    const { auth, authId } = data;
+                    const auth = data[GOTTI_AUTH_KEY];
+                    const authId = data[GOTTI_GATE_AUTH_ID];
                     if(authId) {
                         this.authId = authId;
                         return resolve(auth);
                     } else {
-                        reject(`Error from auth server`)
+                        reject(`Error from authentication server`)
                     }
                 }
             });
         });
     }
 
-    public async getGateData(clientOptions?) {
+    public register(options?: any, tokenHeader?: string) {
+        return new Promise((resolve, reject) => {
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.REGISTER}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+                if (err) {
+                    return reject(`Error requesting game ${err}`);
+                } else {
+                    const auth = data[GOTTI_AUTH_KEY];
+                    const authId = data[GOTTI_GATE_AUTH_ID];
+                    if(authId) {
+                        this.authId = authId;
+                        return resolve(auth);
+                    } else {
+                        reject(`Error from authentication server`)
+                    }
+                }
+            });
+        });
+    }
+
+    public async getGames(clientOptions?, token?) {
         if(!this.authId) {
             throw new Error(`You are not authenticated`)
         }
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}/gateData`, null, {
-                [GOTTI_AUTH_ID]: this.authId
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.GET_GAMES}`, token, {
+                [GOTTI_GATE_AUTH_ID]: this.authId,
+                [GOTTI_GET_GAMES_OPTIONS]: clientOptions,
             }, (err, data) => {
                 if(err) {
                     return reject(`Error getting gate data ${err}`);
@@ -184,18 +201,52 @@ export class Client {
         })
     }
 
-    public async requestGame(gameType, options) {
+    public async joinGame(gameType, joinOptions?, token?, fps=60) {
+        if(!this.authId) {
+            throw new Error(`You are not authenticated`)
+        }
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}/gate`, this.token, { gameType, options }, (err, data) => {
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, token,
+                {
+                    gameType,
+                    [GOTTI_GET_GAMES_OPTIONS]: joinOptions,
+                    [GOTTI_GATE_AUTH_ID]: this.authId,
+                }, (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
-                    this.startGame(gameType, 60, options).then((joinOptions) => {
+                    this.startGame(gameType, fps, data).then((joinOptions) => {
                         return resolve(joinOptions);
                     });
                 }
             });
         })
+    }
+
+    public async joinInitialArea(clientOptions?) {
+        console.log('joining initial area... please register the onAreaWrite in one of your systems to handle the callback.');
+
+        if(!this.runningProcess) {
+            throw new Error('There is no currently running networked process.')
+        }
+        if(!this.runningProcess.isNetworked) {
+            throw new Error('The current running process is not networked, there is no area to write to.');
+        }
+        if(!this.joinedGame) {
+            throw new Error('Make sure client.startGame\'s promise resolved when called with gotti credentials in parameters')
+        }
+        this.connector.joinInitialArea(clientOptions);
+
+        return new Promise((resolve, reject) => {
+            this.connector.onInitialArea.add(({ areaOptions, areaId, err }) => {
+                if(err) {
+                    return reject(err)
+                }
+                return resolve({ areaOptions, areaId });
+            });
+        });
+
+
     }
 
     /**
@@ -390,10 +441,11 @@ function httpGetAsync(url, token, callback)
 function httpPostAsync(url, token, request, callback) {
     var http = new XMLHttpRequest();
     http.open('POST', url, true);
-
-//Send the proper header information along with the request
-    http.setRequestHeader('Content-Type', 'application/json');
-    http.setRequestHeader('authorization', token);
+    if(token) {
+        //Send the proper header information along with the request
+        http.setRequestHeader('Content-Type', 'application/json');
+        http.setRequestHeader('authorization', token);
+    }
 
     http.onreadystatechange = function() {//Call a function when the state changes.
         if(http.readyState == 4) {
