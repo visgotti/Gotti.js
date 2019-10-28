@@ -11,7 +11,7 @@ export declare type ServerGameOptions = {
     host: string;
     port: number;
     gottiId: string;
-    playerIndex: number;
+    clientId: number;
 };
 export declare class Client {
     private runningProcess;
@@ -32,16 +32,20 @@ export declare class Client {
     protected requestId: number;
     protected hostname: string;
     private token;
-    constructor(url: string, token: string, disableWebRTC?: boolean);
+    private authId;
+    constructor(url: string, disableWebRTC?: boolean);
     addGameProcess(gameType: any, process: ClientProcess): void;
-    getConnectorData(gameType: any, options: any): Promise<unknown>;
     private validateServerOpts;
     startGame(gameType: any, fps?: number, serverGameOpts?: ServerGameOptions, serverGameData?: any): Promise<unknown>;
     updateServerGameData(data: any): void;
     stopGame(): void;
     private startGameProcess;
     private clearGameProcess;
-    getGateData(): Promise<unknown>;
+    authenticate(options?: any, tokenHeader?: string): Promise<unknown>;
+    register(options?: any, tokenHeader?: string): Promise<unknown>;
+    getGames(clientOptions?: any, token?: any): Promise<unknown>;
+    joinGame(gameType: any, joinOptions?: any, token?: any, fps?: number): Promise<unknown>;
+    joinInitialArea(clientOptions?: any): Promise<unknown>;
     /**
      * can dispatch process messages from within a client system using
      * this.dispatchProcessMessage()

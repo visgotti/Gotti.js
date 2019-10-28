@@ -60,13 +60,12 @@ export class Client {
 
     private authId: string;
 
-    constructor(url: string, token: string, disableWebRTC=false) {
+    constructor(url: string, disableWebRTC=false) {
         this.hostname = url;
 
         this.options = {
             isWebRTCSupported: window.RTCPeerConnection && window.navigator.userAgent.indexOf("Edge") < 0 && !disableWebRTC
         };
-        this.token = token;
         this.connector = new Connector();
     }
 
@@ -145,7 +144,7 @@ export class Client {
 
     public authenticate(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.AUTHENTICATE}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.AUTHENTICATE}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
@@ -164,7 +163,7 @@ export class Client {
 
     public register(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.REGISTER}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.REGISTER}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
@@ -186,7 +185,7 @@ export class Client {
             throw new Error(`You are not authenticated`)
         }
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.GET_GAMES}`, token, {
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.GET_GAMES}`, token, {
                 [GOTTI_GATE_AUTH_ID]: this.authId,
                 [GOTTI_GET_GAMES_OPTIONS]: clientOptions,
             }, (err, data) => {
@@ -206,7 +205,7 @@ export class Client {
             throw new Error(`You are not authenticated`)
         }
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, token,
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, token,
                 {
                     gameType,
                     [GOTTI_GET_GAMES_OPTIONS]: joinOptions,
@@ -245,8 +244,6 @@ export class Client {
                 return resolve({ areaOptions, areaId });
             });
         });
-
-
     }
 
     /**
@@ -264,7 +261,6 @@ export class Client {
     public raiseMessage(messageName, payload: any) {
         this.processMessageHandlers[messageName] && this.processMessageHandlers[messageName](payload);
     }
-
 
     /**
      * When you finally join a game, you need to make one last mandatory request
@@ -441,9 +437,9 @@ function httpGetAsync(url, token, callback)
 function httpPostAsync(url, token, request, callback) {
     var http = new XMLHttpRequest();
     http.open('POST', url, true);
+    http.setRequestHeader('Content-Type', 'application/json');
     if(token) {
         //Send the proper header information along with the request
-        http.setRequestHeader('Content-Type', 'application/json');
         http.setRequestHeader('authorization', token);
     }
 

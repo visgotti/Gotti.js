@@ -44,6 +44,7 @@ export declare class Connector {
     onError: Signal;
     onLeave: Signal;
     onOpen: Signal;
+    onInitialArea: Signal;
     private process;
     private areas;
     connection: Connection;

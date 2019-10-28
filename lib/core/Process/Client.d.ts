@@ -10,7 +10,10 @@ export declare class ClientProcess extends Process<ClientProcess> {
     messageQueue: ClientMessageQueue;
     isNetworked: boolean;
     peers: Array<number>;
+    clientId: number;
+    gottiId: string;
     constructor(client: WebClient, isNetworked: boolean, globals?: any, options?: ClientProcessOptions);
+    setClientIds(gottiId: any, clientId: any): void;
     /**
      *
      * @param areaId - id of area that the client is now writing to.

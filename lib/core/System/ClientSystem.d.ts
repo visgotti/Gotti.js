@@ -4,6 +4,8 @@ import { EntityManager } from "../EntityManager";
 declare abstract class ClientSystem extends System {
     readonly name: string | number;
     private client;
+    private gottiId;
+    private clientId;
     private _peers;
     protected dispatchToServer: (message: Message) => void;
     protected dispatchProcessMessage: (messageName: string, payload: any) => void;
@@ -22,7 +24,7 @@ declare abstract class ClientSystem extends System {
      */
     initialize(client: any, messageQueue: ClientMessageQueue, entityManager: EntityManager, isNetworked: any, globalSystemVariables: {
         [reference: string]: any;
-    }): void;
+    }, gottiId: any, clientId: any): void;
     abstract onServerMessage(message: Message): any;
     abstract onPeerMessage(peerId: number | string, message: Message): any;
     addListenStatePaths(path: string | Array<string>): void;
