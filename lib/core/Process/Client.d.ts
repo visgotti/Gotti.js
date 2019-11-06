@@ -57,9 +57,10 @@ export declare class ClientProcess extends Process<ClientProcess> {
     onPeerMissedPing(peerIndex: number, missedPings: number): void;
     startLoop(fps?: number): void;
     stopLoop(): void;
-    startSystem(systemName: any): void;
+    clearGame(): void;
+    startSystem(system: any): void;
     startAllSystems(): void;
-    stopSystem(systemName: any): void;
+    stopSystem(system: any): void;
     stopAllSystems(): void;
 }
 export {};

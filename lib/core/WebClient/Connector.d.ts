@@ -59,9 +59,10 @@ export declare class Connector {
     private handlePeerConnectionRequest;
     private handleSignalData;
     requestPeerConnection(peerIndex: number, systemName: string | number, requestOptions: any, systemRequestCallback: any): void;
+    stopAllPeerConnections(): void;
     stopPeerConnection(peerIndex: any): void;
     joinInitialArea(options?: any): void;
-    leave(): void;
+    disconnect(): void;
     sendPeerMessage(peerIndex: any, message: any): void;
     sendAllPeersMessage(message: any): void;
     sendPeersMessage(peerIndexes: Array<number>, message: any): void;

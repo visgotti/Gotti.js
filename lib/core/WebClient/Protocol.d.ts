@@ -42,8 +42,10 @@ export declare const GOTTI_GET_GAMES_OPTIONS = "__GOTTI_GET_GAMES_OPTIONS__";
 export declare const GOTTI_GATE_AUTH_ID = "__GOTTI_AUTH_ID__";
 export declare const GOTTI_AUTH_KEY = "__GOTTI_AUTH_KEY__";
 export declare const GOTTI_HTTP_ROUTES: {
+    BASE_AUTH: string;
     AUTHENTICATE: string;
     REGISTER: string;
+    BASE_GATE: string;
     GET_GAMES: string;
     JOIN_GAME: string;
 };

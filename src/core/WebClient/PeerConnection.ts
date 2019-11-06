@@ -107,7 +107,6 @@ export class PeerConnection {
 
     private applyQueuedIceCandidates() {
         for(let i = 0; i < this.queuedIceCandidates.length; i++) {
-            console.log('APPLYING ICE CANIDATE QUEUE CUZ WE GOT REMOTE DESCRIPTION')
             this.peerConnection.addIceCandidate(new RTCIceCandidate(this.queuedIceCandidates[i]));
         }
         this.queuedIceCandidates.length = 0;
@@ -285,7 +284,6 @@ export class PeerConnection {
     }
 
     public destroy() {
-        console.warn('trying to close peer connection!!!!');
         this.peerConnection.close();
     }
 }

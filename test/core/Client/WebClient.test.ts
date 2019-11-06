@@ -12,7 +12,7 @@ describe('Creates a web client', function() {
     const networkedProcessKey = 'network';
 
     beforeEach('creates instance of a client, a dummy offline process and a dummy networked process', (done) => {
-        client = new Client('', '');
+        client = new Client('', []);
         networkedProcess = createDummyNetworkClientProcess();
         offlineProcess = createDummyOfflineClientProcess();
         done();

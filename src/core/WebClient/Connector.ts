@@ -11,7 +11,7 @@ import {Protocol, StateProtocol} from './Protocol';
 import {PeerConnection} from "./PeerConnection";
 
 import {ClientProcess} from '../Process/Client';
-
+import { ProcessManager } from './ProcessManager';
 import { encode } from './msgpack';
 
 export enum AreaStatus {
@@ -84,22 +84,23 @@ export class Connector {
 
     constructor() {}
 
-    public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, options: any = {}) {
+    public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, options: any = {}) {
         const { gottiId, playerIndex, connectorURL } = connectorAuth;
 
         this.gottiId = gottiId;
         this.playerIndex = playerIndex;
-
+        this.processManager = processManager;
         this.process = process;
         this.messageQueue = process.messageQueue;
-
+        console.log('trying to connect:3')
         let url = this.buildEndPoint(connectorURL, options);
+        console.log('url was', url);
         this.connection = new Connection(url);
         this.connection.onopen = () => {};
         this.connection.onmessage = this.onMessageCallback.bind(this);
         return new Promise((resolve, reject) => {
-            this.onJoinConnector.add((areaData, joinData) => {
-                return resolve({ areaData, joinData });
+            this.onJoinConnector.add((areaData, gameData, joinData) => {
+                return resolve({ areaData, gameData, joinData });
             })
         })
     }
@@ -151,6 +152,12 @@ export class Connector {
         }
     }
 
+    public stopAllPeerConnections() {
+        for(let peerIndex in this.peerConnections) {
+            this.peerConnections[peerIndex].destroy();
+        }
+    }
+
     public stopPeerConnection(peerIndex) {
         if (this.peerConnections[peerIndex]) {
             this.peerConnections[peerIndex].destroy();
@@ -169,13 +176,12 @@ export class Connector {
         this.connection.send([Protocol.GET_INITIAL_CLIENT_AREA_WRITE, options]);
     }
 
-    public leave(): void {
-        if (this.connection) {
-            //     this.connection.send([Protocol.LEAVE_ROOM]);
-
-        } else {
-            this.onLeave.dispatch();
-        }
+    public disconnect() {
+        this.removeAllListeners();
+        this.stopAllPeerConnections();
+        this.connection.close();
+        this.process = null;
+        this.messageQueue = null;
     }
 
     public sendPeerMessage(peerIndex, message: any) {
@@ -211,7 +217,6 @@ export class Connector {
     }
 
     public removeAllListeners() {
-        //  super.removeAllListeners();
         this.onJoinConnector.removeAll();
         this.onStateChange.removeAll();
         this.onMessage.removeAll();
@@ -219,35 +224,41 @@ export class Connector {
         this.onLeave.removeAll();
     }
 
-    protected onJoin(areaOptions, joinOptions) {
-        this.onJoinConnector.dispatch(areaOptions, joinOptions);
-        Object.keys(areaOptions).forEach(areaId => {
+    protected onJoin(areaDatas, gameData, joinOptions) {
+        Object.keys(areaDatas).forEach(areaId => {
+            const { data, type } = areaDatas[areaId];
             this.areas[areaId] = {
                 _previousState: {},
                 status: AreaStatus.NOT_IN,
                 state: new StateContainer({}),
-                options: areaOptions[areaId],
+                data,
+                type,
             };
         })
+        this.onJoinConnector.dispatch(this.areas, gameData, joinOptions);
     }
 
     protected onMessageCallback(event) { // TODO: REFACTOR PROTOCOLS TO USE BITWISE OPS PLS
         const message = msgpack.decode(new Uint8Array(event.data));
         const code = message[0];
         if (code === Protocol.JOIN_CONNECTOR) {
-            // [areaOptions, joinOptions]
-            this.onJoin(message[1], message[2]);
+            // [areaData, gameData joinOptions]
+            this.onJoin(message[1], message[2], message[3]);
         } else if (code === Protocol.JOIN_CONNECTOR_ERROR) {
             this.onError.dispatch(message[1]);
         } else if (code === Protocol.SET_CLIENT_AREA_WRITE) {
-            // newAreaId, oldAreaId?, options?
-            if(message[2]) {
-                this.areas[message[1]].status = AreaStatus.LISTEN;
+            // newAreaId, options?
+            if(this.writeAreaId) {
+                this.areas[this.writeAreaId].status = AreaStatus.LISTEN;
             }
             this.areas[message[1]].status = AreaStatus.WRITE;
             const isInitial = this.writeAreaId === null;
             if(isInitial) {
                 this.onInitialArea.dispatch({ areaId: message[1], areaOptions: message[2]})
+            }
+            // if we werent already listening then start the area systems
+            if(!(this.areas[message[1]].status === AreaStatus.LISTEN)) {
+                this.processManager.startAreaSystems(message[1]);
             }
             this.process.dispatchOnAreaWrite(message[1], isInitial, message[2]);
             this.writeAreaId = message[1];
@@ -340,10 +351,11 @@ export class Connector {
         const index = this.connectedPeerIndexes.indexOf(peerIndex);
         if(index > -1) {
             this.connectedPeerIndexes.splice(index, 1);
-            this.process.peers = this.connectedPeerIndexes;
-            this.process.onPeerDisconnection(peerIndex, options);
+            if(this.process) {
+                this.process.peers = this.connectedPeerIndexes;
+                this.process.onPeerDisconnection(peerIndex, options);
+            }
         }
-
         delete this.peerConnections[peerIndex];
         peerConnection.destroy();
     }

@@ -1,6 +1,8 @@
 import { Signal } from '@gamestdio/signals';
 import * as msgpack from './msgpack';
 
+import { GameProcessSetup, ProcessManager } from "./ProcessManager";
+
 import { Protocol, GOTTI_GET_GAMES_OPTIONS, GOTTI_GATE_AUTH_ID, GOTTI_AUTH_KEY, GOTTI_HTTP_ROUTES } from './Protocol';
 import {Connector, ConnectorAuth} from './Connector';
 import ClientSystem from './../System/ClientSystem';
@@ -26,7 +28,7 @@ export type ServerGameOptions = {
 
 export class Client {
     private runningProcess: ClientProcess = null;
-    private processes: {[gameType: string]: ClientProcess } = {};
+    private processFactories: {[gameType: string]: (gameOptions: any) => ClientProcess } = {};
     private inGate = false;
     private stateListeners : {[path: string]: Array<string>} = {};
     private systemStateHandlers: {[systemName: string]: {
@@ -60,54 +62,31 @@ export class Client {
 
     private authId: string;
 
-    constructor(url: string, disableWebRTC=false) {
-        this.hostname = url;
+    private processManager: ProcessManager;
 
+    constructor(url: string, gameProcessSetups: Array<GameProcessSetup>, disableWebRTC=false) {
+        this.hostname = url;
+        this.processManager = new ProcessManager(gameProcessSetups, this);
         this.options = {
             isWebRTCSupported: window.RTCPeerConnection && window.navigator.userAgent.indexOf("Edge") < 0 && !disableWebRTC
         };
         this.connector = new Connector();
     }
 
-    public addGameProcess(gameType, process: ClientProcess) {
-        if(gameType in this.processes) {
-            throw new Error(`Duplicate named game process: ${gameType}`)
+    public clearGame() {
+        if(this.runningProcess) {
+            this.processManager.clearAllProcesses();
+            this.connector.disconnect();
+            this.joinedGame = false;
+            this.connector = new Connector();
+            this.onJoinGame.removeAll();
+        } else {
+            throw new Error('no game has started to clear');
         }
-        this.processes[gameType] = process;
     }
 
     private validateServerOpts(serverGameOpts: ServerGameOptions) {
         return serverGameOpts.gottiId && serverGameOpts.hasOwnProperty('clientId') && serverGameOpts.host && serverGameOpts.port
-    }
-
-    public async startGame(gameType, fps=60, serverGameOpts?: ServerGameOptions, serverGameData?: any) {
-        return new Promise((resolve, reject) => {
-            const process = this.processes[gameType];
-
-            if(!process) {
-                return reject('Invalid gameType');
-            }
-
-            if(serverGameData) {
-                process.serverGameData = serverGameData;
-            }
-
-            this.startGameProcess(process, fps);
-
-            if(process.isNetworked) {
-                if(this.validateServerOpts(serverGameOpts)){
-                    const { gottiId, clientId, host, port } = serverGameOpts;
-                    this.joinConnector(gottiId, clientId, `${host}:${port}`).then(joinOptions => {
-                        process.setClientIds(gottiId, clientId);
-                        return resolve(joinOptions);
-                    });
-                } else {
-                    throw new Error('Invalid server game opts for server connection.')
-                }
-            } else {
-                return resolve();
-            }
-        });
     }
 
     public updateServerGameData(data: any) {
@@ -115,31 +94,6 @@ export class Client {
             throw new Error('No process is running to update server game data.');
         }
         this.runningProcess.serverGameData = data;
-    }
-
-    public stopGame() {
-        if(!this.runningProcess) {
-            throw new Error('No process is running to stop');
-        }
-        if(this.runningProcess.isNetworked) {
-            this.close()
-        }
-        this.clearGameProcess();
-    }
-
-    private startGameProcess(process, fps) {
-        if(this.runningProcess !== null) {
-            this.clearGameProcess();
-        }
-        this.runningProcess = process;
-        this.runningProcess.startAllSystems();
-        this.runningProcess.startLoop(fps);
-    }
-
-    private clearGameProcess() {
-        this.runningProcess.stopAllSystems();
-        this.runningProcess.stopLoop();
-        this.runningProcess = null;
     }
 
     public authenticate(options?: any, tokenHeader?: string) {
@@ -210,13 +164,17 @@ export class Client {
                     gameType,
                     [GOTTI_GET_GAMES_OPTIONS]: joinOptions,
                     [GOTTI_GATE_AUTH_ID]: this.authId,
-                }, (err, data) => {
+                }, async (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
-                    this.startGame(gameType, fps, data).then((joinOptions) => {
-                        return resolve(joinOptions);
-                    });
+                    const { gottiId, clientId, host, port, gameData, areaData } = data;
+                    this.runningProcess = await this.processManager.initializeGame(gameType, gameData, areaData);
+                    const joinOptions = await this.joinConnector(gottiId, clientId, `${host}:${port}`);
+                    //TODO: initializing process only after onJoin returns
+                    console.log('got game data from join connector', gameData);
+                    this.processManager.startCurrentGameSystems(joinOptions);
+                    return resolve(gameData);
                 }
             });
         })
@@ -291,7 +249,7 @@ export class Client {
 
         const joinOpts = { gottiId, playerIndex, connectorURL } as ConnectorAuth;
 
-        const options = await this.connector.connect(joinOpts, this.runningProcess, this.options);
+        const options = await this.connector.connect(joinOpts, this.runningProcess, this.processManager, this.options);
 
         this.joinedGame = true;
 

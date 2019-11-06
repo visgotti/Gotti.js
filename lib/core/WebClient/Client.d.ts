@@ -1,4 +1,5 @@
 import { Signal } from '@gamestdio/signals';
+import { GameProcessSetup } from "./ProcessManager";
 import { Connector } from './Connector';
 import ClientSystem from './../System/ClientSystem';
 import { Message } from '../ClientMessageQueue';
@@ -6,7 +7,6 @@ export declare type JoinOptions = {
     retryTimes: number;
     requestId: number;
 } & any;
-import { ClientProcess } from '../Process/Client';
 export declare type ServerGameOptions = {
     host: string;
     port: number;
@@ -15,7 +15,7 @@ export declare type ServerGameOptions = {
 };
 export declare class Client {
     private runningProcess;
-    private processes;
+    private processFactories;
     private inGate;
     private stateListeners;
     private systemStateHandlers;
@@ -33,14 +33,11 @@ export declare class Client {
     protected hostname: string;
     private token;
     private authId;
-    constructor(url: string, disableWebRTC?: boolean);
-    addGameProcess(gameType: any, process: ClientProcess): void;
+    private processManager;
+    constructor(url: string, gameProcessSetups: Array<GameProcessSetup>, disableWebRTC?: boolean);
+    clearGame(): void;
     private validateServerOpts;
-    startGame(gameType: any, fps?: number, serverGameOpts?: ServerGameOptions, serverGameData?: any): Promise<unknown>;
     updateServerGameData(data: any): void;
-    stopGame(): void;
-    private startGameProcess;
-    private clearGameProcess;
     authenticate(options?: any, tokenHeader?: string): Promise<unknown>;
     register(options?: any, tokenHeader?: string): Promise<unknown>;
     getGames(clientOptions?: any, token?: any): Promise<unknown>;

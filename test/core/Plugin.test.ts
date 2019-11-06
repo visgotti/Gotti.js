@@ -1,32 +1,11 @@
 import { Plugin, installPlugin } from '../../src/core/Plugin/Plugin';
-import { createDummyClientSystem, system_names, Messages } from '../mocks';
+import { createDummyClientSystem, system_names, Messages, TestPlugin } from '../mocks';
 
 import ClientSystem from '../../src/core/System/ClientSystem';
 
 import * as assert from 'assert';
 import * as mocha from 'mocha';
 import * as sinon from 'sinon';
-
-const TestPlugin = {
-    name: "TestPlugin",
-    props() {
-        return {
-            testString: "test",
-            testNumber: 0,
-        }
-    },
-    methods: {
-        test() {
-            return "test"
-        },
-        add(number) {
-             this.testNumber+=number;
-        },
-        testEmit() {
-            this.emit("test", "testPayload")
-        }
-    }
-}
 
 describe('Plugin', function() {
     let testPlugin;

@@ -145,19 +145,25 @@ export class ClientProcess extends Process<ClientProcess> {
     }
 
     public stopLoop() {
+        this.clear();
         clearGameLoop();
     }
 
-    public startSystem(systemName) {
-        this._startSystem(systemName);
+    public clearGame() {
+        this.clear();
+        clearGameLoop();
+    }
+
+    public startSystem(system) {
+        this._startSystem(system);
     }
 
     public startAllSystems() {
         this._startAllSystems();
     }
 
-    public stopSystem(systemName) {
-        this._stopSystem(systemName);
+    public stopSystem(system) {
+        this._stopSystem(system);
     }
 
     public stopAllSystems() {

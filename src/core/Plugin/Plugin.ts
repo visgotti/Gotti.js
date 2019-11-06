@@ -8,6 +8,7 @@ type KeyValuePair = { [key: string]: any }
 
 type PluginProps = () => any;
 type PluginInit = () => any;
+
 export interface IPlugin {
     name: string,
     props?: PluginProps;

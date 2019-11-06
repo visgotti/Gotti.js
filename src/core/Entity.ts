@@ -50,8 +50,6 @@ export abstract class Entity extends EventEmitter {
                 this[propertyName] = component[propertyName].bind(component);
             }
         }
-
-        console.log('binding component.emit to', this.emit);
         component.emit = this.emit.bind(this);
         // attach setAttribute to component
         component.setAttribute = this.setAttribute.bind(this);

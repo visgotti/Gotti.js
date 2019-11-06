@@ -80,7 +80,7 @@ abstract class System {
     public abstract initialize(...args: any[]): void;
 
     public abstract update (delta) : void;
-    public abstract clear() : void;
+    public abstract onClear() : void;
 
     //overrided in ServerSystem and ClientSystem initialize function
     public initializeEntity(entity:Entity, data?: any) {};

@@ -31,7 +31,7 @@ declare abstract class System {
     abstract onLocalMessage(message: Message): void;
     abstract initialize(...args: any[]): void;
     abstract update(delta: any): void;
-    abstract clear(): void;
+    abstract onClear(): void;
     initializeEntity(entity: Entity, data?: any): void;
     destroyEntity(entity: Entity): void;
     /**
