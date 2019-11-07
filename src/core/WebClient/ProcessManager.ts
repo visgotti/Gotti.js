@@ -20,23 +20,24 @@ export type GameProcessSetup = {
 
 export class ProcessManager {
     private areaData: any;
-    private systemNamesByArea: { [areaType: string]: Array<string | number> };
-    private startedAreaSystemCount: { [systemName: string]: number };
+    private systemNamesByArea: { [areaType: string]: Array<string | number> } = {};
+    private startedAreaSystemCount: { [systemName: string]: number } = {};
     private runningGameProcess: ClientProcess;
     private runningGameProcessSetup: GameProcessSetup;
     private runningAreaProcessSetup: { systems: Array<ISystem>, type: string };
     private areaSystems: { [areaName: string]: Array<ClientSystem> } = {};
     private currentArea: string;
+    private gameSystemConstructors = [];
     private startedAreaSystemConstructors: Array<any> = [];
     private gameProcessSetups: Array<GameProcessSetup>;
     readonly client: Client;
+    private systemConstructorNameToPrototypeName: any = {};
 
     constructor(gameProcessSetups: Array<GameProcessSetup>, client: Client) {
         this.validateGameProcessSetups(gameProcessSetups);
         this.gameProcessSetups = gameProcessSetups;
         this.client = client;
     }
-
     private validateGameProcessSetups(gameProcessSetups) {
         if(!Array.isArray(gameProcessSetups)) throw new Error(`game process files need to be an array`);
         const usedGameNames = {};
@@ -65,8 +66,11 @@ export class ProcessManager {
                     if(!a.type) throw new Error(`game process ${gp} area ${a} needs an type string property`);
                     if(usedGameAreasTypes[gp.type]) throw new Error(`${gp.type} already in use as a game type in game ${gp.type}.`);
                     usedGameNames[gp.type] = true;
-                    if(!a.systems || !Array.isArray(a.systems)) throw `Area ${a.type} systems needs to be an array of systems`
+                    if(!a.systems || !Array.isArray(a.systems)) throw `Area ${a.type} systems needs to be an array of systems`;
                     a.systems.forEach(s => {
+                        if(gp.systems.includes(s)) {
+                            throw new Error(`Area ${a} is using a duplicate system as the game process ${gp} if a game process uses a system, an area should not as well.`)
+                        }
                         if(!(s.prototype instanceof ClientSystem)) {
                             throw new Error(`game type ${gp.type} area ${a.type} system ${s} does not inherit from ClientSystem, make sure your systems array contains system constructors/classes, not objects.`)
                         }
@@ -79,9 +83,10 @@ export class ProcessManager {
     public removeAreaSystems(areaId) {
         const systemNames = this.systemNamesByArea[this.areaData[areaId].type];
         for(let i = 0; i < systemNames.length; i++){
-            this.startedAreaSystemCount[systemNames[i]]--;
-            if(!this.startedAreaSystemCount) {
-                this.runningGameProcess.stopSystem(systemNames[i])
+            const systemName = systemNames[i];
+            this.startedAreaSystemCount[systemName]--;
+            if(!this.startedAreaSystemCount[systemName]) {
+                this.runningGameProcess.stopSystem(systemName)
             }
         }
     }
@@ -124,11 +129,11 @@ export class ProcessManager {
         this.runningGameProcess.dispatchOnAreaWrite(areaType, isInitial, areaJoinData);
     }
 
-    public async changeGameProcessSetup(gameType, gameOptions) {
+    public async changeGameProcessSetup(gameType, gameData, areaData) {
         if(this.runningGameProcess) {
             this.clearAllProcesses();
         }
-        return await this.initializeGame(gameType, gameOptions);
+        return await this.initializeGame(gameType, gameData, areaData);
     }
 
     public clearAllProcesses() {
@@ -140,16 +145,16 @@ export class ProcessManager {
         this.currentArea = "";
     }
 
-    public async initializeGame(gameType, gameData, areaData) {
+    public async initializeGame(gameType, gameData?, areaData?) {
         const process = this.gameProcessSetups.find(p => p.type === gameType);
         if(!process) throw new Error(`Game ${gameType} was not found in processes.`);
         this.runningGameProcessSetup = process;
         this.areaData = areaData;
 
         let globals = {};
-        if(process.globals) {
+        if(process.globals && process.isNetworked) {
             if(typeof process.globals === "function") {
-                globals = await process.globals({ gameData, areaData }, this.client);
+                globals = await process.globals(gameData, areaData, this.client);
             } else {
                 globals = process.globals;
             }
@@ -168,10 +173,11 @@ export class ProcessManager {
                 if(!addedSystemConstructors.includes(s)) {
                     addedSystemConstructors.push(s);
                     const { name } = this.runningGameProcess.addSystem(s);
-                    this.systemNamesByArea[a.type].push(name);
-                    if(!this.startedAreaSystemCount[name]) {
-                        this.startedAreaSystemCount[name] = 0;
-                    }
+                    this.systemConstructorNameToPrototypeName[s.name] = name;
+                }
+                this.systemNamesByArea[a.type].push(this.systemConstructorNameToPrototypeName[s.name]);
+                if(!this.startedAreaSystemCount[this.systemConstructorNameToPrototypeName[s.name]]) {
+                    this.startedAreaSystemCount[this.systemConstructorNameToPrototypeName[s.name]] = 0;
                 }
             });
         });

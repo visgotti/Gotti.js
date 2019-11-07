@@ -41,7 +41,9 @@ export declare class Client {
     authenticate(options?: any, tokenHeader?: string): Promise<unknown>;
     register(options?: any, tokenHeader?: string): Promise<unknown>;
     getGames(clientOptions?: any, token?: any): Promise<unknown>;
+    joinOfflineGame(gameType: any, gameData?: any, areaData?: any): Promise<boolean>;
     joinGame(gameType: any, joinOptions?: any, token?: any, fps?: number): Promise<unknown>;
+    private joinOnlineGame;
     joinInitialArea(clientOptions?: any): Promise<unknown>;
     /**
      * can dispatch process messages from within a client system using

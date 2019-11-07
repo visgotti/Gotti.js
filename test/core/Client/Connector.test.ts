@@ -31,7 +31,6 @@ let onPeerDisconnectionSystemSpy;
 
 
 describe('WebClient/Connector', function() {
-    let client;
     let process;
     let connector;
     let system;
@@ -57,12 +56,12 @@ describe('WebClient/Connector', function() {
 
     describe('connector.connect', () => {
         it('returns asynchronously when onMessageCallback is called with a JOIN_CONNECTOR protocol', (done) => {
-            connector.connect(dummyAuth, process).then(data => {
-                assert.deepStrictEqual(data, { areaData: { foo: 'bar' }, joinData: { bar: 'baz'} });
+            connector.connect(dummyAuth, process, {}, {}, {}).then(data => {
+                assert.deepStrictEqual(data,  { bar: 'baz' });
                 done();
             });
             setTimeout(() => {
-                connector.onMessageCallback({ data: msgpack.encode([Protocol.JOIN_CONNECTOR, { foo: 'bar'}, { bar: 'baz'}]) });
+                connector.onMessageCallback({ data: msgpack.encode([Protocol.JOIN_CONNECTOR, { bar: 'baz'}]) });
             }, 20)
         });
     });

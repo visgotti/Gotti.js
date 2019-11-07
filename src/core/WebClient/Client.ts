@@ -154,30 +154,51 @@ export class Client {
         })
     }
 
-    public async joinGame(gameType, joinOptions?, token?, fps=60) {
-        if(!this.authId) {
-            throw new Error(`You are not authenticated`)
+    public async joinOfflineGame(gameType, gameData?, areaData?) {
+        if(this.runningProcess) {
+            this.clearGame();
         }
-        return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, token,
-                {
-                    gameType,
-                    [GOTTI_GET_GAMES_OPTIONS]: joinOptions,
-                    [GOTTI_GATE_AUTH_ID]: this.authId,
-                }, async (err, data) => {
-                if (err) {
-                    return reject(`Error requesting game ${err}`);
-                } else {
-                    const { gottiId, clientId, host, port, gameData, areaData } = data;
-                    this.runningProcess = await this.processManager.initializeGame(gameType, gameData, areaData);
-                    const joinOptions = await this.joinConnector(gottiId, clientId, `${host}:${port}`);
-                    //TODO: initializing process only after onJoin returns
-                    console.log('got game data from join connector', gameData);
-                    this.processManager.startCurrentGameSystems(joinOptions);
-                    return resolve(gameData);
-                }
-            });
-        })
+        this.runningProcess = await this.processManager.initializeGame(gameType, gameData, areaData);
+        return true;
+    }
+
+    public async joinGame(gameType, joinOptions?, token?, fps=60) {
+        if(this.runningProcess) {
+            this.clearGame();
+        }
+        const found = this.processManager['gameProcessSetups'].find(g => g.type === gameType);
+        if(!found) throw new Error(`couldnt find gameType ${gameType} make sure it was initialized in client constructor`);
+
+        if(found.isNetworked) {
+            if(!this.authId) {
+                throw new Error(`You are not authenticated to join a networked game`);
+            }
+            return new Promise((resolve, reject) => {
+                httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, token,
+                    {
+                        gameType,
+                        [GOTTI_GET_GAMES_OPTIONS]: joinOptions,
+                        [GOTTI_GATE_AUTH_ID]: this.authId,
+                    }, async (err, data) => {
+                        if (err) {
+                            return reject(`Error requesting game ${err}`);
+                        } else {
+                            const {gottiId, clientId, host, port, gameData, areaData} = data;
+                            this.runningProcess = await this.processManager.initializeGame(gameType, gameData, areaData);
+                            const joinOptions = await this.joinConnector(gottiId, clientId, `${host}:${port}`, areaData);
+                            //TODO: initializing process only after onJoin returns
+                            this.processManager.startCurrentGameSystems(joinOptions);
+                            return resolve({ gameData, areaData });
+                        }
+                    });
+            })
+        } else {
+            this.runningProcess = await this.processManager.initializeGame(gameType, joinOptions)
+        }
+    }
+
+    private joinOnlineGame(gameType, joinOptions?, token?, fps=6) {
+
     }
 
     public async joinInitialArea(clientOptions?) {
@@ -245,11 +266,11 @@ export class Client {
         this.connector.joinInitialArea(clientOptions);
     }
 
-    private async joinConnector(gottiId, playerIndex, connectorURL) {
+    private async joinConnector(gottiId, playerIndex, connectorURL, areaData) {
 
         const joinOpts = { gottiId, playerIndex, connectorURL } as ConnectorAuth;
 
-        const options = await this.connector.connect(joinOpts, this.runningProcess, this.processManager, this.options);
+        const options = await this.connector.connect(joinOpts, this.runningProcess, this.processManager, areaData, this.options);
 
         this.joinedGame = true;
 

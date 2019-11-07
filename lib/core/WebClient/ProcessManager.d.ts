@@ -8,6 +8,7 @@ export declare type GameProcessSetup = {
     areas: Array<{
         type: string;
         systems: Array<ISystem>;
+        plugins?: Array<IPlugin>;
     }>;
     isNetworked: boolean;
     plugins?: Array<IPlugin>;
@@ -15,19 +16,26 @@ export declare type GameProcessSetup = {
     fps?: number;
 };
 export declare class ProcessManager {
+    private areaData;
+    private systemNamesByArea;
+    private startedAreaSystemCount;
     private runningGameProcess;
     private runningGameProcessSetup;
     private runningAreaProcessSetup;
     private areaSystems;
     private currentArea;
+    private gameSystemConstructors;
     private startedAreaSystemConstructors;
     private gameProcessSetups;
     readonly client: Client;
+    private systemConstructorNameToPrototypeName;
     constructor(gameProcessSetups: Array<GameProcessSetup>, client: Client);
     private validateGameProcessSetups;
-    changeAreaProcess(areaType: any, areaData: any): void;
-    changeGameProcessSetup(gameType: any, gameOptions: any): Promise<ClientProcess>;
+    removeAreaSystems(areaId: any): void;
+    startAreaSystems(areaId: any): void;
+    setAreaWriteProcess(areaType: any, isInitial: any, areaJoinData: any, areaData: any): void;
+    changeGameProcessSetup(gameType: any, gameData: any, areaData: any): Promise<ClientProcess>;
     clearAllProcesses(): void;
-    initializeGame(gameType: any, gameOptions: any): Promise<ClientProcess>;
-    startCurrentGameSystems(): void;
+    initializeGame(gameType: any, gameData?: any, areaData?: any): Promise<ClientProcess>;
+    startCurrentGameSystems(joinOptions: any): void;
 }

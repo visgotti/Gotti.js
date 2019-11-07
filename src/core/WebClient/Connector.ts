@@ -25,6 +25,8 @@ export interface Area {
     status: AreaStatus,
     state: StateContainer,
     options: any,
+    data: any,
+    type: string,
 }
 
 export type ConnectorAuth = {
@@ -48,6 +50,8 @@ export class Connector {
     public sessionId: string;
 
     public options: any;
+
+    private areaData: any;
 
     public clock: Clock = new Clock(); // experimental
     public remoteClock: Clock = new Clock(); // experimental
@@ -82,25 +86,25 @@ export class Connector {
 
     private _previousState: any;
 
+    private processManager: ProcessManager;
     constructor() {}
 
-    public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, options: any = {}) {
+    public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, areaData, options: any = {}) {
         const { gottiId, playerIndex, connectorURL } = connectorAuth;
 
         this.gottiId = gottiId;
+        this.areaData = areaData;
         this.playerIndex = playerIndex;
         this.processManager = processManager;
         this.process = process;
         this.messageQueue = process.messageQueue;
-        console.log('trying to connect:3')
         let url = this.buildEndPoint(connectorURL, options);
-        console.log('url was', url);
         this.connection = new Connection(url);
         this.connection.onopen = () => {};
         this.connection.onmessage = this.onMessageCallback.bind(this);
         return new Promise((resolve, reject) => {
-            this.onJoinConnector.add((areaData, gameData, joinData) => {
-                return resolve({ areaData, gameData, joinData });
+            this.onJoinConnector.add(joinOptions => {
+                return resolve(joinOptions);
             })
         })
     }
@@ -224,26 +228,27 @@ export class Connector {
         this.onLeave.removeAll();
     }
 
-    protected onJoin(areaDatas, gameData, joinOptions) {
-        Object.keys(areaDatas).forEach(areaId => {
-            const { data, type } = areaDatas[areaId];
+    protected onJoin(joinOptions) {
+        Object.keys(this.areaData).forEach(areaId => {
+            const { data, type } = this.areaData[areaId];
             this.areas[areaId] = {
                 _previousState: {},
                 status: AreaStatus.NOT_IN,
                 state: new StateContainer({}),
+                options: {},
                 data,
                 type,
             };
-        })
-        this.onJoinConnector.dispatch(this.areas, gameData, joinOptions);
+        });
+        this.onJoinConnector.dispatch(joinOptions);
     }
 
     protected onMessageCallback(event) { // TODO: REFACTOR PROTOCOLS TO USE BITWISE OPS PLS
         const message = msgpack.decode(new Uint8Array(event.data));
         const code = message[0];
         if (code === Protocol.JOIN_CONNECTOR) {
-            // [areaData, gameData joinOptions]
-            this.onJoin(message[1], message[2], message[3]);
+            // [joinOptions]
+            this.onJoin(message[1]);
         } else if (code === Protocol.JOIN_CONNECTOR_ERROR) {
             this.onError.dispatch(message[1]);
         } else if (code === Protocol.SET_CLIENT_AREA_WRITE) {
@@ -265,6 +270,7 @@ export class Connector {
         } else if (code === Protocol.ADD_CLIENT_AREA_LISTEN) {
             // areaId, options?
             this.areas[message[1]].status = AreaStatus.LISTEN;
+            this.processManager.startAreaSystems(message[1]);
             const { responseOptions, encodedState } = message[2];
             this.process.dispatchOnAreaListen(message[1], encodedState, responseOptions);
         }

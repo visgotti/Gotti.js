@@ -5,6 +5,7 @@ import { StateContainer } from '@gamestdio/state-listener';
 import { Connection } from './Connection';
 import { PeerConnection } from "./PeerConnection";
 import { ClientProcess } from '../Process/Client';
+import { ProcessManager } from './ProcessManager';
 export declare enum AreaStatus {
     NOT_IN = 0,
     LISTEN = 1,
@@ -15,6 +16,8 @@ export interface Area {
     status: AreaStatus;
     state: StateContainer;
     options: any;
+    data: any;
+    type: string;
 }
 export declare type ConnectorAuth = {
     gottiId: string;
@@ -30,6 +33,7 @@ export declare class Connector {
     playerIndex: number;
     sessionId: string;
     options: any;
+    private areaData;
     clock: Clock;
     remoteClock: Clock;
     onJoinConnector: Signal;
@@ -54,8 +58,9 @@ export declare class Connector {
     private pendingPeerRequests;
     readonly connectedPeerIndexes: Array<number>;
     private _previousState;
+    private processManager;
     constructor();
-    connect(connectorAuth: ConnectorAuth, process: ClientProcess, options?: any): Promise<unknown>;
+    connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, areaData: any, options?: any): Promise<unknown>;
     private handlePeerConnectionRequest;
     private handleSignalData;
     requestPeerConnection(peerIndex: number, systemName: string | number, requestOptions: any, systemRequestCallback: any): void;
@@ -70,7 +75,7 @@ export declare class Connector {
     sendImmediateSystemMessage(message: any): void;
     readonly hasJoined: boolean;
     removeAllListeners(): void;
-    protected onJoin(areaOptions: any, joinOptions: any): void;
+    protected onJoin(joinOptions: any): void;
     protected onMessageCallback(event: any): void;
     protected setState(areaId: string, encodedState: Buffer): void;
     protected patch(areaId: any, binaryPatch: any): void;
