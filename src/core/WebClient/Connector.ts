@@ -176,7 +176,7 @@ export class Connector {
         if(this.writeAreaId !== null) {
             throw new Error('Player is already writing to an area.')
         }
-
+        console.log('GET INITIAL CLIENT AREA WRITE');
         this.connection.send([Protocol.GET_INITIAL_CLIENT_AREA_WRITE, options]);
     }
 
@@ -258,15 +258,14 @@ export class Connector {
             }
             this.areas[message[1]].status = AreaStatus.WRITE;
             const isInitial = this.writeAreaId === null;
-            if(isInitial) {
-                this.onInitialArea.dispatch({ areaId: message[1], areaOptions: message[2]})
-            }
+            this.writeAreaId = message[1];
             // if we werent already listening then start the area systems
             if(!(this.areas[message[1]].status === AreaStatus.LISTEN)) {
                 this.processManager.startAreaSystems(message[1]);
             }
-            this.process.dispatchOnAreaWrite(message[1], isInitial, message[2]);
-            this.writeAreaId = message[1];
+            if(isInitial) {
+                this.onInitialArea.dispatch({ areaId: message[1], areaOptions: message[2]})
+            }
         } else if (code === Protocol.ADD_CLIENT_AREA_LISTEN) {
             // areaId, options?
             this.areas[message[1]].status = AreaStatus.LISTEN;

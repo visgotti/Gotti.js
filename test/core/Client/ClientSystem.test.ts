@@ -33,13 +33,6 @@ describe('ClientSystem', function() {
     });
 
     describe('clientSystem.initialize', () => {
-        it('ran messageQueue.addSystem', (done) => {
-            let messageQueue_addSystemSpy = sinon.spy(messageQueue, 'addSystem');
-            mockSystem1.initialize(client, messageQueue, entityManager, false, client);
-            assert.strictEqual(mockSystem1.isNetworked, false);
-            sinon.assert.calledOnce(messageQueue_addSystemSpy);
-            done();
-        });
         it('ran clientSystem.onInit function', (done) => {
             let clientSystem_onInitSpy = sinon.spy(mockSystem1, 'onInit');
             mockSystem1.initialize(client, messageQueue, entityManager, true, client);

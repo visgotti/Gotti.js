@@ -150,9 +150,8 @@ export class ProcessManager {
         if(!process) throw new Error(`Game ${gameType} was not found in processes.`);
         this.runningGameProcessSetup = process;
         this.areaData = areaData;
-
         let globals = {};
-        if(process.globals && process.isNetworked) {
+        if(process.globals) {
             if(typeof process.globals === "function") {
                 globals = await process.globals(gameData, areaData, this.client);
             } else {

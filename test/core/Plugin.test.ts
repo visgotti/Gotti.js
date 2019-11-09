@@ -104,7 +104,7 @@ class ImplementedSystem extends ClientSystem {
     public update(delta: any): void {
         throw new Error("Method not implemented.");
     }
-    public clear(): void {
+    public onClear(): void {
         throw new Error("Method not implemented.");
     }
     constructor() {

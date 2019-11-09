@@ -53,8 +53,6 @@ abstract class ClientSystem extends System {
         this._peerMap = client.connector.peerConnections;
         this.client = client;
         this.messageQueue = messageQueue;
-        this.messageQueue.addSystem(this);
-
         this.dispatchProcessMessage = client.raiseMessage.bind(client);
         this.initializeEntity = entityManager.initializeEntity.bind(entityManager);
         this.destroyEntity = entityManager.destroyEntity.bind(entityManager);

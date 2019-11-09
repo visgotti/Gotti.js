@@ -50,8 +50,6 @@ describe('Creates a web client', function() {
             // hasnt ticked yet
             assert.strictEqual(tickSpy.callCount, 0);
             client.offlineGame(offlineProcessKey, { weapons: [1,2,3]}).then(() => {
-                sinon.assert.callCount(startGameProcessSpy, 1);
-                sinon.assert.callCount(startAllSystemsSpy, 1);
 
                 // shouldnt join connector since its an offline game
                 sinon.assert.callCount(joinConnectorSpy, 0);

@@ -1,7 +1,6 @@
 import { DummySystem1, DummySystem2, DummySystem3, DummySystem4 } from '../../mocks/client/dummySystems';
 import * as assert from 'assert';
 import * as mocha from 'mocha';
-import * as sinon from 'sinon';
 
 import { ProcessManager } from '../../../src/core/WebClient/ProcessManager';
 import { Client } from '../../../src/core/WebClient/Client';
@@ -23,19 +22,20 @@ const processFiles = [{
         systems: [DummySystem2, DummySystem3, DummySystem4],
     }],
     globals: async (gameData, areaData, client) => {
+        console.log('running g')
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 return resolve({
                     client,
                     global: 'variable',
-                    options: { gameData, ...areaData},
+                    options: { gameData, areaData},
                 })
             }, 1)
         })
     },
 }];
 
-describe('Client Process with no globals', function() {
+describe('Client Process with globals', function() {
     let processManager;
     let startedSystems;
     let stoppedSystems;
@@ -141,5 +141,4 @@ describe('Client Process with no globals', function() {
             });
         });
     })
-
 });

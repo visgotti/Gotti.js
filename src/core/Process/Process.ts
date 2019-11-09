@@ -168,6 +168,7 @@ export abstract class Process<T> {
             this.startedSystems.find(s => s.constructor === system);
 
         if (foundStarted) {
+            this.messageQueue.removeSystem(foundStarted.name);
             foundStarted.onStop();
             for(let i = 0; i < this.startedSystems.length; i++) {
                 if(this.startedSystems[i] === foundStarted) {
@@ -191,6 +192,7 @@ export abstract class Process<T> {
             this.stoppedSystems.find(s => s.constructor === system);
 
         if (foundStopped) {
+            this.messageQueue.addSystem(foundStopped as any);
             const systemName = foundStopped.name;
             const toStartInitializedIndex = this.systemInitializedOrder.get(systemName);
             // no started systems yet so no order to worry about, can just add
@@ -218,7 +220,6 @@ export abstract class Process<T> {
             }
             this.systems[systemName].serverGameData = this._serverGameData;
             this.stoppedSystems.splice(this.stoppedSystems.indexOf(foundStopped), 1);
-            console.log('CALLING ON START');
             this.systems[systemName].onStart();
         } else {
             throw new Error('Couldnt find system')

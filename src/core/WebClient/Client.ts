@@ -96,7 +96,7 @@ export class Client {
         this.runningProcess.serverGameData = data;
     }
 
-    public authenticate(options?: any, tokenHeader?: string) {
+    public async authenticate(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
             httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.AUTHENTICATE}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
@@ -115,7 +115,7 @@ export class Client {
         });
     }
 
-    public register(options?: any, tokenHeader?: string) {
+    public async register(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
             httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.REGISTER}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
@@ -196,9 +196,7 @@ export class Client {
             this.runningProcess = await this.processManager.initializeGame(gameType, joinOptions)
         }
     }
-
     private joinOnlineGame(gameType, joinOptions?, token?, fps=6) {
-
     }
 
     public async joinInitialArea(clientOptions?) {
@@ -220,7 +218,10 @@ export class Client {
                 if(err) {
                     return reject(err)
                 }
-                return resolve({ areaOptions, areaId });
+                console.log('ok got hereeeeeeeeeeeeeeeeeearea id was', areaId, 'areaOptions was', areaOptions);
+                this.runningProcess.dispatchOnAreaWrite(areaId,true,  areaOptions);
+                console.log('resolving');
+                return resolve({ options: areaOptions, areaId });
             });
         });
     }
