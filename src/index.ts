@@ -29,17 +29,3 @@ const setDefaultClientExport = function(client: Client) {
 };
 export { setDefaultClientExport };
 export default Gotti;
-
-export function isFunction(value) {
-    return value && ({}.toString.call(value) === '[object Function]' || {}.toString.call(value) === '[object AsyncFunction]');
-}
-
-
-const getMethods = (obj) => {
-    let properties = new Set()
-    let currentObj = obj
-    do {
-        Object.getOwnPropertyNames(currentObj).map(item => properties.add(item))
-    } while ((currentObj = Object.getPrototypeOf(currentObj)));
-    return [...properties.keys()].filter(isFunction);
-}
