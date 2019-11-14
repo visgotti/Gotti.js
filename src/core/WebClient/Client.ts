@@ -30,6 +30,24 @@ export type ServerGameOptions = {
 
 const EventEmitter = require('eventemitter3');
 
+export type PublicApi = {
+    clearGame?: () => void,
+    register?: (requestPayload?: any) => Promise<any>,
+    getGames?: (requestPayload?: any) => Promise<any>,
+    joinInitialArea?: (requestPayload?: any) => Promise<any>
+    joinGame?: () => Promise<{
+        gameData: any,
+        areaData: any
+    }>
+    onProcessMessage?: (messageName: string, handler: (any) => void) => void,
+    removeProcessMessage?: (messageName) => void,
+    authenticate?: (requestPayload: any) => Promise<any>,
+    auth?: {[handlerName: string]: (requestPayload?: any) => Promise<any> },
+    authentication?: {[handlerName: string]: (requestPayload?: any) => Promise<any> },
+    gate?: {[handlerName: string]: (requestPayload?: any) => Promise<any> },
+    api?: {[handlerName: string]: (requestPayload?: any) => Promise<any> },
+}
+
 export class Client extends EventEmitter {
     private runningProcess: ClientProcess = null;
     private processFactories: {[gameType: string]: (gameOptions: any) => ClientProcess } = {};
@@ -115,7 +133,7 @@ export class Client extends EventEmitter {
             authentication: this.auth,
             gate: this.gate,
             api: this.api,
-        };
+        } as PublicApi;
 
         setDefaultClientExport(this);
     }

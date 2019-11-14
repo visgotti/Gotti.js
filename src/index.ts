@@ -9,12 +9,12 @@ export { ClientProcess } from './core/Process/Client';
 export { ClientManager } from './core/ServerFrameworks/ClientManager';
 export { Entity } from './core/Entity';
 export { Component } from './core/Component';
-import { Client } from './core/WebClient/Client';
+import { Client, PublicApi} from './core/WebClient/Client';
 export { Client };
 
 export { Message } from './core/ClientMessageQueue';
 
-const Gotti: any = {};
+const Gotti: PublicApi = {};
 const setDefaultClientExport = function(client: Client) {
     // clear properties on Gotti in case we already had a client initialized
     Object.keys(Gotti).forEach(key => {
