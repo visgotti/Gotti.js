@@ -42,7 +42,7 @@ describe('Client Process with globals', function() {
     let systems;
     describe('Game Type game1', () => {
         beforeEach('gets process manager after initializing a client', async() => {
-            processManager = new Client('/', processFiles)['processManager'];
+            processManager = new Client(processFiles, '/')['processManager'];
             await processManager.initializeGame('game1', 'gameData', {
                 'area1_id': { data: 'areaData', type: 'area1'},
                 'area2_id': { data: 'areaData', type: 'area2'},

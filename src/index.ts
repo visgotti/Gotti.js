@@ -9,6 +9,33 @@ export { ClientProcess } from './core/Process/Client';
 export { ClientManager } from './core/ServerFrameworks/ClientManager';
 export { Entity } from './core/Entity';
 export { Component } from './core/Component';
-export {  Client } from './core/WebClient/Client';
+import { Client } from './core/WebClient/Client';
+export { Client };
 
 export { Message } from './core/ClientMessageQueue';
+
+const Gotti: any = {};
+const setDefaultClientExport = function(client: Client) {
+    Object.keys(client.publicApi).forEach(key => {
+        Gotti[key] = client.publicApi[key];
+        Object.defineProperty(Gotti, key, {
+            writable: false
+        });
+    });
+};
+export { setDefaultClientExport };
+export default Gotti;
+
+export function isFunction(value) {
+    return value && ({}.toString.call(value) === '[object Function]' || {}.toString.call(value) === '[object AsyncFunction]');
+}
+
+
+const getMethods = (obj) => {
+    let properties = new Set()
+    let currentObj = obj
+    do {
+        Object.getOwnPropertyNames(currentObj).map(item => properties.add(item))
+    } while ((currentObj = Object.getPrototypeOf(currentObj)));
+    return [...properties.keys()].filter(isFunction);
+}

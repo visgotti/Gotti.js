@@ -13,7 +13,8 @@ export declare type ServerGameOptions = {
     gottiId: string;
     clientId: number;
 };
-export declare class Client {
+declare const EventEmitter: any;
+export declare class Client extends EventEmitter {
     private runningProcess;
     private processFactories;
     private inGate;
@@ -34,7 +35,8 @@ export declare class Client {
     private token;
     private authId;
     private processManager;
-    constructor(url: string, gameProcessSetups: Array<GameProcessSetup>, disableWebRTC?: boolean);
+    private webProtocol;
+    constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC?: boolean, webProtocol?: string);
     clearGame(): void;
     private validateServerOpts;
     updateServerGameData(data: any): void;
@@ -111,3 +113,4 @@ export declare class Client {
      */
     private initializeSystemStateHandler;
 }
+export {};

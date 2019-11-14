@@ -3,6 +3,8 @@ import * as msgpack from './msgpack';
 
 import { GameProcessSetup, ProcessManager } from "./ProcessManager";
 
+import {setDefaultClientExport} from '../../index';
+
 import { Protocol, GOTTI_GET_GAMES_OPTIONS, GOTTI_GATE_AUTH_ID, GOTTI_AUTH_KEY, GOTTI_HTTP_ROUTES } from './Protocol';
 import {Connector, ConnectorAuth} from './Connector';
 import ClientSystem from './../System/ClientSystem';
@@ -26,7 +28,9 @@ export type ServerGameOptions = {
     clientId: number,
 }
 
-export class Client {
+const EventEmitter = require('eventemitter3');
+
+export class Client extends EventEmitter {
     private runningProcess: ClientProcess = null;
     private processFactories: {[gameType: string]: (gameOptions: any) => ClientProcess } = {};
     private inGate = false;
@@ -60,17 +64,99 @@ export class Client {
 
     private token: string;
 
+    readonly publicApi: any;
+
+    private auth: any;
+    private gate: any;
+    private api: any;
+
     private authId: string;
 
     private processManager: ProcessManager;
+    private webProtocol: string = 'http';
 
-    constructor(url: string, gameProcessSetups: Array<GameProcessSetup>, disableWebRTC=false) {
-        this.hostname = url;
+    constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC=false, webProtocol?: string) {
+        super();
+        if(webProtocol){
+            this.webProtocol = webProtocol;
+        }
+        if(hostname) {
+            this.hostname = hostname;
+        } else if(window) {
+            this.hostname = window['location'].hostname
+        } else {
+            throw new Error('No hostname provided or no window reference');
+        }
+
+        if(webProtocol) {
+            if(webProtocol !== 'http' && webProtocol !== 'https') {
+                throw new Error('Web protocol must be http or https');
+            }
+            this.webProtocol = webProtocol;
+        } else if(window) {
+            this.webProtocol = window['location'].protocol
+        }
+
         this.processManager = new ProcessManager(gameProcessSetups, this);
         this.options = {
             isWebRTCSupported: window.RTCPeerConnection && window.navigator.userAgent.indexOf("Edge") < 0 && !disableWebRTC
         };
         this.connector = new Connector();
+        this.publicApi = {
+            clearGame: this.clearGame.bind(this),
+            register: this.register.bind(this),
+            getGames: this.getGames.bind(this),
+            joinInitialArea: this.joinInitialArea.bind(this),
+            joinGame: this.joinGame.bind(this),
+            onProcessMessage: this.onProcessMessage.bind(this),
+            removeProcessMessage: this.removeProcessMessage.bind(this),
+            authenticate: this.authenticate.bind(this),
+            auth: this.auth,
+            authentication: this.auth,
+            gate: this.gate,
+            api: this.api,
+        };
+
+        setDefaultClientExport(this);
+    }
+
+    public addAuthRoutes(names) {
+        names.forEach(name => {
+            if(name === GOTTI_HTTP_ROUTES.AUTHENTICATE || name === GOTTI_HTTP_ROUTES.REGISTER) {
+                throw new Error('auth route name in use')
+            }
+            this.auth[name] = async (requestPayload: any) => {
+                return new Promise((resolve, reject) => {
+                    httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}/${name}`, this.webProtocol, '', {[GOTTI_AUTH_KEY]: requestPayload }, (err, data) => {
+                        if (err) {
+                            return reject(`Error on auth response for handler: ${name} the error was: ${err}`);
+                        } else {
+                            const payload = data[GOTTI_AUTH_KEY];
+                            const authId = data[GOTTI_GATE_AUTH_ID];
+                            if(authId) {
+                                this.authId = authId;
+                            }
+                            return resolve(payload);
+                        }
+                    });
+                });
+            };
+            this.auth[name] = this.auth[name].bind(this);
+        });
+        this.auth.authenticate = this.authenticate.bind(this);
+        this.auth.register = this.register.bind(this);
+    }
+
+    private addGateRoutes(names) {
+        names.forEach(name => {
+
+        });
+    }
+
+    private addApiRoutes(names) {
+        names.forEach(name => {
+
+        })
     }
 
     public clearGame() {
@@ -98,7 +184,7 @@ export class Client {
 
     public async authenticate(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.AUTHENTICATE}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.AUTHENTICATE}`, this.webProtocol, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
@@ -117,7 +203,7 @@ export class Client {
 
     public async register(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.REGISTER}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.REGISTER}`, this.webProtocol, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
@@ -139,7 +225,7 @@ export class Client {
             throw new Error(`You are not authenticated`)
         }
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.GET_GAMES}`, token, {
+            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.GET_GAMES}`, this.webProtocol, token, {
                 [GOTTI_GATE_AUTH_ID]: this.authId,
                 [GOTTI_GET_GAMES_OPTIONS]: clientOptions,
             }, (err, data) => {
@@ -174,7 +260,7 @@ export class Client {
                 throw new Error(`You are not authenticated to join a networked game`);
             }
             return new Promise((resolve, reject) => {
-                httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, token,
+                httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, this.webProtocol, token,
                     {
                         gameType,
                         [GOTTI_GET_GAMES_OPTIONS]: joinOptions,
@@ -414,9 +500,9 @@ function httpGetAsync(url, token, callback)
     http.send(null);
 }
 
-function httpPostAsync(url, token, request, callback) {
-    var http = new XMLHttpRequest();
-    http.open('POST', url, true);
+function httpPostAsync(url, protocol, token, request, callback) {
+    const http = new XMLHttpRequest();
+    http.open('POST', `${protocol}://${url}`, true);
     http.setRequestHeader('Content-Type', 'application/json');
     if(token) {
         //Send the proper header information along with the request
