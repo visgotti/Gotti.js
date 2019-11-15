@@ -110,7 +110,7 @@ export class Client extends EventEmitter {
             if(webProtocol !== 'http' && webProtocol !== 'https') {
                 throw new Error('Web protocol must be http or https');
             }
-            this.webProtocol = webProtocol;
+            this.webProtocol = webProtocol + ':';
         } else if(window) {
             this.webProtocol = window['location'].protocol
         }
@@ -145,7 +145,7 @@ export class Client extends EventEmitter {
             }
             this.auth[name] = async (requestPayload: any) => {
                 return new Promise((resolve, reject) => {
-                    httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}/${name}`, this.webProtocol, '', {[GOTTI_AUTH_KEY]: requestPayload }, (err, data) => {
+                    httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}/${name}`, '', {[GOTTI_AUTH_KEY]: requestPayload }, (err, data) => {
                         if (err) {
                             return reject(`Error on auth response for handler: ${name} the error was: ${err}`);
                         } else {
@@ -165,13 +165,13 @@ export class Client extends EventEmitter {
         this.auth.register = this.register.bind(this);
     }
 
-    private addGateRoutes(names) {
+    public addGateRoutes(names) {
         names.forEach(name => {
 
         });
     }
 
-    private addApiRoutes(names) {
+    public addApiRoutes(names) {
         names.forEach(name => {
 
         })
@@ -202,7 +202,7 @@ export class Client extends EventEmitter {
 
     public async authenticate(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.AUTHENTICATE}`, this.webProtocol, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+            httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.AUTHENTICATE}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
@@ -221,7 +221,7 @@ export class Client extends EventEmitter {
 
     public async register(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.REGISTER}`, this.webProtocol, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+            httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.REGISTER}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
@@ -243,7 +243,7 @@ export class Client extends EventEmitter {
             throw new Error(`You are not authenticated`)
         }
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.GET_GAMES}`, this.webProtocol, token, {
+            httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.GET_GAMES}`, token, {
                 [GOTTI_GATE_AUTH_ID]: this.authId,
                 [GOTTI_GET_GAMES_OPTIONS]: clientOptions,
             }, (err, data) => {
@@ -278,7 +278,7 @@ export class Client extends EventEmitter {
                 throw new Error(`You are not authenticated to join a networked game`);
             }
             return new Promise((resolve, reject) => {
-                httpPostAsync(`${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, this.webProtocol, token,
+                httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, token,
                     {
                         gameType,
                         [GOTTI_GET_GAMES_OPTIONS]: joinOptions,
@@ -322,9 +322,7 @@ export class Client extends EventEmitter {
                 if(err) {
                     return reject(err)
                 }
-                console.log('ok got hereeeeeeeeeeeeeeeeeearea id was', areaId, 'areaOptions was', areaOptions);
                 this.runningProcess.dispatchOnAreaWrite(areaId,true,  areaOptions);
-                console.log('resolving');
                 return resolve({ options: areaOptions, areaId });
             });
         });
@@ -346,30 +344,6 @@ export class Client extends EventEmitter {
         this.processMessageHandlers[messageName] && this.processMessageHandlers[messageName](payload);
     }
 
-    /**
-     * When you finally join a game, you need to make one last mandatory request
-     * which is to find your initial write area. This is the only time where the client
-     * natively can send data directly requesting an area if you wanted. The connector server
-     * class will receive the client, areaOptions, and clientOptions. There is no callback or promise
-     * for this, from this point on you will communicate with the server through your Gotti systems.
-     * You can either implement the onAreaWrite method in your systems or you can have a server system
-     * send a custom system message to one of your client systems.
-     * @param clientOptions - options to send to connector when getting initial area.
-     */
-    public writeInitialArea(clientOptions?) {
-        console.log('joining initial area... please register the onAreaWrite in one of your systems to handle the callback.');
-
-        if(!this.runningProcess) {
-            throw new Error('There is no currently running networked process.')
-        }
-        if(!this.runningProcess.isNetworked) {
-            throw new Error('The current running process is not networked, there is no area to write to.');
-        }
-        if(!this.joinedGame) {
-            throw new Error('Make sure client.startGame\'s promise resolved when called with gotti credentials in parameters')
-        }
-        this.connector.joinInitialArea(clientOptions);
-    }
 
     private async joinConnector(gottiId, playerIndex, connectorURL, areaData) {
 
@@ -518,9 +492,9 @@ function httpGetAsync(url, token, callback)
     http.send(null);
 }
 
-function httpPostAsync(url, protocol, token, request, callback) {
+function httpPostAsync(url, token, request, callback) {
     const http = new XMLHttpRequest();
-    http.open('POST', `${protocol}://${url}`, true);
+    http.open('POST', url, true);
     http.setRequestHeader('Content-Type', 'application/json');
     if(token) {
         //Send the proper header information along with the request

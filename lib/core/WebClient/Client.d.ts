@@ -14,6 +14,31 @@ export declare type ServerGameOptions = {
     clientId: number;
 };
 declare const EventEmitter: any;
+export declare type PublicApi = {
+    clearGame?: () => void;
+    register?: (requestPayload?: any) => Promise<any>;
+    getGames?: (requestPayload?: any) => Promise<any>;
+    joinInitialArea?: (requestPayload?: any) => Promise<any>;
+    joinGame?: () => Promise<{
+        gameData: any;
+        areaData: any;
+    }>;
+    onProcessMessage?: (messageName: string, handler: (any: any) => void) => void;
+    removeProcessMessage?: (messageName: any) => void;
+    authenticate?: (requestPayload: any) => Promise<any>;
+    auth?: {
+        [handlerName: string]: (requestPayload?: any) => Promise<any>;
+    };
+    authentication?: {
+        [handlerName: string]: (requestPayload?: any) => Promise<any>;
+    };
+    gate?: {
+        [handlerName: string]: (requestPayload?: any) => Promise<any>;
+    };
+    api?: {
+        [handlerName: string]: (requestPayload?: any) => Promise<any>;
+    };
+};
 export declare class Client extends EventEmitter {
     private runningProcess;
     private processFactories;
@@ -33,10 +58,17 @@ export declare class Client extends EventEmitter {
     protected requestId: number;
     protected hostname: string;
     private token;
+    readonly publicApi: any;
+    private auth;
+    private gate;
+    private api;
     private authId;
     private processManager;
     private webProtocol;
     constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC?: boolean, webProtocol?: string);
+    addAuthRoutes(names: any): void;
+    addGateRoutes(names: any): void;
+    addApiRoutes(names: any): void;
     clearGame(): void;
     private validateServerOpts;
     updateServerGameData(data: any): void;
