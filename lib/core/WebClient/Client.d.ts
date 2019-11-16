@@ -86,17 +86,6 @@ export declare class Client extends EventEmitter {
     onProcessMessage(messageName: string, handler: Function): void;
     removeProcessMessage(messageName: any): void;
     raiseMessage(messageName: any, payload: any): void;
-    /**
-     * When you finally join a game, you need to make one last mandatory request
-     * which is to find your initial write area. This is the only time where the client
-     * natively can send data directly requesting an area if you wanted. The connector server
-     * class will receive the client, areaOptions, and clientOptions. There is no callback or promise
-     * for this, from this point on you will communicate with the server through your Gotti systems.
-     * You can either implement the onAreaWrite method in your systems or you can have a server system
-     * send a custom system message to one of your client systems.
-     * @param clientOptions - options to send to connector when getting initial area.
-     */
-    writeInitialArea(clientOptions?: any): void;
     private joinConnector;
     close(): void;
     /**

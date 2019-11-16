@@ -5,7 +5,7 @@ import { GameProcessSetup, ProcessManager } from "./ProcessManager";
 
 import {setDefaultClientExport} from '../../index';
 
-import { Protocol, GOTTI_GET_GAMES_OPTIONS, GOTTI_GATE_AUTH_ID, GOTTI_AUTH_KEY, GOTTI_HTTP_ROUTES } from './Protocol';
+import { Protocol, GOTTI_GET_GAMES_OPTIONS, GOTTI_GATE_AUTH_ID, GOTTI_AUTH_KEY, GOTTI_HTTP_ROUTES, GOTTI_ROUTE_BODY_PAYLOAD } from './Protocol';
 import {Connector, ConnectorAuth} from './Connector';
 import ClientSystem from './../System/ClientSystem';
 import { ClientMessageQueue, Message } from '../ClientMessageQueue';
@@ -48,6 +48,8 @@ export type PublicApi = {
     api?: {[handlerName: string]: (requestPayload?: any) => Promise<any> },
 }
 
+type HttpRequests = { [name: string]: (requestPayload) => Promise<any> }
+
 export class Client extends EventEmitter {
     private runningProcess: ClientProcess = null;
     private processFactories: {[gameType: string]: (gameOptions: any) => ClientProcess } = {};
@@ -84,9 +86,9 @@ export class Client extends EventEmitter {
 
     readonly publicApi: any;
 
-    private auth: any;
-    private gate: any;
-    private api: any;
+    private auth: HttpRequests = {};
+    private gate: HttpRequests = {};
+    private api: HttpRequests = {};
 
     private authId: string;
 
@@ -145,11 +147,14 @@ export class Client extends EventEmitter {
             }
             this.auth[name] = async (requestPayload: any) => {
                 return new Promise((resolve, reject) => {
-                    httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}/${name}`, '', {[GOTTI_AUTH_KEY]: requestPayload }, (err, data) => {
+                    httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}/${name}`, '', {
+                        [GOTTI_ROUTE_BODY_PAYLOAD]: requestPayload,
+                        [GOTTI_GATE_AUTH_ID]: this.authId,
+                    }, (err, data) => {
                         if (err) {
-                            return reject(`Error on auth response for handler: ${name} the error was: ${err}`);
+                            return reject(err);
                         } else {
-                            const payload = data[GOTTI_AUTH_KEY];
+                            const payload = data[GOTTI_ROUTE_BODY_PAYLOAD];
                             const authId = data[GOTTI_GATE_AUTH_ID];
                             if(authId) {
                                 this.authId = authId;
@@ -167,14 +172,48 @@ export class Client extends EventEmitter {
 
     public addGateRoutes(names) {
         names.forEach(name => {
-
+            if(name === GOTTI_HTTP_ROUTES.GET_GAMES || name === GOTTI_HTTP_ROUTES.JOIN_GAME) {
+                throw new Error('gate route name in use')
+            }
+            this.gate[name] = async (requestPayload: any) => {
+                return new Promise((resolve, reject) => {
+                    httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}/${name}`, '', {
+                        [GOTTI_ROUTE_BODY_PAYLOAD]: requestPayload,
+                        [GOTTI_GATE_AUTH_ID]: this.authId,
+                    }, (err, data) => {
+                        if (err) {
+                            return reject(err);
+                        } else {
+                            const payload = data[GOTTI_ROUTE_BODY_PAYLOAD];
+                            return resolve(payload);
+                        }
+                    });
+                });
+            };
+            this.gate[name] = this.gate[name].bind(this);
         });
+        this.gate.getGames = this.getGames.bind(this);
+        this.gate.register = this.register.bind(this);
     }
 
     public addApiRoutes(names) {
         names.forEach(name => {
-
-        })
+            this.api[name] = async (requestPayload: any) => {
+                return new Promise((resolve, reject) => {
+                    httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_PUBLIC_API}/${name}`, '', {
+                        [GOTTI_ROUTE_BODY_PAYLOAD]: requestPayload,
+                    }, (err, data) => {
+                        if (err) {
+                            return reject(err);
+                        } else {
+                            const payload = data[GOTTI_ROUTE_BODY_PAYLOAD];
+                            return resolve(payload);
+                        }
+                    });
+                });
+            };
+            this.api[name] = this.api[name].bind(this);
+        });
     }
 
     public clearGame() {
@@ -304,8 +343,6 @@ export class Client extends EventEmitter {
     }
 
     public async joinInitialArea(clientOptions?) {
-        console.log('joining initial area... please register the onAreaWrite in one of your systems to handle the callback.');
-
         if(!this.runningProcess) {
             throw new Error('There is no currently running networked process.')
         }
