@@ -67,6 +67,8 @@ export declare class Client extends EventEmitter {
     private webProtocol;
     constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC?: boolean, webProtocol?: string);
     addAuthRoutes(names: any): void;
+    private removeAuthValues;
+    private setAuthValues;
     addGateRoutes(names: any): void;
     addApiRoutes(names: any): void;
     clearGame(): void;

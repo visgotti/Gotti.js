@@ -145,6 +145,10 @@ export class Client extends EventEmitter {
             if(name === GOTTI_HTTP_ROUTES.AUTHENTICATE || name === GOTTI_HTTP_ROUTES.REGISTER) {
                 throw new Error('auth route name in use')
             }
+            const reserved = ['data', 'id'];
+            if(reserved.includes(name)) {
+                throw new Error(`${name} is a reserved field on auth object. cannot have handler with the name ${name}`);
+            }
             this.auth[name] = async (requestPayload: any) => {
                 return new Promise((resolve, reject) => {
                     httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}/${name}`, '', {
@@ -154,11 +158,11 @@ export class Client extends EventEmitter {
                         if (err) {
                             return reject(err);
                         } else {
+                            console.log('data was', data);
                             const payload = data[GOTTI_ROUTE_BODY_PAYLOAD];
+                            const newAuthData = data[GOTTI_AUTH_KEY];
                             const authId = data[GOTTI_GATE_AUTH_ID];
-                            if(authId) {
-                                this.authId = authId;
-                            }
+                            this.setAuthValues(newAuthData, authId);
                             return resolve(payload);
                         }
                     });
@@ -168,6 +172,24 @@ export class Client extends EventEmitter {
         });
         this.auth.authenticate = this.authenticate.bind(this);
         this.auth.register = this.register.bind(this);
+    }
+
+    private removeAuthValues() {
+        this.authId = null;
+        this.auth.id = null;
+        this.auth.data = null;
+    }
+
+    private setAuthValues(authData, authId) {
+        if(authData) {
+            this.auth.data = authData;
+            this.emit('auth-data', authData);
+        }
+        if(authId) {
+            this.authId = authId;
+            this.auth.id = authId;
+            this.emit('auth-id', authId);
+        }
     }
 
     public addGateRoutes(names) {
@@ -248,7 +270,7 @@ export class Client extends EventEmitter {
                     const auth = data[GOTTI_AUTH_KEY];
                     const authId = data[GOTTI_GATE_AUTH_ID];
                     if(authId) {
-                        this.authId = authId;
+                        this.setAuthValues(auth, authId);
                         return resolve(auth);
                     } else {
                         reject(`Error from authentication server`)
@@ -267,7 +289,7 @@ export class Client extends EventEmitter {
                     const auth = data[GOTTI_AUTH_KEY];
                     const authId = data[GOTTI_GATE_AUTH_ID];
                     if(authId) {
-                        this.authId = authId;
+                        this.setAuthValues(auth, authId);
                         return resolve(auth);
                     } else {
                         reject(`Error from authentication server`)
