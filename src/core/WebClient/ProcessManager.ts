@@ -188,7 +188,7 @@ export class ProcessManager {
         return this.runningGameProcess;
     }
 
-    public startCurrentGameSystems(joinOptions) {
+    public startCurrentGameSystems() {
         this.runningGameProcessSetup.systems.forEach(s => {
             this.runningGameProcess.startSystem(s);
         });

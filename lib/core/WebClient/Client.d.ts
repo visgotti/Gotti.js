@@ -13,13 +13,13 @@ export declare type ServerGameOptions = {
     gottiId: string;
     clientId: number;
 };
-declare const EventEmitter: any;
+import * as EventEmitter from "eventemitter3";
 export declare type PublicApi = {
     clearGame?: () => void;
     register?: (requestPayload?: any) => Promise<any>;
     getGames?: (requestPayload?: any) => Promise<any>;
     joinInitialArea?: (requestPayload?: any) => Promise<any>;
-    joinGame?: () => Promise<{
+    joinGame?: (gameType: string, joinOptions: any) => Promise<{
         gameData: any;
         areaData: any;
     }>;
@@ -38,6 +38,11 @@ export declare type PublicApi = {
     api?: {
         [handlerName: string]: (requestPayload?: any) => Promise<any>;
     };
+    on: EventEmitter.ListenerFn;
+    once: EventEmitter.ListenerFn;
+    off: (event: any, fn?: EventEmitter.ListenerFn, context?: any, once?: boolean) => void;
+    removeAllListeners: (event?: any) => void;
+    emit: EventEmitter.EventEmitterStatic;
 };
 export declare class Client extends EventEmitter {
     private runningProcess;
@@ -57,6 +62,8 @@ export declare class Client extends EventEmitter {
     protected connector: Connector;
     protected requestId: number;
     protected hostname: string;
+    private port;
+    private baseHttpUrl;
     private token;
     readonly publicApi: any;
     private auth;
@@ -65,7 +72,7 @@ export declare class Client extends EventEmitter {
     private authId;
     private processManager;
     private webProtocol;
-    constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC?: boolean, webProtocol?: string);
+    constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC?: boolean, webProtocol?: string, port?: number);
     addAuthRoutes(names: any): void;
     private removeAuthValues;
     private setAuthValues;
@@ -78,7 +85,7 @@ export declare class Client extends EventEmitter {
     register(options?: any, tokenHeader?: string): Promise<unknown>;
     getGames(clientOptions?: any, token?: any): Promise<unknown>;
     joinOfflineGame(gameType: any, gameData?: any, areaData?: any): Promise<boolean>;
-    joinGame(gameType: any, joinOptions?: any, token?: any, fps?: number): Promise<unknown>;
+    joinGame(gameType: any, joinOptions?: any): Promise<unknown>;
     private joinOnlineGame;
     joinInitialArea(clientOptions?: any): Promise<unknown>;
     /**
@@ -136,4 +143,3 @@ export declare class Client extends EventEmitter {
      */
     private initializeSystemStateHandler;
 }
-export {};

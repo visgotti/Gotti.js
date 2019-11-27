@@ -28,14 +28,14 @@ export type ServerGameOptions = {
     clientId: number,
 }
 
-const EventEmitter = require('eventemitter3');
+import * as EventEmitter from "eventemitter3";
 
 export type PublicApi = {
     clearGame?: () => void,
     register?: (requestPayload?: any) => Promise<any>,
     getGames?: (requestPayload?: any) => Promise<any>,
     joinInitialArea?: (requestPayload?: any) => Promise<any>
-    joinGame?: () => Promise<{
+    joinGame?: (gameType: string, joinOptions: any) => Promise<{
         gameData: any,
         areaData: any
     }>
@@ -46,6 +46,11 @@ export type PublicApi = {
     authentication?: {[handlerName: string]: (requestPayload?: any) => Promise<any> },
     gate?: {[handlerName: string]: (requestPayload?: any) => Promise<any> },
     api?: {[handlerName: string]: (requestPayload?: any) => Promise<any> },
+    on: EventEmitter.ListenerFn,
+    once: EventEmitter.ListenerFn,
+    off: (event: any, fn?: EventEmitter.ListenerFn, context?: any, once?: boolean) => void,
+    removeAllListeners: (event?: any) => void,
+    emit: EventEmitter.EventEmitterStatic
 }
 
 type HttpRequests = { [name: string]: (requestPayload) => Promise<any> }
@@ -81,6 +86,8 @@ export class Client extends EventEmitter {
     protected requestId = 0;
 
     protected hostname: string;
+    private port: number;
+    private baseHttpUrl;
 
     private token: string;
 
@@ -89,13 +96,12 @@ export class Client extends EventEmitter {
     private auth: HttpRequests = {};
     private gate: HttpRequests = {};
     private api: HttpRequests = {};
-
     private authId: string;
 
     private processManager: ProcessManager;
     private webProtocol: string = 'http';
 
-    constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC=false, webProtocol?: string) {
+    constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC=false, webProtocol?: string, port?: number) {
         super();
         if(webProtocol){
             this.webProtocol = webProtocol;
@@ -107,6 +113,15 @@ export class Client extends EventEmitter {
         } else {
             throw new Error('No hostname provided or no window reference');
         }
+        if(port) {
+            this.port = port;
+        } else if(window) {
+            this.port = window['location'].port
+        } else {
+            console.warn('No port set, defaulting to 80.');
+            this.port = 80;
+        }
+        this.baseHttpUrl = this.port != 80 ? `${this.hostname}:${this.port}` : this.hostname;
 
         if(webProtocol) {
             if(webProtocol !== 'http' && webProtocol !== 'https') {
@@ -135,6 +150,10 @@ export class Client extends EventEmitter {
             authentication: this.auth,
             gate: this.gate,
             api: this.api,
+            on: this.on.bind(this),
+            emit: this.emit.bind(this),
+            off: this.off.bind(this),
+            removeAllListeners: this.removeAllListeners.bind(this)
         } as PublicApi;
 
         setDefaultClientExport(this);
@@ -151,7 +170,7 @@ export class Client extends EventEmitter {
             }
             this.auth[name] = async (requestPayload: any) => {
                 return new Promise((resolve, reject) => {
-                    httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}/${name}`, '', {
+                    httpPostAsync(`${this.webProtocol}//${this.baseHttpUrl}${GOTTI_HTTP_ROUTES.BASE_AUTH}/${name}`, '', {
                         [GOTTI_ROUTE_BODY_PAYLOAD]: requestPayload,
                         [GOTTI_GATE_AUTH_ID]: this.authId,
                     }, (err, data) => {
@@ -199,7 +218,7 @@ export class Client extends EventEmitter {
             }
             this.gate[name] = async (requestPayload: any) => {
                 return new Promise((resolve, reject) => {
-                    httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}/${name}`, '', {
+                    httpPostAsync(`${this.webProtocol}//${this.baseHttpUrl}${GOTTI_HTTP_ROUTES.BASE_GATE}/${name}`, '', {
                         [GOTTI_ROUTE_BODY_PAYLOAD]: requestPayload,
                         [GOTTI_GATE_AUTH_ID]: this.authId,
                     }, (err, data) => {
@@ -222,7 +241,7 @@ export class Client extends EventEmitter {
         names.forEach(name => {
             this.api[name] = async (requestPayload: any) => {
                 return new Promise((resolve, reject) => {
-                    httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_PUBLIC_API}/${name}`, '', {
+                    httpPostAsync(`${this.webProtocol}//${this.baseHttpUrl}${GOTTI_HTTP_ROUTES.BASE_PUBLIC_API}/${name}`, '', {
                         [GOTTI_ROUTE_BODY_PAYLOAD]: requestPayload,
                     }, (err, data) => {
                         if (err) {
@@ -263,7 +282,7 @@ export class Client extends EventEmitter {
 
     public async authenticate(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.AUTHENTICATE}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+            httpPostAsync(`${this.webProtocol}//${this.baseHttpUrl}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.AUTHENTICATE}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
@@ -282,7 +301,7 @@ export class Client extends EventEmitter {
 
     public async register(options?: any, tokenHeader?: string) {
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.REGISTER}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
+            httpPostAsync(`${this.webProtocol}//${this.baseHttpUrl}${GOTTI_HTTP_ROUTES.BASE_AUTH}${GOTTI_HTTP_ROUTES.REGISTER}`, tokenHeader, {[GOTTI_AUTH_KEY]: options }, (err, data) => {
                 if (err) {
                     return reject(`Error requesting game ${err}`);
                 } else {
@@ -304,7 +323,7 @@ export class Client extends EventEmitter {
             throw new Error(`You are not authenticated`)
         }
         return new Promise((resolve, reject) => {
-            httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.GET_GAMES}`, token, {
+            httpPostAsync(`${this.webProtocol}//${this.baseHttpUrl}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.GET_GAMES}`, token, {
                 [GOTTI_GATE_AUTH_ID]: this.authId,
                 [GOTTI_GET_GAMES_OPTIONS]: clientOptions,
             }, (err, data) => {
@@ -327,7 +346,7 @@ export class Client extends EventEmitter {
         return true;
     }
 
-    public async joinGame(gameType, joinOptions?, token?, fps=60) {
+    public async joinGame(gameType, joinOptions?) {
         if(this.runningProcess) {
             this.clearGame();
         }
@@ -339,7 +358,7 @@ export class Client extends EventEmitter {
                 throw new Error(`You are not authenticated to join a networked game`);
             }
             return new Promise((resolve, reject) => {
-                httpPostAsync(`${this.webProtocol}//${this.hostname}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, token,
+                httpPostAsync(`${this.webProtocol}//${this.baseHttpUrl}${GOTTI_HTTP_ROUTES.BASE_GATE}${GOTTI_HTTP_ROUTES.JOIN_GAME}`, '',
                     {
                         gameType,
                         [GOTTI_GET_GAMES_OPTIONS]: joinOptions,
@@ -352,8 +371,8 @@ export class Client extends EventEmitter {
                             this.runningProcess = await this.processManager.initializeGame(gameType, gameData, areaData);
                             const joinOptions = await this.joinConnector(gottiId, clientId, `${host}:${port}`, areaData);
                             //TODO: initializing process only after onJoin returns
-                            this.processManager.startCurrentGameSystems(joinOptions);
-                            return resolve({ gameData, areaData });
+                            this.processManager.startCurrentGameSystems();
+                            return resolve({ gameData, areaData, joinOptions });
                         }
                     });
             })

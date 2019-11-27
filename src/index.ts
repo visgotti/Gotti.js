@@ -14,7 +14,7 @@ export { Client };
 
 export { Message } from './core/ClientMessageQueue';
 
-const Gotti: PublicApi = {};
+const Gotti: PublicApi = <PublicApi>{};
 const setDefaultClientExport = function(client: Client) {
     // clear properties on Gotti in case we already had a client initialized
     Object.keys(Gotti).forEach(key => {
