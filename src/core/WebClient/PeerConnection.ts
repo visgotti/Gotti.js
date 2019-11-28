@@ -226,7 +226,7 @@ export class PeerConnection {
     private startPinging() {
         let lastSent = this.seq;
         this.sentPingAt = Date.now();
-        this.dataChannel.send(msgpack.encode([PEER_TO_PEER_PROTOCOLS.PING, this.seq]));
+        this.send(msgpack.encode([PEER_TO_PEER_PROTOCOLS.PING, this.seq]));
         this.pingInterval = setInterval(() => {
             // this.seq should increase by 1 by the time we get back here
             if(lastSent !== this.seq - 1) {
@@ -239,12 +239,14 @@ export class PeerConnection {
                 lastSent++;
             }
             this.sentPingAt = Date.now();
-            this.dataChannel.send(msgpack.encode([PEER_TO_PEER_PROTOCOLS.PING, this.seq]));
+            this.send(msgpack.encode([PEER_TO_PEER_PROTOCOLS.PING, this.seq]));
         }, this.config.timeout);
     }
 
-    public send(message){
-        this.dataChannel.send(message);
+    public send(message) {
+        if(this.dataChannel.readyState === 'open') {
+            this.dataChannel.send(message);
+        }
     }
 
     private handlePong(seq) {
@@ -274,7 +276,7 @@ export class PeerConnection {
         const decoded = msgpack.decode(event.data);
         if(decoded.length < 3) {
             if(decoded[0] === PEER_TO_PEER_PROTOCOLS.PING) {
-                this.dataChannel.send(msgpack.encode([PEER_TO_PEER_PROTOCOLS.PONG, decoded[1]]));
+                this.send(msgpack.encode([PEER_TO_PEER_PROTOCOLS.PONG, decoded[1]]));
             } else if (decoded[0] === PEER_TO_PEER_PROTOCOLS.PONG) {
                 this.handlePong(decoded[1]);
             }

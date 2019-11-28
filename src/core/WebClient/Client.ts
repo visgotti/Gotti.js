@@ -372,12 +372,14 @@ export class Client extends EventEmitter {
                             const joinOptions = await this.joinConnector(gottiId, clientId, `${host}:${port}`, areaData);
                             //TODO: initializing process only after onJoin returns
                             this.processManager.startCurrentGameSystems();
+                            this.processManager.startProcess();
                             return resolve({ gameData, areaData, joinOptions });
                         }
                     });
             })
         } else {
             this.runningProcess = await this.processManager.initializeGame(gameType, joinOptions)
+            this.processManager.startProcess();
         }
     }
     private joinOnlineGame(gameType, joinOptions?, token?, fps=6) {

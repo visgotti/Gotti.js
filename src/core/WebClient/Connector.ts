@@ -193,7 +193,7 @@ export class Connector {
     }
 
     public sendAllPeersMessage(message: any) {
-        let len = this.connectedPeerIndexes.length;
+        const len = this.connectedPeerIndexes.length;
         const encoded = msgpack.encode([message.type, message.data, message.to, message.from]);
         for(let i = 0; i < len; i++) {
             this.peerConnections[this.connectedPeerIndexes[i]].send(encoded)

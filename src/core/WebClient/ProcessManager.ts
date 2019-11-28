@@ -182,10 +182,19 @@ export class ProcessManager {
         });
 
         if(process.plugins && Array.isArray(process.plugins)) {
-            process.plugins.forEach(this.runningGameProcess.installPlugin.bind(this.runningGameProcess))
+            process.plugins.forEach(plugin => {
+                this.runningGameProcess.installPlugin(plugin)
+            })
         }
 
         return this.runningGameProcess;
+    }
+
+    public startProcess() {
+        this.runningGameProcess.startLoop()
+    }
+    public stopProcess() {
+        this.runningGameProcess.stopLoop();
     }
 
     public startCurrentGameSystems() {

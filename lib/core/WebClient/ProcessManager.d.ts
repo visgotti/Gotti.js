@@ -37,5 +37,7 @@ export declare class ProcessManager {
     changeGameProcessSetup(gameType: any, gameData: any, areaData: any): Promise<ClientProcess>;
     clearAllProcesses(): void;
     initializeGame(gameType: any, gameData?: any, areaData?: any): Promise<ClientProcess>;
+    startProcess(): void;
+    stopProcess(): void;
     startCurrentGameSystems(): void;
 }
