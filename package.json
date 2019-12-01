@@ -1,6 +1,6 @@
 {
   "name": "gotti",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "description": "Full stack scalable javascript and html5 game engine.",

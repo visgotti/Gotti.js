@@ -15,6 +15,7 @@ export enum SocketType {
     UDP,
     TCP
 }
+
 export interface PeerConnectionConfig {
     iceServers?: Array<RTCIceServer>,
     socketType?: SocketType,
