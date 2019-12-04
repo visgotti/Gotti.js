@@ -49,6 +49,7 @@ export declare const GOTTI_HTTP_ROUTES: {
     GET_GAMES: string;
     JOIN_GAME: string;
     BASE_PUBLIC_API: string;
+    CONNECTOR: string;
 };
 export declare enum PeerDisconnectionReasons {
     PEER_PLAYER_DISCONNECTED_FROM_SERVER = 0,

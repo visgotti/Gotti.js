@@ -8,8 +8,7 @@ export declare type JoinOptions = {
     requestId: number;
 } & any;
 export declare type ServerGameOptions = {
-    host: string;
-    port: number;
+    proxyId: string;
     gottiId: string;
     clientId: number;
 };
@@ -72,6 +71,7 @@ export declare class Client extends EventEmitter {
     private authId;
     private processManager;
     private webProtocol;
+    private webSocketProtocol;
     constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC?: boolean, webProtocol?: string, port?: number);
     addAuthRoutes(names: any): void;
     private removeAuthValues;

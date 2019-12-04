@@ -115,10 +115,12 @@ export class Client extends EventEmitter {
         }
         if(port) {
             this.port = port;
-        } else if(window) {
+        } else if(window && window['location'] && window['location']['port']) {
             this.port = window['location'].port
         } else {
-            console.warn('No port set, defaulting to 80.');
+            this.port = 80;
+        }
+        if(!this.port) {
             this.port = 80;
         }
         this.baseHttpUrl = this.port != 80 ? `${this.hostname}:${this.port}` : this.hostname;

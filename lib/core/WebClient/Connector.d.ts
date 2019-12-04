@@ -60,7 +60,7 @@ export declare class Connector {
     private _previousState;
     private processManager;
     constructor();
-    connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, areaData: any, options?: any): Promise<unknown>;
+    connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, areaData: any, options: any, webSocketProtocol: any): Promise<unknown>;
     private handlePeerConnectionRequest;
     private handleSignalData;
     requestPeerConnection(peerIndex: number, systemName: string | number, requestOptions: any, systemRequestCallback: any): void;
