@@ -22,8 +22,7 @@ interface Window {
 declare var window: Window;
 
 export type ServerGameOptions = {
-    host: string,
-    port: number,
+    proxyId: string,
     gottiId: string,
     clientId: number,
 }
@@ -100,6 +99,7 @@ export class Client extends EventEmitter {
 
     private processManager: ProcessManager;
     private webProtocol: string = 'http';
+    private webSocketProtocol: string = 'ws:';
 
     constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC=false, webProtocol?: string, port?: number) {
         super();
@@ -130,6 +130,9 @@ export class Client extends EventEmitter {
             this.webProtocol = webProtocol + ':';
         } else if(window) {
             this.webProtocol = window['location'].protocol
+        }
+        if(this.webProtocol === 'https:') {
+            this.webSocketProtocol = 'wss:'
         }
 
         this.processManager = new ProcessManager(gameProcessSetups, this);
@@ -270,7 +273,7 @@ export class Client extends EventEmitter {
     }
 
     private validateServerOpts(serverGameOpts: ServerGameOptions) {
-        return serverGameOpts.gottiId && serverGameOpts.hasOwnProperty('clientId') && serverGameOpts.host && serverGameOpts.port
+        return serverGameOpts.gottiId && serverGameOpts.hasOwnProperty('clientId') && serverGameOpts.proxyId
     }
 
     public updateServerGameData(data: any) {
@@ -367,9 +370,9 @@ export class Client extends EventEmitter {
                         if (err) {
                             return reject(`Error requesting game ${err}`);
                         } else {
-                            const {gottiId, clientId, host, port, gameData, areaData} = data;
+                            const {gottiId, clientId, proxyId, gameData, areaData} = data;
                             this.runningProcess = await this.processManager.initializeGame(gameType, gameData, areaData);
-                            const joinOptions = await this.joinConnector(gottiId, clientId, `${host}:${port}`, areaData);
+                            const joinOptions = await this.joinConnector(gottiId, clientId, `${this.baseHttpUrl}${GOTTI_HTTP_ROUTES.CONNECTOR}/${proxyId}`, areaData);
                             //TODO: initializing process only after onJoin returns
                             this.processManager.startCurrentGameSystems();
                             this.processManager.startProcess();
@@ -429,7 +432,7 @@ export class Client extends EventEmitter {
 
         const joinOpts = { gottiId, playerIndex, connectorURL } as ConnectorAuth;
 
-        const options = await this.connector.connect(joinOpts, this.runningProcess, this.processManager, areaData, this.options);
+        const options = await this.connector.connect(joinOpts, this.runningProcess, this.processManager, areaData, this.options, this.webSocketProtocol);
 
         this.joinedGame = true;
 

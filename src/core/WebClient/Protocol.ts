@@ -69,6 +69,7 @@ export const GOTTI_HTTP_ROUTES = {
     GET_GAMES: '/gotti_games',
     JOIN_GAME: '/gotti_join_game',
     BASE_PUBLIC_API: '/gotti_api',
+    CONNECTOR: '/gotti_connector'
 }
 
 export enum PeerDisconnectionReasons {

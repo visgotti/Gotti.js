@@ -89,7 +89,7 @@ export class Connector {
     private processManager: ProcessManager;
     constructor() {}
 
-    public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, areaData, options: any = {}) {
+    public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, areaData, options: any = {}, webSocketProtocol) {
         const { gottiId, playerIndex, connectorURL } = connectorAuth;
 
         this.gottiId = gottiId;
@@ -98,7 +98,7 @@ export class Connector {
         this.processManager = processManager;
         this.process = process;
         this.messageQueue = process.messageQueue;
-        let url = this.buildEndPoint(connectorURL, options);
+        let url = this.buildEndPoint(connectorURL, options, webSocketProtocol);
         this.connection = new Connection(url);
         this.connection.onopen = () => {};
         this.connection.onmessage = this.onMessageCallback.bind(this);
@@ -330,7 +330,10 @@ export class Connector {
         this.onStateChange.dispatch(area.state);
     }
 
-    private buildEndPoint(URL, options: any ={}) {
+    private buildEndPoint(URL, options: any ={}, protocol) {
+        if(protocol !== 'ws:' && protocol !== 'wss:') {
+            throw new Error('websocket protocol must be ws or wss')
+        }
         const params = [ `gottiId=${this.gottiId}`];
         for (const name in options) {
             if (!options.hasOwnProperty(name)) {
@@ -338,7 +341,7 @@ export class Connector {
             }
             params.push(`${name}=${options[name]}`);
         }
-        return `ws://${URL}/?${params.join('&')}`;
+        return `${protocol}//${URL}/?${params.join('&')}`;
     }
 
     private handlePeerFailure(peerIndex, options?: any) {
