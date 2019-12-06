@@ -1,5 +1,6 @@
 import { Component } from './Component';
-export declare abstract class Entity {
+declare const EventEmitter: any;
+export declare abstract class Entity extends EventEmitter {
     id: string | number;
     type: string | number;
     components: any;
@@ -29,3 +30,4 @@ export declare abstract class Entity {
     removeComponent(componentName: any): void;
     destroy(): void;
 }
+export {};

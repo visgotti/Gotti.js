@@ -22,7 +22,6 @@ describe('Client Process with no globals', function() {
         done();
     });
 
-
     describe('clientProcess.addSystem with no globals', () => {
         before(() => {
             clientProcess.addSystem(DummySystem1);
@@ -59,7 +58,7 @@ describe('Client Process with no globals', function() {
             done();
         });
         it('has initialized systems in clientProcess.stoppedSystems', (done) => {
-            assert.strictEqual(clientProcess.stoppedSystems.size, system_names.length);
+            assert.strictEqual(clientProcess.stoppedSystems.length, system_names.length);
             done();
         });
         it('does not have systems in clientProcess.startedSystems', (done) => {
@@ -80,12 +79,11 @@ describe('Client Process with no globals', function() {
             done();
         });
         it('removes all system names from stoppedSystems', (done) => {
-            assert.strictEqual(clientProcess.stoppedSystems.size, 0);
+            assert.strictEqual(clientProcess.stoppedSystems.length, 0);
             done();
         });
         it('adds all systems to started in initialization order', (done) => {
             assert.strictEqual(clientProcess.startedSystems.length, system_names.length);
-            assert.strictEqual(clientProcess.startedSystemsLookup.size, system_names.length);
             done();
         });
     });
@@ -99,11 +97,10 @@ describe('Client Process with no globals', function() {
         });
         it('removes all started systems from lookup and array', (done) => {
             assert.strictEqual(clientProcess.startedSystems.length, 0);
-            assert.strictEqual(clientProcess.startedSystemsLookup.size, 0);
             done();
         });
         it('added system names back to stopped systems', (done) =>{
-            assert.strictEqual(clientProcess.stoppedSystems.size, system_names.length);
+            assert.strictEqual(clientProcess.stoppedSystems.length, system_names.length);
             done();
         });
     });
@@ -124,7 +121,7 @@ describe('Client Process with no globals', function() {
             done();
         });
         it('removed systems from stoppedSystems', (done) => {
-            assert.strictEqual(clientProcess.stoppedSystems.size, 0);
+            assert.strictEqual(clientProcess.stoppedSystems.length, 0);
             done();
         });
     });
@@ -138,7 +135,6 @@ describe('Client Process with no globals', function() {
             done();
         })
     });
-
 
     describe('clientProcess.serverGameData', () => {
         it('calls the onServerDataUpdated method on started systems', () => {
@@ -160,6 +156,7 @@ describe('Client Process with plugins', function() {
 
     const plugin = {
         name: "testPlugin",
+        init() {},
         props() {
             return {
                 "testprop": "test"
@@ -179,8 +176,6 @@ describe('Client Process with plugins', function() {
         clientProcess.addSystem(DummySystem3);
     })
     describe('clientProcess.installPlugin', () => {
-        
-      
         it('adds plugin to all systems if no names are specified as second params', (done) => {
             clientProcess.installPlugin(plugin);
             assert.deepStrictEqual(clientProcess.systems[system_names[0]].$.test(), "test");
@@ -194,6 +189,17 @@ describe('Client Process with plugins', function() {
             assert.deepStrictEqual(clientProcess.systems[system_names[1]].$.test(), "test");
             assert.deepStrictEqual(clientProcess.systems[system_names[2]].$.test, undefined);
             done();
+        });
+        it('adds plugins to system if we use system.installPlugin', () => {
+            clientProcess.systems[system_names[0]].installPlugin(plugin);
+            assert.deepStrictEqual(clientProcess.systems[system_names[0]].$.test(), "test");
+            assert.deepStrictEqual(clientProcess.systems[system_names[1]].$.test, undefined);
+            assert.deepStrictEqual(clientProcess.systems[system_names[2]].$.test, undefined);
+        })
+        it('executes init', () => {
+            const initSpy = sinon.spy(plugin, 'init');
+            clientProcess.installPlugin(plugin);
+            sinon.assert.callCount(initSpy, 1);
         })
     });
 })

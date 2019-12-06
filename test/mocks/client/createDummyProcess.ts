@@ -7,5 +7,5 @@ export function createDummyNetworkClientProcess(globalVariables?: any) {
 }
 
 export function createDummyOfflineClientProcess(globalVariables?: any) {
-    return new ClientProcess(createDummyWebClient(), false, globalVariables);
+    return new ClientProcess( createDummyWebClient(), false, globalVariables);
 }

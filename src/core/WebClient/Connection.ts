@@ -7,6 +7,7 @@ export class Connection extends WebSocketClient {
     private _enqueuedCalls: any[] = [];
     constructor(url, autoConnect: boolean = true) {
         super(url, undefined, { connect: autoConnect  });
+        console.log('making connection')
     }
 
     public onOpenCallback(event) {

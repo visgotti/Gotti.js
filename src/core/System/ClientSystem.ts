@@ -8,6 +8,9 @@ abstract class ClientSystem extends System {
     readonly name: string | number;
     private client: WebClient;
 
+    private gottiId: string;
+    private clientId: number;
+
     private _peers: Array<any>;
 
     // sends system message to server to be processed on next game tick
@@ -38,19 +41,18 @@ abstract class ClientSystem extends System {
      * @param messageQueue
      * @param globalSystemVariables - map of objects or values you want to be able to access in any system in the globals property.
      */
-    public initialize(client, messageQueue: ClientMessageQueue, entityManager: EntityManager, isNetworked, globalSystemVariables: {[reference: string]: any})
+    public initialize(client, messageQueue: ClientMessageQueue, entityManager: EntityManager, isNetworked, globalSystemVariables: {[reference: string]: any}, gottiId, clientId)
     {
         this.isNetworked = isNetworked;
         if(globalSystemVariables && typeof globalSystemVariables === 'object') {
             this.globals = globalSystemVariables;
         }
-
+        this.gottiId = gottiId;
+        this.clientId = clientId;
         this._peers = client.connector.connectedPeerIndexes;
         this._peerMap = client.connector.peerConnections;
         this.client = client;
         this.messageQueue = messageQueue;
-        this.messageQueue.addSystem(this);
-
         this.dispatchProcessMessage = client.raiseMessage.bind(client);
         this.initializeEntity = entityManager.initializeEntity.bind(entityManager);
         this.destroyEntity = entityManager.destroyEntity.bind(entityManager);

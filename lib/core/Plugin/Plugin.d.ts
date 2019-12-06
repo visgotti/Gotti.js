@@ -4,12 +4,14 @@ declare type KeyValuePair = {
     [key: string]: any;
 };
 declare type PluginProps = () => any;
+declare type PluginInit = () => any;
 export interface IPlugin {
     name: string;
     props?: PluginProps;
     methods?: {
         [methodName: string]: PluginMethod;
     };
+    init?: PluginInit;
 }
 export declare class Plugin {
     readonly name: string;
@@ -19,9 +21,13 @@ export declare class Plugin {
     };
     private _props;
     props: KeyValuePair;
+    private systemPlugs;
     private propNames;
     private methodNames;
-    constructor(plugin: IPlugin);
+    private globals;
+    initialize: Function;
+    constructor(plugin: IPlugin, globals?: any);
+    emit(eventName: any, payload: any): void;
     private applyProps;
     private applyMethods;
     applyToSystem(system: System): void;

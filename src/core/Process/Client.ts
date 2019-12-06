@@ -18,6 +18,9 @@ export class ClientProcess extends Process<ClientProcess> {
 
     public peers: Array<number> = [];
 
+    public clientId: number;
+    public gottiId: string;
+
     constructor(client: WebClient, isNetworked: boolean, globals?: any, options?: ClientProcessOptions) {
         super(PROCESS_ENV.CLIENT, globals);
 
@@ -37,6 +40,15 @@ export class ClientProcess extends Process<ClientProcess> {
 //   this.room.onMessageQueueRelay.add(this.onMessageQueueRelay.bind(this))
     }
 
+    public setClientIds(gottiId, clientId) {
+        this.gottiId = gottiId;
+        this.clientId = clientId;
+        this.startedSystems.forEach(system => {
+            system['gottiId'] = gottiId;
+            system['clientId'] = clientId;
+        });
+    }
+
     // runs abstract area status update functions if the system implements it
     /**
      *
@@ -45,9 +57,8 @@ export class ClientProcess extends Process<ClientProcess> {
      * @param options - options sent back from area when accepting the write request.
      */
     public dispatchOnAreaWrite(areaId, isInitial: boolean, options?) {
-        const length = this.systemNames.length;
-        for(let i = 0; i < length; i++) {
-            const system = this.systems[this.systemNames[i]] as ClientSystem;
+        for(let i = 0; i < this.startedSystems.length; i++) {
+            const system = this.startedSystems[i] as ClientSystem;
             system.onAreaWrite && system.onAreaWrite(areaId, isInitial, options)
         }
     }
@@ -59,10 +70,13 @@ export class ClientProcess extends Process<ClientProcess> {
      * @param options - options sent back from area when it added the client as listener
      */
     public dispatchOnAreaListen(areaId, state: any, options?: any) {
-        const length = this.systemNames.length;
-        for(let i = 0; i < length; i++) {
-            const system = this.systems[this.systemNames[i]] as ClientSystem;
+        const length = this.startedSystems.length;
+        for(let i = 0; i < this.startedSystems.length; i++) {
+            const system = this.startedSystems[i] as ClientSystem;
             system.onAreaListen && system.onAreaListen(areaId, options)
+        }
+        for(let i = 0; i < length; i++) {
+
         }
     }
 
@@ -72,9 +86,8 @@ export class ClientProcess extends Process<ClientProcess> {
      * @param options
      */
     public onPeerDisconnection(peerId, options?: any) {
-        const length = this.systemNames.length;
-        for(let i = 0; i < length; i++) {
-            const system = this.systems[this.systemNames[i]] as ClientSystem;
+        for(let i = 0; i < this.startedSystems.length; i++) {
+            const system = this.startedSystems[i] as ClientSystem;
             system.onPeerDisconnection && system.onPeerDisconnection(peerId, options)
         }
     }
@@ -85,9 +98,8 @@ export class ClientProcess extends Process<ClientProcess> {
      * @param options - options sent back from area when the client was removed.
      */
     public dispatchOnRemoveAreaListen(areaId, options?) {
-        const length = this.systemNames.length;
-        for(let i = 0; i < length; i++) {
-            const system = this.systems[this.systemNames[i]] as ClientSystem;
+        for(let i = 0; i < this.startedSystems.length; i++) {
+            const system = this.startedSystems[i] as ClientSystem;
             system.onRemoveAreaListen && system.onRemoveAreaListen(areaId, options)
         }
     }
@@ -101,7 +113,7 @@ export class ClientProcess extends Process<ClientProcess> {
      */
     public onPeerConnectionRequest(peerId, systemName: number | string, options?: any) {
         const system = this.systems[systemName] as ClientSystem;
-        if(system && system.onPeerConnectionRequest) {
+        if(this.startedSystems.indexOf(system) > -1 && system.onPeerConnectionRequest) {
             return system.onPeerConnectionRequest(peerId, options)
         }
         return false;
@@ -113,17 +125,15 @@ export class ClientProcess extends Process<ClientProcess> {
      * @param options
      */
     public onPeerConnection(peerIndex: number, options?: any) {
-        const length = this.systemNames.length;
-        for(let i = 0; i < length; i++) {
-            const system = this.systems[this.systemNames[i]] as ClientSystem;
+        for(let i = 0; i < this.startedSystems.length; i++) {
+            const system = this.startedSystems[i] as ClientSystem;
             system.onPeerConnection && system.onPeerConnection(peerIndex, options)
         }
     }
 
     public onPeerMissedPing(peerIndex: number, missedPings: number) {
-        const length = this.systemNames.length;
-        for(let i = 0; i < length; i++) {
-            const system = this.systems[this.systemNames[i]] as ClientSystem;
+        for(let i = 0; i < this.startedSystems.length; i++) {
+            const system = this.startedSystems[i] as ClientSystem;
             system.onPeerMissedPing && system.onPeerMissedPing(peerIndex, missedPings)
         }
     }
@@ -133,19 +143,25 @@ export class ClientProcess extends Process<ClientProcess> {
     }
 
     public stopLoop() {
+        this.clear();
         clearGameLoop();
     }
 
-    public startSystem(systemName) {
-        this._startSystem(systemName);
+    public clearGame() {
+        this.clear();
+        clearGameLoop();
+    }
+
+    public startSystem(system) {
+        this._startSystem(system);
     }
 
     public startAllSystems() {
         this._startAllSystems();
     }
 
-    public stopSystem(systemName) {
-        this._stopSystem(systemName);
+    public stopSystem(system) {
+        this._stopSystem(system);
     }
 
     public stopAllSystems() {

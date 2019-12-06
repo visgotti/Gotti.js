@@ -23,7 +23,7 @@ describe('ClientSystem', function() {
     beforeEach('Creates dummy systems and inits a web client', (done) => {
         messageQueue = new ClientMessageQueue();
         entityManager = new EntityManager({});
-        client = new WebClient('/', '');
+        client = new WebClient( [], '/');
 
         mockSystem1 = createDummyClientSystem(system_names[0]);
         mockSystem2 = createDummyClientSystem(system_names[1]);
@@ -33,13 +33,6 @@ describe('ClientSystem', function() {
     });
 
     describe('clientSystem.initialize', () => {
-        it('ran messageQueue.addSystem', (done) => {
-            let messageQueue_addSystemSpy = sinon.spy(messageQueue, 'addSystem');
-            mockSystem1.initialize(client, messageQueue, entityManager, false, client);
-            assert.strictEqual(mockSystem1.isNetworked, false);
-            sinon.assert.calledOnce(messageQueue_addSystemSpy);
-            done();
-        });
         it('ran clientSystem.onInit function', (done) => {
             let clientSystem_onInitSpy = sinon.spy(mockSystem1, 'onInit');
             mockSystem1.initialize(client, messageQueue, entityManager, true, client);
@@ -70,4 +63,21 @@ describe('ClientSystem', function() {
             done();
         });
     });
+
+    describe('clientSystem.installPlugin', () => {
+        const plugin = {
+            name: "testPlugin",
+            props() {
+                return {
+                    "testprop": "test"
+                }
+            },
+            methods: {
+                test() {
+                    return this.testprop
+                }
+            }
+        }
+    })
+
 });

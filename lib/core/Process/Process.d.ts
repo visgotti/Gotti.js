@@ -31,20 +31,21 @@ export declare abstract class Process<T> {
     private systemDecorator;
     systems: SystemLookup<string | number>;
     systemNames: Array<string | number>;
-    startedSystemsLookup: Set<string | number>;
     startedSystems: Array<ServerSystem | ClientSystem>;
-    stoppedSystems: Set<string | number>;
+    stoppedSystems: Array<ServerSystem | ClientSystem>;
+    private initializedPlugins;
     private pluginInit;
     constructor(processEnv: PROCESS_ENV, globals?: {}, plugins?: any[]);
     addGlobal(key: string, value: any): void;
-    installPlugin(iPlugin: IPlugin, systemNames: Array<string | number>): void;
+    installPlugin(iPlugin: IPlugin, systemNames?: Array<string | number>): void;
     serverGameData: any;
     addSystem(SystemConstructor: ISystem, ...args: Array<any>): ServerSystem | ClientSystem;
     protected _stopAllSystems(): void;
-    protected _stopSystem(systemName: any): void;
+    protected _stopSystem(system: string | number | ISystem): void;
     protected _startAllSystems(): void;
-    protected _startSystem(systemName: any): void;
+    protected _startSystem(system: string | number | ISystem): void;
     protected tick(delta: any): void;
+    clear(): void;
     abstract startLoop(framesPerSecond: number): void;
     abstract stopLoop(): void;
 }

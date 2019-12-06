@@ -1,4 +1,5 @@
 import { Signal } from '@gamestdio/signals';
+import { GameProcessSetup } from "./ProcessManager";
 import { Connector } from './Connector';
 import ClientSystem from './../System/ClientSystem';
 import { Message } from '../ClientMessageQueue';
@@ -6,16 +7,45 @@ export declare type JoinOptions = {
     retryTimes: number;
     requestId: number;
 } & any;
-import { ClientProcess } from '../Process/Client';
 export declare type ServerGameOptions = {
-    host: string;
-    port: number;
+    proxyId: string;
     gottiId: string;
-    playerIndex: number;
+    clientId: number;
 };
-export declare class Client {
+import * as EventEmitter from "eventemitter3";
+export declare type PublicApi = {
+    clearGame?: () => void;
+    register?: (requestPayload?: any) => Promise<any>;
+    getGames?: (requestPayload?: any) => Promise<any>;
+    joinInitialArea?: (requestPayload?: any) => Promise<any>;
+    joinGame?: (gameType: string, joinOptions: any) => Promise<{
+        gameData: any;
+        areaData: any;
+    }>;
+    onProcessMessage?: (messageName: string, handler: (any: any) => void) => void;
+    removeProcessMessage?: (messageName: any) => void;
+    authenticate?: (requestPayload: any) => Promise<any>;
+    auth?: {
+        [handlerName: string]: (requestPayload?: any) => Promise<any>;
+    };
+    authentication?: {
+        [handlerName: string]: (requestPayload?: any) => Promise<any>;
+    };
+    gate?: {
+        [handlerName: string]: (requestPayload?: any) => Promise<any>;
+    };
+    api?: {
+        [handlerName: string]: (requestPayload?: any) => Promise<any>;
+    };
+    on: EventEmitter.ListenerFn;
+    once: EventEmitter.ListenerFn;
+    off: (event: any, fn?: EventEmitter.ListenerFn, context?: any, once?: boolean) => void;
+    removeAllListeners: (event?: any) => void;
+    emit: EventEmitter.EventEmitterStatic;
+};
+export declare class Client extends EventEmitter {
     private runningProcess;
-    private processes;
+    private processFactories;
     private inGate;
     private stateListeners;
     private systemStateHandlers;
@@ -31,17 +61,33 @@ export declare class Client {
     protected connector: Connector;
     protected requestId: number;
     protected hostname: string;
+    private port;
+    private baseHttpUrl;
     private token;
-    constructor(url: string, token: string, disableWebRTC?: boolean);
-    addGameProcess(gameType: any, process: ClientProcess): void;
-    getConnectorData(gameType: any, options: any): Promise<unknown>;
+    readonly publicApi: any;
+    private auth;
+    private gate;
+    private api;
+    private authId;
+    private processManager;
+    private webProtocol;
+    private webSocketProtocol;
+    constructor(gameProcessSetups: Array<GameProcessSetup>, hostname?: string, disableWebRTC?: boolean, webProtocol?: string, port?: number);
+    addAuthRoutes(names: any): void;
+    private removeAuthValues;
+    private setAuthValues;
+    addGateRoutes(names: any): void;
+    addApiRoutes(names: any): void;
+    clearGame(): void;
     private validateServerOpts;
-    startGame(gameType: any, fps?: number, serverGameOpts?: ServerGameOptions, serverGameData?: any): Promise<unknown>;
     updateServerGameData(data: any): void;
-    stopGame(): void;
-    private startGameProcess;
-    private clearGameProcess;
-    getGateData(): Promise<unknown>;
+    authenticate(options?: any, tokenHeader?: string): Promise<unknown>;
+    register(options?: any, tokenHeader?: string): Promise<unknown>;
+    getGames(clientOptions?: any, token?: any): Promise<unknown>;
+    joinOfflineGame(gameType: any, gameData?: any, areaData?: any): Promise<boolean>;
+    joinGame(gameType: any, joinOptions?: any): Promise<unknown>;
+    private joinOnlineGame;
+    joinInitialArea(clientOptions?: any): Promise<unknown>;
     /**
      * can dispatch process messages from within a client system using
      * this.dispatchProcessMessage()
@@ -49,17 +95,6 @@ export declare class Client {
     onProcessMessage(messageName: string, handler: Function): void;
     removeProcessMessage(messageName: any): void;
     raiseMessage(messageName: any, payload: any): void;
-    /**
-     * When you finally join a game, you need to make one last mandatory request
-     * which is to find your initial write area. This is the only time where the client
-     * natively can send data directly requesting an area if you wanted. The connector server
-     * class will receive the client, areaOptions, and clientOptions. There is no callback or promise
-     * for this, from this point on you will communicate with the server through your Gotti systems.
-     * You can either implement the onAreaWrite method in your systems or you can have a server system
-     * send a custom system message to one of your client systems.
-     * @param clientOptions - options to send to connector when getting initial area.
-     */
-    writeInitialArea(clientOptions?: any): void;
     private joinConnector;
     close(): void;
     /**

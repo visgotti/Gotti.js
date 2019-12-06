@@ -11,7 +11,7 @@ import {Protocol, StateProtocol} from './Protocol';
 import {PeerConnection} from "./PeerConnection";
 
 import {ClientProcess} from '../Process/Client';
-
+import { ProcessManager } from './ProcessManager';
 import { encode } from './msgpack';
 
 export enum AreaStatus {
@@ -25,6 +25,8 @@ export interface Area {
     status: AreaStatus,
     state: StateContainer,
     options: any,
+    data: any,
+    type: string,
 }
 
 export type ConnectorAuth = {
@@ -49,6 +51,8 @@ export class Connector {
 
     public options: any;
 
+    private areaData: any;
+
     public clock: Clock = new Clock(); // experimental
     public remoteClock: Clock = new Clock(); // experimental
 
@@ -66,6 +70,7 @@ export class Connector {
     public onError: Signal = new Signal();
     public onLeave: Signal = new Signal();
     public onOpen: Signal = new Signal();
+    public onInitialArea: Signal = new Signal();
 
     private process: ClientProcess;
 
@@ -81,24 +86,25 @@ export class Connector {
 
     private _previousState: any;
 
+    private processManager: ProcessManager;
     constructor() {}
 
-    public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, options: any = {}) {
+    public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, areaData, options: any = {}, webSocketProtocol) {
         const { gottiId, playerIndex, connectorURL } = connectorAuth;
 
         this.gottiId = gottiId;
+        this.areaData = areaData;
         this.playerIndex = playerIndex;
-
+        this.processManager = processManager;
         this.process = process;
         this.messageQueue = process.messageQueue;
-
-        let url = this.buildEndPoint(connectorURL, options);
+        let url = this.buildEndPoint(connectorURL, options, webSocketProtocol);
         this.connection = new Connection(url);
         this.connection.onopen = () => {};
         this.connection.onmessage = this.onMessageCallback.bind(this);
         return new Promise((resolve, reject) => {
-            this.onJoinConnector.add((areaData, joinData) => {
-                return resolve({ areaData, joinData });
+            this.onJoinConnector.add(joinOptions => {
+                return resolve(joinOptions);
             })
         })
     }
@@ -150,6 +156,12 @@ export class Connector {
         }
     }
 
+    public stopAllPeerConnections() {
+        for(let peerIndex in this.peerConnections) {
+            this.peerConnections[peerIndex].destroy();
+        }
+    }
+
     public stopPeerConnection(peerIndex) {
         if (this.peerConnections[peerIndex]) {
             this.peerConnections[peerIndex].destroy();
@@ -164,17 +176,16 @@ export class Connector {
         if(this.writeAreaId !== null) {
             throw new Error('Player is already writing to an area.')
         }
-
+        console.log('GET INITIAL CLIENT AREA WRITE');
         this.connection.send([Protocol.GET_INITIAL_CLIENT_AREA_WRITE, options]);
     }
 
-    public leave(): void {
-        if (this.connection) {
-            //     this.connection.send([Protocol.LEAVE_ROOM]);
-
-        } else {
-            this.onLeave.dispatch();
-        }
+    public disconnect() {
+        this.removeAllListeners();
+        this.stopAllPeerConnections();
+        this.connection.close();
+        this.process = null;
+        this.messageQueue = null;
     }
 
     public sendPeerMessage(peerIndex, message: any) {
@@ -182,7 +193,7 @@ export class Connector {
     }
 
     public sendAllPeersMessage(message: any) {
-        let len = this.connectedPeerIndexes.length;
+        const len = this.connectedPeerIndexes.length;
         const encoded = msgpack.encode([message.type, message.data, message.to, message.from]);
         for(let i = 0; i < len; i++) {
             this.peerConnections[this.connectedPeerIndexes[i]].send(encoded)
@@ -210,7 +221,6 @@ export class Connector {
     }
 
     public removeAllListeners() {
-        //  super.removeAllListeners();
         this.onJoinConnector.removeAll();
         this.onStateChange.removeAll();
         this.onMessage.removeAll();
@@ -218,37 +228,48 @@ export class Connector {
         this.onLeave.removeAll();
     }
 
-    protected onJoin(areaOptions, joinOptions) {
-        this.onJoinConnector.dispatch(areaOptions, joinOptions);
-        Object.keys(areaOptions).forEach(areaId => {
+    protected onJoin(joinOptions) {
+        Object.keys(this.areaData).forEach(areaId => {
+            const { data, type } = this.areaData[areaId];
             this.areas[areaId] = {
                 _previousState: {},
                 status: AreaStatus.NOT_IN,
                 state: new StateContainer({}),
-                options: areaOptions[areaId],
+                options: {},
+                data,
+                type,
             };
-        })
+        });
+        this.onJoinConnector.dispatch(joinOptions);
     }
 
     protected onMessageCallback(event) { // TODO: REFACTOR PROTOCOLS TO USE BITWISE OPS PLS
         const message = msgpack.decode(new Uint8Array(event.data));
         const code = message[0];
         if (code === Protocol.JOIN_CONNECTOR) {
-            // [areaOptions, joinOptions]
-            this.onJoin(message[1], message[2]);
+            // [joinOptions]
+            this.onJoin(message[1]);
         } else if (code === Protocol.JOIN_CONNECTOR_ERROR) {
             this.onError.dispatch(message[1]);
         } else if (code === Protocol.SET_CLIENT_AREA_WRITE) {
-            // newAreaId, oldAreaId?, options?
-            if(message[2]) {
-                this.areas[message[1]].status = AreaStatus.LISTEN;
+            // newAreaId, options?
+            if(this.writeAreaId) {
+                this.areas[this.writeAreaId].status = AreaStatus.LISTEN;
             }
             this.areas[message[1]].status = AreaStatus.WRITE;
-            this.process.dispatchOnAreaWrite(message[1], this.writeAreaId === null, message[2]);
+            const isInitial = this.writeAreaId === null;
             this.writeAreaId = message[1];
+            // if we werent already listening then start the area systems
+            if(!(this.areas[message[1]].status === AreaStatus.LISTEN)) {
+                this.processManager.startAreaSystems(message[1]);
+            }
+            if(isInitial) {
+                this.onInitialArea.dispatch({ areaId: message[1], areaOptions: message[2]})
+            }
         } else if (code === Protocol.ADD_CLIENT_AREA_LISTEN) {
             // areaId, options?
             this.areas[message[1]].status = AreaStatus.LISTEN;
+            this.processManager.startAreaSystems(message[1]);
             const { responseOptions, encodedState } = message[2];
             this.process.dispatchOnAreaListen(message[1], encodedState, responseOptions);
         }
@@ -309,7 +330,10 @@ export class Connector {
         this.onStateChange.dispatch(area.state);
     }
 
-    private buildEndPoint(URL, options: any ={}) {
+    private buildEndPoint(URL, options: any ={}, protocol) {
+        if(protocol !== 'ws:' && protocol !== 'wss:') {
+            throw new Error('websocket protocol must be ws or wss')
+        }
         const params = [ `gottiId=${this.gottiId}`];
         for (const name in options) {
             if (!options.hasOwnProperty(name)) {
@@ -317,7 +341,7 @@ export class Connector {
             }
             params.push(`${name}=${options[name]}`);
         }
-        return `ws://${URL}/?${params.join('&')}`;
+        return `${protocol}//${URL}/?${params.join('&')}`;
     }
 
     private handlePeerFailure(peerIndex, options?: any) {
@@ -335,10 +359,11 @@ export class Connector {
         const index = this.connectedPeerIndexes.indexOf(peerIndex);
         if(index > -1) {
             this.connectedPeerIndexes.splice(index, 1);
-            this.process.peers = this.connectedPeerIndexes;
-            this.process.onPeerDisconnection(peerIndex, options);
+            if(this.process) {
+                this.process.peers = this.connectedPeerIndexes;
+                this.process.onPeerDisconnection(peerIndex, options);
+            }
         }
-
         delete this.peerConnections[peerIndex];
         peerConnection.destroy();
     }

@@ -37,6 +37,20 @@ export declare const enum Protocol {
     WS_SERVER_DISCONNECT = 4201,
     WS_TOO_MANY_CLIENTS = 4202
 }
+export declare const GOTTI_ROUTE_BODY_PAYLOAD = "__GOTTI_ROUTE_BODY_PAYLOAD__";
+export declare const GOTTI_GET_GAMES_OPTIONS = "__GOTTI_GET_GAMES_OPTIONS__";
+export declare const GOTTI_GATE_AUTH_ID = "__GOTTI_AUTH_ID__";
+export declare const GOTTI_AUTH_KEY = "__GOTTI_AUTH_KEY__";
+export declare const GOTTI_HTTP_ROUTES: {
+    BASE_AUTH: string;
+    AUTHENTICATE: string;
+    REGISTER: string;
+    BASE_GATE: string;
+    GET_GAMES: string;
+    JOIN_GAME: string;
+    BASE_PUBLIC_API: string;
+    CONNECTOR: string;
+};
 export declare enum PeerDisconnectionReasons {
     PEER_PLAYER_DISCONNECTED_FROM_SERVER = 0,
     PEER_PLAYER_TIMED_OUT = 1,

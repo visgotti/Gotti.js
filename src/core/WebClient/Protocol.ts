@@ -56,6 +56,22 @@ export const enum Protocol {
     WS_TOO_MANY_CLIENTS = 4202,
 }
 
+export const GOTTI_ROUTE_BODY_PAYLOAD = '__GOTTI_ROUTE_BODY_PAYLOAD__';
+export const GOTTI_GET_GAMES_OPTIONS = '__GOTTI_GET_GAMES_OPTIONS__';
+export const GOTTI_GATE_AUTH_ID = '__GOTTI_AUTH_ID__';
+export const GOTTI_AUTH_KEY = '__GOTTI_AUTH_KEY__';
+
+export const GOTTI_HTTP_ROUTES = {
+    BASE_AUTH: '/gotti_auth',
+    AUTHENTICATE: '/gotti_authenticate',
+    REGISTER: '/gotti_register',
+    BASE_GATE: '/gotti_gate',
+    GET_GAMES: '/gotti_games',
+    JOIN_GAME: '/gotti_join_game',
+    BASE_PUBLIC_API: '/gotti_api',
+    CONNECTOR: '/gotti_connector'
+}
+
 export enum PeerDisconnectionReasons {
     PEER_PLAYER_DISCONNECTED_FROM_SERVER,
     PEER_PLAYER_TIMED_OUT,

@@ -7,7 +7,6 @@ export enum PROCESS_ENV {
     SERVER = 1,
 }
 
-
 import { ClientMessageQueue, Message } from '../ClientMessageQueue'
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import System from '../System/System';
@@ -48,10 +47,10 @@ export abstract class Process<T> {
     public systems: SystemLookup<string | number>;
     public systemNames: Array<string | number>;
 
-    public startedSystemsLookup: Set<string | number>;
     public startedSystems: Array<ServerSystem | ClientSystem>;
+    public stoppedSystems: Array<ServerSystem | ClientSystem>;
 
-    public stoppedSystems: Set<string | number>;
+    private initializedPlugins: Array<Plugin>;
 
     private pluginInit: Array<{
         plugin: Plugin,
@@ -65,13 +64,11 @@ export abstract class Process<T> {
         this.systemNames = [] as Array<string>;
 
         this.systemInitializedOrder = new Map() as Map<string | number, number>;
-
-        this.startedSystemsLookup = new Set() as Set<string | number>;
         this.startedSystems = [] as Array<ServerSystem | ClientSystem>;
 
         this._serverGameData = {};
 
-        this.stoppedSystems = new Set() as Set<string | number>;
+        this.stoppedSystems = [];
 
         this.messageQueue = processEnv === PROCESS_ENV.SERVER ? new ServerMessageQueue() : new ClientMessageQueue();
         this.entityManager = new EntityManager(this.systems);
@@ -82,8 +79,13 @@ export abstract class Process<T> {
         this.globals[key] = value;
     }
 
-    public installPlugin(iPlugin: IPlugin, systemNames: Array<string | number>) {
-        const plugin = new Plugin(iPlugin);
+    public installPlugin(iPlugin: IPlugin, systemNames?: Array<string | number>) {
+        let foundPlugin = this.pluginInit.find(p => iPlugin.name === p.plugin.name);
+
+        const plugin = foundPlugin ? foundPlugin.plugin : new Plugin(iPlugin, this.globals);
+        if(!foundPlugin) {
+            plugin.initialize();
+        }
         if(!systemNames) {
             systemNames = [...this.systemNames];
         }
@@ -100,8 +102,11 @@ export abstract class Process<T> {
                 indexDiff++;
             }
         }
-        this.pluginInit.push({ plugin, systems: bufferedSystemNames });
-
+        if(foundPlugin) {
+            foundPlugin.systems = [...foundPlugin.systems, ...bufferedSystemNames].filter((v, i, a) => a.indexOf(v) === i); // makes sure we dont duplicate system buffers
+        } else {
+            this.pluginInit.push({ plugin, systems: bufferedSystemNames });
+        }
 
         /*
         for(let i = 0; i < systemNames.length; i++) {
@@ -130,6 +135,10 @@ export abstract class Process<T> {
             return null;
         }
 
+        system['installPlugin'] = (iPlugin: IPlugin) => {
+            this.installPlugin(iPlugin, [system.name])
+        };
+
         this.systemInitializer(system);
         this.systems[system.name] = system;
         this.systemNames.push(system.name);
@@ -138,7 +147,7 @@ export abstract class Process<T> {
         // and started we can keep track of only the needed names in order
         this.systemInitializedOrder.set(system.name, this.systemInitializedOrder.size);
 
-        this.stoppedSystems.add(system.name);
+        this.stoppedSystems.push(system);
         this.pluginInit.forEach(({ plugin, systems }) => {
             if(systems.includes(system.name)) {
                 plugin.applyToSystem(system);
@@ -153,20 +162,21 @@ export abstract class Process<T> {
         }
     }
 
-    protected _stopSystem(systemName) {
-        if (this.startedSystemsLookup.has(systemName)) {
-            this.systems[systemName].onStop();
+    protected _stopSystem(system: string | number | ISystem) {
+        const foundStarted = (typeof system === 'string' || typeof system === 'number') ?
+            this.startedSystems.find(s => s.name === system) :
+            this.startedSystems.find(s => s.constructor === system);
 
-            this.startedSystemsLookup.delete(systemName);
-
+        if (foundStarted) {
+            this.messageQueue.removeSystem(foundStarted.name);
+            foundStarted.onStop();
             for(let i = 0; i < this.startedSystems.length; i++) {
-                if(this.startedSystems[i].name === systemName) {
+                if(this.startedSystems[i] === foundStarted) {
                     this.startedSystems.splice(i, 1);
                     break;
                 }
             }
-
-            this.stoppedSystems.add(systemName);
+            this.stoppedSystems.push(foundStarted);
         }
     }
 
@@ -176,9 +186,14 @@ export abstract class Process<T> {
         }
     }
 
-    protected _startSystem(systemName) {
-        if (this.stoppedSystems.has(systemName)) {
-            this.startedSystemsLookup.add(systemName);
+    protected _startSystem(system: string | number | ISystem) {
+        const foundStopped = (typeof system === 'string' || typeof system === 'number') ?
+            this.stoppedSystems.find(s => s.name === system) :
+            this.stoppedSystems.find(s => s.constructor === system);
+
+        if (foundStopped) {
+            this.messageQueue.addSystem(foundStopped as any);
+            const systemName = foundStopped.name;
             const toStartInitializedIndex = this.systemInitializedOrder.get(systemName);
             // no started systems yet so no order to worry about, can just add
             if(this.startedSystems.length === 0) {
@@ -204,8 +219,10 @@ export abstract class Process<T> {
                 }
             }
             this.systems[systemName].serverGameData = this._serverGameData;
-            this.stoppedSystems.delete(systemName);
+            this.stoppedSystems.splice(this.stoppedSystems.indexOf(foundStopped), 1);
             this.systems[systemName].onStart();
+        } else {
+            throw new Error('Couldnt find system')
         }
     }
 
@@ -216,6 +233,24 @@ export abstract class Process<T> {
         }
     }
 
+    public clear() {
+        this._stopAllSystems();
+        for(let i = 0; i < this.systemNames.length; i++) {
+            this.systems[this.systemNames[i]].onClear();
+        }
+        this.systems = {};
+        this.startedSystems.length = 0;
+        this.stoppedSystems.length = 0;
+        this.systemNames.length = 0;
+        this.systemInitializedOrder = new Map();
+    }
+
+
     public abstract startLoop (framesPerSecond: number): void;
     public abstract stopLoop(): void;
+}
+
+
+function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
 }

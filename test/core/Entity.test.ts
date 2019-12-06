@@ -21,6 +21,9 @@ export class TestComponent extends Component {
     testMethod() {
         return this.testProperty;
     }
+    testEmit() {
+        this.emit("test", "testPayload");
+    }
 }
 
 describe('Entity', function() {
@@ -47,6 +50,15 @@ describe('Entity', function() {
             testEntity.addComponent(new TestComponent());
             assert.throws(() => {    testEntity.addComponent(new TestComponent()); });
             done();
+        });
+        it('Successfully handles events emitted from component', (done) => {
+            const component = new TestComponent();
+            testEntity.addComponent(component);
+            testEntity.on('test', (payload) => {
+                assert.strictEqual(payload, "testPayload");
+                done();
+            });
+            component.testEmit();
         })
     });
     describe('entity.removeComponent', () => {

@@ -3,40 +3,48 @@ import {createDummyOfflineClientProcess, createDummyNetworkClientProcess, system
 import * as assert from 'assert';
 import * as mocha from 'mocha';
 import * as sinon from 'sinon';
+import {DummySystem1, DummySystem2, DummySystem3, DummySystem4} from "../../mocks/client/dummySystems";
+
+const processFiles = [{
+    isNetworked: false,
+    type: 'game1',
+    systems: [DummySystem1],
+    areas: [{
+        type: 'area1',
+        systems: [DummySystem2]
+    }, {
+        type: 'area2',
+        systems: [DummySystem3]
+    }, {
+        type: 'area3',
+        systems: [DummySystem2, DummySystem3, DummySystem4],
+    }],
+    globals: async (gameData, client) => {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                return resolve({
+                    global: 'variable',
+                    gameData,
+                })
+            }, 1)
+        })
+    },
+}];
+
+import Gotti from '../../../src';
+const client = new Client(processFiles, '/');
 
 describe('Creates a web client', function() {
-    let client;
-    let networkedProcess;
-    let offlineProcess;
-    const offlineProcessKey = 'offline';
-    const networkedProcessKey = 'network';
-
-    beforeEach('creates instance of a client, a dummy offline process and a dummy networked process', (done) => {
-        client = new Client('', '');
-        networkedProcess = createDummyNetworkClientProcess();
-        offlineProcess = createDummyOfflineClientProcess();
-        done();
+    const offlineProcessKey = 'game1';
+    it('The default export is the public api of the client we just made', () => {
+        assert.deepStrictEqual(Object.keys(client.publicApi).sort(), Object.keys(Gotti).sort());
     });
-
-    describe('client.addGameProcess', () => {
-        it('succesfully adds offline process', () => {
-           client.addGameProcess(offlineProcessKey, offlineProcess);
-           assert.strictEqual(Object.keys(client.processes).length, 1);
-           assert.notStrictEqual(client.processes[offlineProcessKey], undefined);
-        });
-        it('succesfully adds online process', () => {
-            client.addGameProcess(networkedProcessKey, networkedProcess);
-            assert.strictEqual(Object.keys(client.processes).length, 1);
-            assert.notStrictEqual(client.processes[networkedProcessKey], undefined);
-        });
-        it('fails to add a process with a duplicate name', () => {
-            assert.doesNotThrow(() => { client.addGameProcess(offlineProcessKey, offlineProcess)});
-            assert.throws(() => { client.addGameProcess(offlineProcessKey, offlineProcess)});
-        });
+    it('throws if you try to change the Gotti values', () => {
+        assert.throws((() => { Gotti.api = "something else"}));
     });
+    /*
     describe('client.startGame', () => {
         it('successfully starts process of offline process', (done) => {
-            client.addGameProcess(offlineProcessKey, offlineProcess);
             let startGameProcessSpy = sinon.spy(client, 'startGameProcess');
             let joinConnectorSpy = sinon.spy(client, 'joinConnector');
             let startAllSystemsSpy = sinon.spy(offlineProcess, '_startAllSystems');
@@ -44,10 +52,7 @@ describe('Creates a web client', function() {
 
             // hasnt ticked yet
             assert.strictEqual(tickSpy.callCount, 0);
-
-            client.startGame(offlineProcessKey).then(() => {
-                sinon.assert.callCount(startGameProcessSpy, 1);
-                sinon.assert.callCount(startAllSystemsSpy, 1);
+            client.offlineGame(offlineProcessKey, { weapons: [1,2,3]}).then(() => {
 
                 // shouldnt join connector since its an offline game
                 sinon.assert.callCount(joinConnectorSpy, 0);
@@ -55,16 +60,24 @@ describe('Creates a web client', function() {
                 // not quite sure best way to predict this behavior better than
                 // just knowing it called tick at least once.
                 assert.strictEqual(tickSpy.callCount > 0, true);
+                assert.deepStrictEqual(client.runningProcess.globals, {
+                    global: 'variable',
+                    gameData: {
+                        weapons: [1, 2, 3]
+                    },
+                })
                 done();
             });
         });
     });
-    describe('client.stopGame', () => {
+
+     */
+    describe('client.clearGame', () => {
+        /*
         it('Successfully stops a started process', (done) => {
-            client.addGameProcess(offlineProcessKey, offlineProcess);
-            client.startGame(offlineProcessKey).then(() => {
+            client.startOfflineGame(offlineProcessKey).then(() => {
                 assert.deepStrictEqual(client.runningProcess, client.processes[offlineProcessKey]);
-                assert.doesNotThrow(() => {client.stopGame() });
+                assert.doesNotThrow(() => {client.clearGame() });
                 // sets running process to null
                 assert.strictEqual(client.runningProcess, null);
                 // make sure the process is still kept as a reference
@@ -72,10 +85,7 @@ describe('Creates a web client', function() {
                 done();
             });
         });
-        it('throws an error when no process is started a started process', () => {
-            client.addGameProcess(offlineProcessKey, offlineProcess);
-            assert.throws(() => {client.stopGame() });
-        });
+         */
     })
 });
 

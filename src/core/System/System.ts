@@ -2,14 +2,25 @@ import { Message, ClientMessageQueue } from '../ClientMessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
 import { Entity } from '../Entity';
 import { Component } from '../Component';
+
+import * as EventEmitter from "eventemitter3";
+import {IPlugin} from "../Plugin/Plugin";
+
+export interface SystemPlug extends EventEmitter {
+    [key: string]: any,
+}
+
 abstract class System {
     protected initialized: boolean;
 
     public onRemoteMessage(message: Message) {};
 
+    // overrided in process addSystem function
+    public installPlugin(plugin: IPlugin) {};
+
     public globals: any;
 
-    public $: any = {};
+    public $: SystemPlug = new EventEmitter();
 
     private _serverGameData: any;
 
@@ -69,7 +80,7 @@ abstract class System {
     public abstract initialize(...args: any[]): void;
 
     public abstract update (delta) : void;
-    public abstract clear() : void;
+    public abstract onClear() : void;
 
     //overrided in ServerSystem and ClientSystem initialize function
     public initializeEntity(entity:Entity, data?: any) {};
