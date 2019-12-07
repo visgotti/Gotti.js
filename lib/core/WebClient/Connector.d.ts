@@ -56,6 +56,8 @@ export declare class Connector {
         [playerIndex: number]: PeerConnection;
     };
     private pendingPeerRequests;
+    private peerAckRequestTimeouts;
+    private peerConnectedRequestTimeouts;
     readonly connectedPeerIndexes: Array<number>;
     private _previousState;
     private processManager;
@@ -63,7 +65,7 @@ export declare class Connector {
     connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, areaData: any, options: any, webSocketProtocol: any): Promise<unknown>;
     private handlePeerConnectionRequest;
     private handleSignalData;
-    requestPeerConnection(peerIndex: number, systemName: string | number, requestOptions: any, systemRequestCallback: any): void;
+    requestPeerConnection(peerIndex: number, systemName: string | number, requestOptions: any, systemRequestCallback: any, connectionTimeout?: number): void;
     stopAllPeerConnections(): void;
     stopPeerConnection(peerIndex: any): void;
     joinInitialArea(options?: any): void;

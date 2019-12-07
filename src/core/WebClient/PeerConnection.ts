@@ -53,6 +53,8 @@ export class PeerConnection {
     private dataChannel: RTCDataChannel;
 
   //  public onPeerMessage: Signal = new Signal();
+    // on ack is signaled basically saying the other client has received and sent back an acknowledgement that we want to p2p
+    public onAck: Signal = new Signal();
     public onConnected: Signal = new Signal();
     public onDisconnected: Signal = new Signal();
     public onMessage: Signal = new Signal();
@@ -67,6 +69,8 @@ export class PeerConnection {
 
     private seq: number = 0;
 
+    public gotAck: boolean=false;
+
     constructor(connection: Connection, clientPlayerIndex: number, peerPlayerIndex: number, configOptions?: PeerConnectionConfig) {
         this.peerPlayerIndex = peerPlayerIndex;
         this.clientPlayerIndex = clientPlayerIndex;
@@ -78,8 +82,6 @@ export class PeerConnection {
                 }
             });
         }
-
-
         // create unique channel id for players by ordering by index then joining
         this.channelId = [peerPlayerIndex, clientPlayerIndex].sort().join('-');
 
@@ -113,7 +115,15 @@ export class PeerConnection {
         this.queuedIceCandidates.length = 0;
     }
 
+    private checkAck() {
+        if(!this.gotAck) {
+            this.onAck.dispatch(true);
+            this.gotAck = true;
+        }
+    }
+
     public handleSDPSignal(sdp) {
+        this.checkAck();
         this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp)).then(() => {
             console.warn('GOT SDP SIGNAL')
             if (this.peerConnection.remoteDescription.type === 'offer') {
@@ -128,6 +138,7 @@ export class PeerConnection {
     };
 
     public handleIceCandidateSignal(candidate) {
+        this.checkAck();
         if(this.remoteDescriptionSet) {
             console.warn('applying ice candidate cuz we rdy');
             this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));

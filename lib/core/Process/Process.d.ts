@@ -39,6 +39,7 @@ export declare abstract class Process<T> {
     addGlobal(key: string, value: any): void;
     installPlugin(iPlugin: IPlugin, systemNames?: Array<string | number>): void;
     serverGameData: any;
+    private installMethodAsPlugin;
     addSystem(SystemConstructor: ISystem, ...args: Array<any>): ServerSystem | ClientSystem;
     protected _stopAllSystems(): void;
     protected _stopSystem(system: string | number | ISystem): void;

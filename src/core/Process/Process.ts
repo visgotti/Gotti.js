@@ -59,6 +59,7 @@ export abstract class Process<T> {
 
     constructor(processEnv: PROCESS_ENV, globals={}, plugins=[]) {
         this.globals = globals;
+
         this.processEnv = processEnv;
         this.systems = {} as SystemLookup<string | number>;
         this.systemNames = [] as Array<string>;
@@ -127,6 +128,10 @@ export abstract class Process<T> {
         });
     }
 
+    private installMethodAsPlugin(method) {
+
+    }
+
     public addSystem(SystemConstructor: ISystem, ...args: Array<any>) : ServerSystem | ClientSystem {
         let system = new SystemConstructor(...args);
 
@@ -136,7 +141,7 @@ export abstract class Process<T> {
         }
 
         system['installPlugin'] = (iPlugin: IPlugin) => {
-            this.installPlugin(iPlugin, [system.name])
+            this.installPlugin(iPlugin)
         };
 
         this.systemInitializer(system);
