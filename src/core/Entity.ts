@@ -115,6 +115,7 @@ export abstract class Entity extends EventEmitter {
         for(let component in this.components) {
             this.removeComponent(component);
         }
+        this.removeAllListeners();
         this.componentNames = [];
     }
 };
