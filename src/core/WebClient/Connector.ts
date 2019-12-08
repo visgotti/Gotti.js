@@ -354,11 +354,12 @@ export class Connector {
     }
 
     private buildEndPoint(URL, options: any ={}, protocol) {
-        if(protocol !== 'ws:' && protocol !== 'wss:') {
-        } else if (protocol === 'ws' || protocol === 'wss') {
-            protocol = protocol + ':';
-        } else {
+        if(protocol !== 'ws:' && protocol !== 'wss:' && protocol !== 'ws' && protocol !== 'wss') {
             throw new Error('websocket protocol must be ws or wss')
+        }
+
+        if (protocol === 'ws' || protocol === 'wss') {
+            protocol = protocol + ':';
         }
         const params = [ `gottiId=${this.gottiId}`];
         for (const name in options) {
