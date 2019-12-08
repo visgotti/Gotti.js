@@ -23,7 +23,7 @@ abstract class System {
     public globals: any;
 
     public $: SystemPlug = new EventEmitter();
-    public $api: {[methodNamme: string] : () => any };
+    public $api: {[methodNamme: string] : (...args: any[]) => any };
 
     private _serverGameData: any;
 

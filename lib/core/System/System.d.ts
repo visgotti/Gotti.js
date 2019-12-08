@@ -15,7 +15,7 @@ declare abstract class System {
     globals: any;
     $: SystemPlug;
     $api: {
-        [methodNamme: string]: () => any;
+        [methodNamme: string]: (...args: any[]) => any;
     };
     private _serverGameData;
     protected messageQueue: ClientMessageQueue | ServerMessageQueue;
