@@ -11,8 +11,12 @@ declare abstract class System {
     protected initialized: boolean;
     onRemoteMessage(message: Message): void;
     installPlugin(plugin: IPlugin): void;
+    addApi: (method: (...args: any[]) => any, name?: string) => void;
     globals: any;
     $: SystemPlug;
+    $api: {
+        [methodNamme: string]: () => any;
+    };
     private _serverGameData;
     protected messageQueue: ClientMessageQueue | ServerMessageQueue;
     protected dispatchLocal: Function;
@@ -51,6 +55,7 @@ declare abstract class System {
     onInit(): void;
     onStop(): void;
     onStart(): void;
+    onRestart(): void;
     onServerDataUpdated(newData: any, oldData: any): void;
 }
 export default System;
