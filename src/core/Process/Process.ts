@@ -32,6 +32,7 @@ export abstract class Process<T> {
     public entityManager: EntityManager;
 
     public globals: any;
+    public $api: {[methodNamme: string] : (...args: any[]) => any } = {};
 
     private _serverGameData: any;
 
@@ -59,6 +60,7 @@ export abstract class Process<T> {
 
     constructor(processEnv: PROCESS_ENV, globals={}, plugins=[]) {
         this.globals = globals;
+
         this.processEnv = processEnv;
         this.systems = {} as SystemLookup<string | number>;
         this.systemNames = [] as Array<string>;
@@ -136,7 +138,7 @@ export abstract class Process<T> {
         }
 
         system['installPlugin'] = (iPlugin: IPlugin) => {
-            this.installPlugin(iPlugin, [system.name])
+            this.installPlugin(iPlugin)
         };
 
         this.systemInitializer(system);
@@ -183,6 +185,18 @@ export abstract class Process<T> {
     protected _startAllSystems() {
         for(let i = 0; i < this.systemNames.length; i++) {
             this._startSystem(this.systemNames[i]);
+        }
+    }
+
+    protected _restartSystem(system: string | number | ISystem) {
+        const foundStarted = (typeof system === 'string' || typeof system === 'number') ?
+            this.startedSystems.find(s => s.name === system) :
+            this.startedSystems.find(s => s.constructor === system);
+
+        if(foundStarted) {
+            foundStarted.onRestart();
+        } else {
+            throw new Error(`Couldin't restart system ${system} since it wasn't started.`)
         }
     }
 
@@ -245,6 +259,15 @@ export abstract class Process<T> {
         this.systemInitializedOrder = new Map();
     }
 
+    public addApi(system: System, method: (...args: any[]) => any, name?: string) {
+        const isFunction = method && ({}.toString.call(method) === '[object Function]' || {}.toString.call(method) === '[object AsyncFunction]');
+        if(!isFunction) {
+            throw new Error('addApi must be called with a valid function to add as an api method')
+        }
+        name = name ? name : method.name;
+        if(!name) throw new Error(`no name provided for api method ${method} from system ${system} if youre adding an anonynmous function to the api from a system you must supply a name as second parameter`);
+        this.$api[name] = method.bind(system);
+    }
 
     public abstract startLoop (framesPerSecond: number): void;
     public abstract stopLoop(): void;

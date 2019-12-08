@@ -24,6 +24,7 @@ export declare class PeerConnection {
     private sentPingAt;
     private peerConnection;
     private dataChannel;
+    onAck: Signal;
     onConnected: Signal;
     onDisconnected: Signal;
     onMessage: Signal;
@@ -33,10 +34,12 @@ export declare class PeerConnection {
     private remoteDescriptionSet;
     private missedPings;
     private seq;
+    gotAck: boolean;
     constructor(connection: Connection, clientPlayerIndex: number, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
     private onDataChannelOpen;
     private setupDataChannel;
     private applyQueuedIceCandidates;
+    private checkAck;
     handleSDPSignal(sdp: any): void;
     handleIceCandidateSignal(candidate: any): void;
     private handleLocalDescription;

@@ -18,9 +18,12 @@ abstract class System {
     // overrided in process addSystem function
     public installPlugin(plugin: IPlugin) {};
 
+    public addApi : (method: (...args: any[]) => any, name?: string) => void;
+
     public globals: any;
 
     public $: SystemPlug = new EventEmitter();
+    public $api: {[methodNamme: string] : () => any };
 
     private _serverGameData: any;
 
@@ -102,9 +105,14 @@ abstract class System {
      */
     public onEntityAddedComponent(entity, component: Component) {};
 
+    // triggered when the system gets added to an initialized game process
     public onInit() {};
+    // triggered when the the system is stopped because an area you switched to does not use the system
     public onStop() {};
+    // triggered when the the system is started and the update loop becomes callable
     public onStart() {};
+    // triggered when processes change but both processes use the system.
+    public onRestart() {};
     public onServerDataUpdated(newData: any, oldData: any) {}
 }
 

@@ -81,6 +81,8 @@ export class Connector {
     public peerConnections: {[ playerIndex: number]: PeerConnection } = {};
     // adds the system name that requested the peer connection so we call the correct handlers inside the system when we receive a response
     private pendingPeerRequests: {[playerIndex: number ]: (err: any, options: any) => void } = {};
+    private peerAckRequestTimeouts: {[playerIndex: number]: any } = {};
+    private peerConnectedRequestTimeouts: {[playerIndex: number]: any } = {};
 
     readonly connectedPeerIndexes: Array<number> = [];
 
@@ -143,7 +145,7 @@ export class Connector {
         }
     }
 
-    public requestPeerConnection(peerIndex: number, systemName: string | number,  requestOptions, systemRequestCallback) {
+    public requestPeerConnection(peerIndex: number, systemName: string | number,  requestOptions, systemRequestCallback, connectionTimeout: number = 3000) {
         let peerConnection = this.peerConnections[peerIndex];
         if(!(peerConnection)){
             peerConnection = new PeerConnection(this.connection, this.playerIndex, peerIndex);
@@ -151,6 +153,27 @@ export class Connector {
             peerConnection.requestConnection(systemName, requestOptions);
             this.peerConnections[peerIndex] = peerConnection;
             this.pendingPeerRequests[peerIndex] = systemRequestCallback;
+
+            this.peerAckRequestTimeouts[peerIndex] = setTimeout(() => {
+                peerConnection.onAck.removeAll();
+                delete this.peerAckRequestTimeouts[peerIndex];
+                this.handlePeerFailure(peerIndex, null, 'Peer connection timed out, never received an acknowledgement back from peer.');
+            }, 2000);
+
+            // add the ack callback to remove the timeout
+            peerConnection.onAck.addOnce(() => {
+                clearTimeout(this.peerAckRequestTimeouts[peerIndex]);
+                delete this.peerAckRequestTimeouts[peerIndex];
+
+                // we got the ack, now we want to add a callback for the actual request unless for some reason the
+                // peer connection was already connected
+                if(!peerConnection.connected) {
+                    this.peerConnectedRequestTimeouts[peerIndex] = setTimeout(() => {
+                        delete this.peerConnectedRequestTimeouts[peerIndex];
+                        this.handlePeerFailure(peerIndex, null, 'Peer connection timed out on actual handshake of webRTC connection');
+                    }, connectionTimeout);
+                }
+            });
         } else {
             throw new Error(`Already existing peer connection for peer:, ${peerIndex}`);
         }
@@ -332,6 +355,9 @@ export class Connector {
 
     private buildEndPoint(URL, options: any ={}, protocol) {
         if(protocol !== 'ws:' && protocol !== 'wss:') {
+        } else if (protocol === 'ws' || protocol === 'wss') {
+            protocol = protocol + ':';
+        } else {
             throw new Error('websocket protocol must be ws or wss')
         }
         const params = [ `gottiId=${this.gottiId}`];
@@ -344,16 +370,28 @@ export class Connector {
         return `${protocol}//${URL}/?${params.join('&')}`;
     }
 
-    private handlePeerFailure(peerIndex, options?: any) {
+    private handlePeerFailure(peerIndex, options?: any, err?: string | boolean) {
         const peerConnection = this.peerConnections[peerIndex];
         if(!peerConnection) {
             console.error(`Peer failure for peerIndex ${peerIndex} did not have a correlated peer connection.`);
-        };
+        } else {
+            peerConnection.onConnected.removeAll();
+        }
 
         // check to see if we have a pending request so we can initiate the callback
         if(this.pendingPeerRequests[peerIndex]) {
-            this.pendingPeerRequests[peerIndex](true, options);
+            err = err ? err : true;
+            this.pendingPeerRequests[peerIndex](err, null);
             delete this.pendingPeerRequests[peerIndex];
+        }
+
+        if(this.peerAckRequestTimeouts[peerIndex]) {
+            clearTimeout(this.peerAckRequestTimeouts[peerIndex]);
+            delete this.peerAckRequestTimeouts[peerIndex];
+        }
+        if (this.peerConnectedRequestTimeouts[peerIndex]) {
+            clearTimeout(this.peerConnectedRequestTimeouts[peerIndex]);
+            delete this.peerConnectedRequestTimeouts[peerIndex]
         }
 
         const index = this.connectedPeerIndexes.indexOf(peerIndex);
@@ -375,6 +413,16 @@ export class Connector {
                     this.pendingPeerRequests[peerIndex](null, options)
                 }
 
+                // check ack for good measure ;]
+                if(this.peerAckRequestTimeouts[peerIndex]) {
+                    clearTimeout(this.peerAckRequestTimeouts[peerIndex]);
+                    delete this.peerAckRequestTimeouts[peerIndex];
+                }
+                // this should still be defined..
+                if(this.peerConnectedRequestTimeouts[peerIndex]) {
+                    clearTimeout(this.peerConnectedRequestTimeouts[peerIndex]);
+                    delete this.peerConnectedRequestTimeouts[peerIndex];
+                }
                 this.connectedPeerIndexes.push(peerIndex);
                 this.process.peers = this.connectedPeerIndexes;
                 this.process.onPeerConnection(peerIndex, options);

@@ -91,7 +91,7 @@ export abstract class Entity extends EventEmitter {
         return this.components[componentName] !== undefined;
     }
 
-    public removeComponent(componentName){
+    public removeComponent(componentName) {
         const component = this.components[componentName];
 
         if(component === undefined) {
@@ -115,6 +115,7 @@ export abstract class Entity extends EventEmitter {
         for(let component in this.components) {
             this.removeComponent(component);
         }
+        this.removeAllListeners();
         this.componentNames = [];
     }
 };

@@ -6,6 +6,7 @@ export declare enum PROCESS_ENV {
 }
 import { ClientMessageQueue } from '../ClientMessageQueue';
 import { ServerMessageQueue } from '../Server/ServerMessageQueue';
+import System from '../System/System';
 import ClientSystem from '../System/ClientSystem';
 import ServerSystem from '../System/ServerSystem';
 export interface ISystem {
@@ -23,6 +24,9 @@ export declare abstract class Process<T> {
     messageQueue: ClientMessageQueue | ServerMessageQueue;
     entityManager: EntityManager;
     globals: any;
+    $api: {
+        [methodNamme: string]: (...args: any[]) => any;
+    };
     private _serverGameData;
     protected initializerFactory: (process: Process<any>) => (System: any) => void;
     protected systemInitializer: (System: any) => void;
@@ -43,9 +47,11 @@ export declare abstract class Process<T> {
     protected _stopAllSystems(): void;
     protected _stopSystem(system: string | number | ISystem): void;
     protected _startAllSystems(): void;
+    protected _restartSystem(system: string | number | ISystem): void;
     protected _startSystem(system: string | number | ISystem): void;
     protected tick(delta: any): void;
     clear(): void;
+    addApi(system: System, method: (...args: any[]) => any, name?: string): void;
     abstract startLoop(framesPerSecond: number): void;
     abstract stopLoop(): void;
 }

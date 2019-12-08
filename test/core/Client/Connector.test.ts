@@ -2,6 +2,11 @@ import { Connector } from '../../../src/core/WebClient/Connector';
 import { createDummyNetworkClientProcess, system_names } from '../../mocks';
 import { DummySystem1, DummySystem2 } from '../../mocks/client/dummySystems';
 
+import * as Con from '../../../src/core/WebClient/Connection';
+
+// @ts-ignore
+Con.Connection = class MockConnection {constructor() {}};
+
 import { PeerConnection } from "../../../src/core/WebClient/PeerConnection";
 
 import { Protocol } from "../../../src/core/WebClient/Protocol";
@@ -15,7 +20,7 @@ import * as sinon from 'sinon';
 let dummyAuth = {
     gottiId: 'test',
     playerIndex: 1,
-    connectorUrl: '',
+    connectorUrl: 'localhost',
 };
 
 const dummySystemName = system_names[0];
@@ -26,9 +31,7 @@ let onPeerConnectionRejectedSystemSpy;
 let onPeerConnectionRejectedSystemSpy2;
 
 let onPeerDisconnectionProcessSpy;
-
 let onPeerDisconnectionSystemSpy;
-
 
 describe('WebClient/Connector', function() {
     let process;
@@ -39,7 +42,7 @@ describe('WebClient/Connector', function() {
     before('stubs out PeerConnection methods', () => {
         sinon.stub(PeerConnection.prototype, 'requestConnection');
         sinon.stub(PeerConnection.prototype, 'acceptConnection');
-    })
+    });
 
     beforeEach('creates mock process and client then gets connector from client and stubs out networked functions with spies', (done) => {
         process = createDummyNetworkClientProcess();
@@ -56,7 +59,7 @@ describe('WebClient/Connector', function() {
 
     describe('connector.connect', () => {
         it('returns asynchronously when onMessageCallback is called with a JOIN_CONNECTOR protocol', (done) => {
-            connector.connect(dummyAuth, process, {}, {}, {}).then(data => {
+            connector.connect(dummyAuth, process, {}, {}, {}, 'ws').then(data => {
                 assert.deepStrictEqual(data,  { bar: 'baz' });
                 done();
             });

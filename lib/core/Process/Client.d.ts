@@ -60,6 +60,7 @@ export declare class ClientProcess extends Process<ClientProcess> {
     clearGame(): void;
     startSystem(system: any): void;
     startAllSystems(): void;
+    restartSystem(system: any): void;
     stopSystem(system: any): void;
     stopAllSystems(): void;
 }

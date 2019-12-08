@@ -135,6 +135,33 @@ describe('Client Process with no globals', function() {
             done();
         })
     });
+    describe('clientProcess.addApi', () => {
+        let dummyProcess;
+        before(() => {
+            dummyProcess = createDummyNetworkClientProcess();
+            dummyProcess.addSystem(DummySystem1);
+            dummyProcess.addSystem(DummySystem2);
+            dummyProcess.addSystem(DummySystem3);
+            dummyProcess.startAllSystems();
+        });
+        it('Binds the added api to the system\'s context that added it', () => {
+            dummyProcess.startedSystems[0]['testprop'] = 'system 1';
+            dummyProcess.startedSystems[0]['testMethod'] = function () {
+                return this.testprop;
+            };
+            dummyProcess.startedSystems[0].addApi(dummyProcess.startedSystems[0].testMethod, 'testMethod');
+            dummyProcess.startedSystems[1]['testprop'] = 'system 2';
+
+            assert.deepStrictEqual(dummyProcess.startedSystems[0].$api.testMethod(), 'system 1');
+            assert.deepStrictEqual(dummyProcess.startedSystems[1].$api.testMethod(), 'system 1');
+        });
+        it('Uses correct name if it was a class method and no name param provided', () => {
+            dummyProcess.startedSystems[0]['testprop'] = 'system 1';
+            dummyProcess.startedSystems[0].addApi(dummyProcess.startedSystems[0].returnName);
+            assert.deepStrictEqual(dummyProcess.startedSystems[0].$api.returnName(), system_names[0]);
+            assert.deepStrictEqual(dummyProcess.startedSystems[1].$api.returnName(), system_names[0]);
+        });
+    });
 
     describe('clientProcess.serverGameData', () => {
         it('calls the onServerDataUpdated method on started systems', () => {
@@ -190,12 +217,6 @@ describe('Client Process with plugins', function() {
             assert.deepStrictEqual(clientProcess.systems[system_names[2]].$.test, undefined);
             done();
         });
-        it('adds plugins to system if we use system.installPlugin', () => {
-            clientProcess.systems[system_names[0]].installPlugin(plugin);
-            assert.deepStrictEqual(clientProcess.systems[system_names[0]].$.test(), "test");
-            assert.deepStrictEqual(clientProcess.systems[system_names[1]].$.test, undefined);
-            assert.deepStrictEqual(clientProcess.systems[system_names[2]].$.test, undefined);
-        })
         it('executes init', () => {
             const initSpy = sinon.spy(plugin, 'init');
             clientProcess.installPlugin(plugin);

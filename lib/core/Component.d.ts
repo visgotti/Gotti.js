@@ -7,7 +7,6 @@ export declare abstract class Component {
     setAttributeGetter: Function;
     entityId: string | number;
     $: SystemPlug;
-    readonly emitions: [];
     constructor(name: string | number);
     emit(event: string, payload: any): void;
     onAdded(entity: Entity): void;

@@ -160,6 +160,10 @@ export class ClientProcess extends Process<ClientProcess> {
         this._startAllSystems();
     }
 
+    public restartSystem(system) {
+        this._restartSystem(system);
+    }
+
     public stopSystem(system) {
         this._stopSystem(system);
     }
