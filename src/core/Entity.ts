@@ -91,7 +91,7 @@ export abstract class Entity extends EventEmitter {
         return this.components[componentName] !== undefined;
     }
 
-    public removeComponent(componentName){
+    public removeComponent(componentName) {
         const component = this.components[componentName];
 
         if(component === undefined) {

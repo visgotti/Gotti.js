@@ -9,6 +9,7 @@ class DummySystem extends ClientSystem {
     public onInit() {};
     public onStop() {};
     public onStart() {};
+    public onRestart() {}
     public update() {};
     public onStateUpdate(pathString, pathData, change, value) {};
     public onMessage(message) {};
@@ -17,6 +18,9 @@ class DummySystem extends ClientSystem {
     public onComponentRemoved(entity) {};
     public onPeerMessage(peerId: number | string, message: any) {};
     public onPeerConnectionRejected(peerId, options?) {};
+
+    onClear(): void {
+    }
 }
 
 export function createDummyClientSystem(name) {

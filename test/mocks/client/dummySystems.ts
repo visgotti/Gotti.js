@@ -6,6 +6,9 @@ export class DummySystem1 extends ClientSystem {
     constructor() {
         super(system_names[0]);
     }
+    public returnName() {
+        return this.name;
+    }
     public onLocalMessage(message) {};
     public onServerMessage(message) {};
     public onInit() {};
@@ -20,7 +23,7 @@ export class DummySystem1 extends ClientSystem {
     public onPeerConnectionRejected(peerId, options?) {};
     public onPeerConnectionRequested(peerId, options?) {};
 
-    public clear() {};
+    public onClear() {};
 }
 
 export class DummySystem2 extends ClientSystem {
@@ -41,7 +44,7 @@ export class DummySystem2 extends ClientSystem {
     public onPeerConnectionRejected(peerId, options?) {};
     public onPeerConnectionRequested(peerId, options?) {};
 
-    public clear() {};
+    public onClear() {};
 }
 
 export class DummySystem3 extends ClientSystem {
@@ -62,7 +65,7 @@ export class DummySystem3 extends ClientSystem {
     public onPeerConnectionRejected(peerId, options?) {};
     public onPeerConnectionRequested(peerId, options?) {};
 
-    public clear() {};
+    public onClear() {};
 }
 
 export class DummySystem4 extends ClientSystem {
@@ -83,5 +86,5 @@ export class DummySystem4 extends ClientSystem {
     public onPeerConnectionRejected(peerId, options?) {};
     public onPeerConnectionRequested(peerId, options?) {};
 
-    public clear() {};
+    public onClear() {};
 }

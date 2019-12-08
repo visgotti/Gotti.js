@@ -40,7 +40,9 @@ describe('Creates a web client', function() {
         assert.deepStrictEqual(Object.keys(client.publicApi).sort(), Object.keys(Gotti).sort());
     });
     it('throws if you try to change the Gotti values', () => {
-        assert.throws((() => { Gotti.api = "something else"}));
+        assert.throws((() => {
+            // @ts-ignore
+            Gotti.api = "something else"}));
     });
     /*
     describe('client.startGame', () => {

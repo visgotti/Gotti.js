@@ -27,6 +27,7 @@ export class TestComponent extends Component {
     }
 }
 
+// @ts-ignore
 export class TestSystem extends System {
     constructor() {
         super('TEST');
@@ -42,6 +43,7 @@ describe('EntityManager', function() {
     let testSystem;
     let entity;
     beforeEach('creates EntityManager entity ', (done) => {
+        // @ts-ignore
         testSystem = new TestSystem() as ClientSystem;
         entity = null;
         let systemMap = {'TEST': testSystem};

@@ -107,6 +107,15 @@ export class ProcessManager {
         if(!newAreaProcessSetup) {
             throw new Error(`${areaType} area type was not defined.`)
         }
+
+        // if its not the initial area write that means the game systems were started
+        // but now need to be restarted since the client has changed areas.
+        if(!isInitial) {
+            this.runningGameProcessSetup.systems.forEach(s => {
+                this.runningGameProcess.restartSystem(this.systemConstructorNameToPrototypeName[s.name]);
+            });
+        }
+
         //runningAreaProcessSetup
         const newAreaSystemConstructors = [...newAreaProcessSetup.systems];
         // same area process no need to do anything
@@ -119,6 +128,7 @@ export class ProcessManager {
                 this.runningGameProcess.stopSystem(systemConstructor);
                 this.startedAreaSystemConstructors.splice(this.startedAreaSystemConstructors.indexOf(systemConstructor), 1);
             } else {
+                this.runningGameProcess.restartSystem(systemConstructor);
                 newAreaSystemConstructors.splice(newAreaSystemConstructors.indexOf(systemConstructor), 1);
             }
         }
@@ -163,7 +173,8 @@ export class ProcessManager {
         const addedSystemConstructors = [];
 
         process.systems.forEach(s => {
-            this.runningGameProcess.addSystem(s);
+            const { name } = this.runningGameProcess.addSystem(s);
+            this.systemConstructorNameToPrototypeName[s.name] = name;
         });
         process.areas.forEach(a => {
             this.systemNamesByArea[a.type] = [];

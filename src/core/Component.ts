@@ -12,9 +12,7 @@ export abstract class Component {
 
     public $: SystemPlug;
 
-    readonly emitions: [];
-
-    constructor(name: string | number){
+    constructor(name: string | number) {
         if (typeof(name) === 'undefined')
         {
             throw "Component: Invalid component name";
@@ -25,10 +23,10 @@ export abstract class Component {
         });
         this.name = name;
     }
+    // overrided by Entity
     public emit(event: string, payload: any) {};
     public onAdded(entity: Entity) {};
     public onRemoved(entity: Entity) {};
-
 };
 
 /*
