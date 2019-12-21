@@ -22,6 +22,7 @@ export declare type PublicApi = {
         gameData: any;
         areaData: any;
     }>;
+    startOfflineGame?: (gameType: string, gameData: any) => Promise<boolean>;
     onProcessMessage?: (messageName: string, handler: (any: any) => void) => void;
     removeProcessMessage?: (messageName: any) => void;
     authenticate?: (requestPayload: any) => Promise<any>;
@@ -41,7 +42,7 @@ export declare type PublicApi = {
     once: EventEmitter.ListenerFn;
     off: (event: any, fn?: EventEmitter.ListenerFn, context?: any, once?: boolean) => void;
     removeAllListeners: (event?: any) => void;
-    emit: EventEmitter.EventEmitterStatic;
+    emit: (event: string, payload: any) => boolean;
 };
 export declare class Client extends EventEmitter {
     private runningProcess;
@@ -84,7 +85,7 @@ export declare class Client extends EventEmitter {
     authenticate(options?: any, tokenHeader?: string): Promise<unknown>;
     register(options?: any, tokenHeader?: string): Promise<unknown>;
     getGames(clientOptions?: any, token?: any): Promise<unknown>;
-    joinOfflineGame(gameType: any, gameData?: any, areaData?: any): Promise<boolean>;
+    startOfflineGame(gameType: any, gameData?: any, areaData?: any): Promise<boolean>;
     joinGame(gameType: any, joinOptions?: any): Promise<unknown>;
     private joinOnlineGame;
     joinInitialArea(clientOptions?: any): Promise<unknown>;

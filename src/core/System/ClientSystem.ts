@@ -124,15 +124,17 @@ abstract class ClientSystem extends System {
     /**
      * triggers onPeerConnectionRequest on peer players computer
      * if the request went through
-     * @param peerIndex
+     * @param peerIndex - playerIndex/clientId
      * @param options - options passed into onPeerConnectionRequest options param for player youre requesting to.
+     * @paramm ackTimeout - amount of time in ms you will wait to hear back from the client accepting your request, defaults to 3000
+     * @param requestTimeout - amount of time in ms to wait for the accepted request to actually connect, defdults to 5000
      */
-    public async requestPeer(peerIndex: number, options?: any) {
+    public async requestPeer(peerIndex: number, options?: any, ackTimeout?: number, requestTimeout?: number) {
         if(!this.onPeerConnectionRequest) {
             throw new Error(`Cannot add a peer from the system ${this.name} it does not implement onPeerConnectionRequest`);
         }
         return new Promise((resolve, reject) => {
-            this._requestPeer(peerIndex, this.name, options, (err, options) => {
+            this._requestPeer(peerIndex, this.name, options, ackTimeout, requestTimeout, (err, options) => {
                 if(err) {
                     return reject(err);
                 } else {
@@ -160,7 +162,7 @@ abstract class ClientSystem extends System {
     }
 
     // overrided in process decoration
-    private _requestPeer(peerIndex: number, systemName: string | number, options: any, callback: Function) {};
+    private _requestPeer(peerIndex: number, systemName: string | number, options: any, ackTimeout: number, requestTimeout: number, callback: Function) {};
 
     public dispatchToPeer(toPeerId: string | number, message: Message) {};
     public dispatchToPeers(toPeerIds: string | number, message: Message) {};

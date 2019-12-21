@@ -62,10 +62,12 @@ declare abstract class ClientSystem extends System {
     /**
      * triggers onPeerConnectionRequest on peer players computer
      * if the request went through
-     * @param peerIndex
+     * @param peerIndex - playerIndex/clientId
      * @param options - options passed into onPeerConnectionRequest options param for player youre requesting to.
+     * @paramm ackTimeout - amount of time in ms you will wait to hear back from the client accepting your request, defaults to 3000
+     * @param requestTimeout - amount of time in ms to wait for the accepted request to actually connect, defdults to 5000
      */
-    requestPeer(peerIndex: number, options?: any): Promise<unknown>;
+    requestPeer(peerIndex: number, options?: any, ackTimeout?: number, requestTimeout?: number): Promise<unknown>;
     readonly peers: any[];
     isPeer(playerIndex: any): boolean;
     getPeerPing(playerIndex: any): any;

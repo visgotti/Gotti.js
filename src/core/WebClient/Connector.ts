@@ -145,9 +145,11 @@ export class Connector {
         }
     }
 
-    public requestPeerConnection(peerIndex: number, systemName: string | number,  requestOptions, systemRequestCallback, connectionTimeout: number = 3000) {
+    public requestPeerConnection(peerIndex: number, systemName: string | number,  requestOptions, systemRequestCallback, ackTimeout?: number, connectionTimeout?: number) {
+        ackTimeout = ackTimeout ? ackTimeout : 3000;
+        connectionTimeout = connectionTimeout ? connectionTimeout : 5000;
         let peerConnection = this.peerConnections[peerIndex];
-        if(!(peerConnection)){
+        if(!(peerConnection)) {
             peerConnection = new PeerConnection(this.connection, this.playerIndex, peerIndex);
             this.setupPeerConnection(peerConnection, peerIndex);
             peerConnection.requestConnection(systemName, requestOptions);
@@ -158,7 +160,7 @@ export class Connector {
                 peerConnection.onAck.removeAll();
                 delete this.peerAckRequestTimeouts[peerIndex];
                 this.handlePeerFailure(peerIndex, null, 'Peer connection timed out, never received an acknowledgement back from peer.');
-            }, 2000);
+            }, ackTimeout);
 
             // add the ack callback to remove the timeout
             peerConnection.onAck.addOnce(() => {

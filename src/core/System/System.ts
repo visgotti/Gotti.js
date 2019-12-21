@@ -74,6 +74,7 @@ abstract class System {
     };
 
     public getSystemComponent(entity: Entity) {
+        if(!entity) return null;
         return entity.getComponent(this.name);
     }
 

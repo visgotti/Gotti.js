@@ -1,3 +1,6 @@
+type EventNames<T extends string | symbol | { [K in string | symbol]: any[] }> = T extends string | symbol ? T : keyof T;
+type EventArgs<T extends string | symbol | { [K in string | symbol]: any[] }, K extends EventNames<T>> = T extends string | symbol ? any[] : K extends keyof T ? T[K] : never;
+
 import { Signal } from '@gamestdio/signals';
 import * as msgpack from './msgpack';
 
@@ -38,6 +41,7 @@ export type PublicApi = {
         gameData: any,
         areaData: any
     }>
+    startOfflineGame?: (gameType: string, gameData: any) => Promise<boolean>,
     onProcessMessage?: (messageName: string, handler: (any) => void) => void,
     removeProcessMessage?: (messageName) => void,
     authenticate?: (requestPayload: any) => Promise<any>,
@@ -49,7 +53,7 @@ export type PublicApi = {
     once: EventEmitter.ListenerFn,
     off: (event: any, fn?: EventEmitter.ListenerFn, context?: any, once?: boolean) => void,
     removeAllListeners: (event?: any) => void,
-    emit: EventEmitter.EventEmitterStatic
+    emit: (event: string, payload: any) => boolean
 }
 
 type HttpRequests = { [name: string]: (requestPayload) => Promise<any> }
@@ -158,7 +162,8 @@ export class Client extends EventEmitter {
             on: this.on.bind(this),
             emit: this.emit.bind(this),
             off: this.off.bind(this),
-            removeAllListeners: this.removeAllListeners.bind(this)
+            removeAllListeners: this.removeAllListeners.bind(this),
+            startOfflineGame: this.startOfflineGame.bind(this),
         } as PublicApi;
 
         setDefaultClientExport(this);
@@ -343,11 +348,13 @@ export class Client extends EventEmitter {
         })
     }
 
-    public async joinOfflineGame(gameType, gameData?, areaData?) {
+    public async startOfflineGame(gameType, gameData?, areaData?) {
         if(this.runningProcess) {
             this.clearGame();
         }
-        this.runningProcess = await this.processManager.initializeGame(gameType, gameData, areaData);
+        this.runningProcess = await this.processManager.initializeGame(gameType, gameData, areaData)
+        this.processManager.startCurrentGameSystems();
+        this.processManager.startProcess();
         return true;
     }
 
@@ -383,8 +390,7 @@ export class Client extends EventEmitter {
                     });
             })
         } else {
-            this.runningProcess = await this.processManager.initializeGame(gameType, joinOptions)
-            this.processManager.startProcess();
+           throw new Error('The found game is not a networked game, start with joinOfflineGame(gameType, gameData, areaData)')
         }
     }
     private joinOnlineGame(gameType, joinOptions?, token?, fps=6) {

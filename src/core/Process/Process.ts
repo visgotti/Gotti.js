@@ -53,6 +53,8 @@ export abstract class Process<T> {
 
     private initializedPlugins: Array<Plugin>;
 
+    private apiSystemLookup: {[name: string]: Array<string>} = {};
+
     private pluginInit: Array<{
         plugin: Plugin,
         systems: Array<string | number>
@@ -178,6 +180,13 @@ export abstract class Process<T> {
                     break;
                 }
             }
+            const apiMethodsAdded = this.apiSystemLookup[foundStarted.name];
+            if(apiMethodsAdded) {
+                apiMethodsAdded.forEach(n => {
+                    delete this.$api[n];
+                });
+                delete this.apiSystemLookup[foundStarted.name];
+            }
             this.stoppedSystems.push(foundStarted);
         }
     }
@@ -267,6 +276,11 @@ export abstract class Process<T> {
         name = name ? name : method.name;
         if(!name) throw new Error(`no name provided for api method ${method} from system ${system} if youre adding an anonynmous function to the api from a system you must supply a name as second parameter`);
         this.$api[name] = method.bind(system);
+        if(!this.apiSystemLookup[system.name]) {
+            this.apiSystemLookup[system.name] = [name];
+        } else {
+            this.apiSystemLookup[system.name].push(name);
+        }
     }
 
     public abstract startLoop (framesPerSecond: number): void;

@@ -38,6 +38,7 @@ export declare abstract class Process<T> {
     startedSystems: Array<ServerSystem | ClientSystem>;
     stoppedSystems: Array<ServerSystem | ClientSystem>;
     private initializedPlugins;
+    private apiSystemLookup;
     private pluginInit;
     constructor(processEnv: PROCESS_ENV, globals?: {}, plugins?: any[]);
     addGlobal(key: string, value: any): void;
