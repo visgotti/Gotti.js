@@ -160,6 +160,7 @@ export class Client extends EventEmitter {
             gate: this.gate,
             api: this.api,
             on: this.on.bind(this),
+            once: this.once.bind(this),
             emit: this.emit.bind(this),
             off: this.off.bind(this),
             removeAllListeners: this.removeAllListeners.bind(this),

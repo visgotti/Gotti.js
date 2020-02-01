@@ -5,6 +5,7 @@ export declare abstract class Component {
     name: string | number;
     setAttribute: Function;
     setAttributeGetter: Function;
+    removeAttribute: Function;
     entityId: string | number;
     $: SystemPlug;
     constructor(name: string | number);

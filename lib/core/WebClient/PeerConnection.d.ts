@@ -39,7 +39,7 @@ export declare class PeerConnection {
     private onDataChannelOpen;
     private setupDataChannel;
     private applyQueuedIceCandidates;
-    private checkAck;
+    checkAck(): void;
     handleSDPSignal(sdp: any): void;
     handleIceCandidateSignal(candidate: any): void;
     private handleLocalDescription;

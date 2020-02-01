@@ -115,7 +115,7 @@ export class PeerConnection {
         this.queuedIceCandidates.length = 0;
     }
 
-    private checkAck() {
+    public checkAck() {
         if(!this.gotAck) {
             this.onAck.dispatch(true);
             this.gotAck = true;
@@ -123,7 +123,6 @@ export class PeerConnection {
     }
 
     public handleSDPSignal(sdp) {
-        this.checkAck();
         this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp)).then(() => {
             console.warn('GOT SDP SIGNAL')
             if (this.peerConnection.remoteDescription.type === 'offer') {
@@ -138,7 +137,6 @@ export class PeerConnection {
     };
 
     public handleIceCandidateSignal(candidate) {
-        this.checkAck();
         if(this.remoteDescriptionSet) {
             console.warn('applying ice candidate cuz we rdy');
             this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));

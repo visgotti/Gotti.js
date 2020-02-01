@@ -5,6 +5,11 @@ export interface Message {
     to?: Array<string | number>;
     from?: string | number;
 }
+export interface RemoteMessage {
+    type: number;
+    data: any;
+    to: number;
+}
 declare type SystemName = string | number;
 declare type SystemMessageLookup = {
     [systemName: string]: Array<Message>;

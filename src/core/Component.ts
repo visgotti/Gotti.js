@@ -8,6 +8,7 @@ export abstract class Component {
     public name: string | number;
     public setAttribute: Function = () => {};
     public setAttributeGetter: Function = () => {};
+    public removeAttribute: Function = () => {};
     public entityId: string | number;
 
     public $: SystemPlug;

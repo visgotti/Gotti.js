@@ -54,9 +54,20 @@ export abstract class Entity extends EventEmitter {
         // attach setAttribute to component
         component.setAttribute = this.setAttribute.bind(this);
         component.setAttributeGetter = this.setAttributeGetter.bind(this);
+        component.removeAttribute = this.removeAttribute.bind(this);
         component.onAdded(this);
         component.entityId = this.id;
         this.componentNames.push(component.name);
+    }
+
+    protected removeAttribute(key: string) {
+        delete this.attributes[key];
+        for(let i = 0; i < this.attributeGetters.length; i++) {
+            if(this.attributeGetters[i][0] === key) {
+                this.attributeGetters.splice(i, 1);
+                return;
+            }
+        }
     }
 
     protected setAttribute(key: string, value: any) {

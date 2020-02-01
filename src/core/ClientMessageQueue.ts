@@ -9,6 +9,12 @@ export interface Message {
     from?: string | number,
 }
 
+export interface RemoteMessage {
+    type: number,
+    data: any,
+    to: number,
+}
+
 type SystemName = string | number;
 
 type SystemMessageLookup = { [systemName: string]: Array<Message> }

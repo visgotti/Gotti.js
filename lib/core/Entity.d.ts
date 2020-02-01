@@ -20,6 +20,7 @@ export declare abstract class Entity extends EventEmitter {
      * @returns {Entity}
      */
     addComponent(component: Component): void;
+    protected removeAttribute(key: string): void;
     protected setAttribute(key: string, value: any): void;
     protected setAttributeGetter(key: string, value: Function): void;
     getComponent(componentName: any): any;

@@ -201,7 +201,6 @@ export class Connector {
         if(this.writeAreaId !== null) {
             throw new Error('Player is already writing to an area.')
         }
-        console.log('GET INITIAL CLIENT AREA WRITE');
         this.connection.send([Protocol.GET_INITIAL_CLIENT_AREA_WRITE, options]);
     }
 
@@ -320,13 +319,10 @@ export class Connector {
         } else if (code === Protocol.SIGNAL_SUCCESS) {
             // fromPeerIndex, signalData
             console.warn('Connector, GOT SIGNAL SUCCESS FROM PLAYER', message[1], 'the signalData was', message[2]);
+            this.peerConnections[message[1]] && this.peerConnections[message[1]].checkAck();
             this.handleSignalData(message[1], message[2]);
         } else if (code === Protocol.PEER_REMOTE_SYSTEM_MESSAGE) { // in case were using a dispatch peer message without a p2p connection itll go through the web server
             // [protocol, fromPeerPlayerIndex, msgType, msgData, msgTo, msgFrom]
-            console.warn('from peer was', message[1]);
-            console.warn('msg type was', message[2]);
-            console.warn('data was', message[3]);
-            console.warn('to was', message[4]);
             this.messageQueue.dispatchPeerMessage(message[1], message[2],  message[3], message[4], message[5])
         } else if(code === Protocol.SIGNAL_FAILED) {
             this.handlePeerFailure(message[1]);

@@ -134,14 +134,14 @@ abstract class ClientSystem extends System {
             throw new Error(`Cannot add a peer from the system ${this.name} it does not implement onPeerConnectionRequest`);
         }
         return new Promise((resolve, reject) => {
-            this._requestPeer(peerIndex, this.name, options, ackTimeout, requestTimeout, (err, options) => {
+            this._requestPeer(peerIndex, this.name, options, (err, options) => {
                 if(err) {
                     return reject(err);
                 } else {
                     options = options ? options : true;
                     return resolve(options);
                 }
-            });
+            }, ackTimeout, requestTimeout);
         });
     }
 
@@ -162,7 +162,7 @@ abstract class ClientSystem extends System {
     }
 
     // overrided in process decoration
-    private _requestPeer(peerIndex: number, systemName: string | number, options: any, ackTimeout: number, requestTimeout: number, callback: Function) {};
+    private _requestPeer(peerIndex: number, systemName: string | number, options: any,  callback: Function, ackTimeout?: number, requestTimeout?: number) {};
 
     public dispatchToPeer(toPeerId: string | number, message: Message) {};
     public dispatchToPeers(toPeerIds: string | number, message: Message) {};
