@@ -50,6 +50,35 @@ abstract class ServerSystem extends System {
     public dispatchToAllClients(message: Message) {};
     public dispatchToLocalClients(message: Message) {};
     public dispatchToMaster(message) {};
+
+    /**
+     * Sets a client to write to a specific area.
+     * @param clientId - id of client to set
+     * @param areaId - id of area the client will be writing to
+     * @param options - options that get sent to the new area's ClientManager's onClientWrite
+     */
+    public setClientWrite(clientId, areaId, options?) {
+        throw 'clientManager.setClientWrite should be overidden in area initialization before use.'
+    };
+
+    /**
+     * Adds an area to the client to listen to.
+     * @param clientId - client to add listener to
+     * @param areaId - id of area that the client is listening to
+     * @param options - options that get sent to the new area's ClientManager's onClientListen
+     */
+    public addClientListener(clientId, areaId, options?) {
+        throw 'clientManager.addClientListen should be overidden in area initialization before use.'
+    };
+
+    /**
+     * Removes client from its own listeners
+     * @param clientId
+     * @param options
+     */
+    public removeClientListener(clientId, options?) {
+        throw 'removeClientListener should be overidden in area initialization before use.'
+    };
 }
 
 export default ServerSystem;

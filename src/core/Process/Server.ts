@@ -43,6 +43,9 @@ export class ServerProcess extends Process<ServerProcess> {
             if(this.room) {
                 this.decorateSystemWithRoomFunctions(system, this.room);
             }
+            if(this.clientManager) {
+                this.decorateSystemWithClientManagerFunctions(system, this.clientManager)
+            }
             return system;
         };
     }
@@ -53,7 +56,16 @@ export class ServerProcess extends Process<ServerProcess> {
         for(let name in this.systems) {
             const system = this.systems[name] as ServerSystem;
             this.decorateSystemWithRoomFunctions(system, room);
+            if(this.clientManager) {
+                this.decorateSystemWithClientManagerFunctions(system, this.clientManager);
+            }
         }
+    }
+
+    private decorateSystemWithClientManagerFunctions(system: ServerSystem, clientManager: ClientManager) {
+        system.setClientWrite = this.clientManager.setClientWrite.bind(clientManager);
+        system.removeClientListener = this.clientManager.removeClientListener.bind(clientManager);
+        system.addClientListener = this.clientManager.addClientListener.bind(clientManager);
     }
 
     private decorateSystemWithRoomFunctions(system: ServerSystem, room: any) {
