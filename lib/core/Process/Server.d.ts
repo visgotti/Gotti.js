@@ -13,6 +13,7 @@ export declare class ServerProcess extends Process<ServerProcess> {
     messageQueue: ServerMessageQueue;
     constructor(ClientManagerConstructor: ISystem, globals?: any, options?: ServerProcessOptions);
     addRoom(room: any): void;
+    private decorateSystemWithClientManagerFunctions;
     private decorateSystemWithRoomFunctions;
     startLoop(fps?: number): void;
     stopLoop(): void;

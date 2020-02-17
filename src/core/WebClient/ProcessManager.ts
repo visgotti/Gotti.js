@@ -96,48 +96,61 @@ export class ProcessManager {
         for(let i = 0; i < systemNames.length; i++){
             if(!this.startedAreaSystemCount[systemNames[i]]) {
                 this.runningGameProcess.startSystem(systemNames[i]);
+            } else {
+                this.runningGameProcess.restartSystem(systemNames[i]);
             }
             this.startedAreaSystemCount[systemNames[i]]++;
         }
     }
 
-    public setAreaWriteProcess(areaType, isInitial, areaJoinData, areaData) {
+    /*
+    public changeAreaWriteProcess(areaId, isInitial, areaJoinData) {
         if(!this.runningGameProcessSetup) throw new Error('Need to have a game process running before changing area process.');
+        const areaType = this.areaData[areaId].type;
+        if(!areaType) throw new Error(`Could not find area type for area id ${areaId}`);
+
+        // restart all game-level systems (these are not the started systems of the current process, just the system constructors in the global gamem init
+        this.runningGameProcessSetup.systems.forEach(s => {
+            console.log('s.name was', s.name, 'and it mapped to', this.systemConstructorNameToPrototypeName[s.name]);
+            console.log('all the system constructor to name prototypes was', this.systemConstructorNameToPrototypeName);
+            this.runningGameProcess.restartSystem(this.systemConstructorNameToPrototypeName[s.name]);
+        });
+
         const newAreaProcessSetup = this.runningGameProcessSetup.areas.find(a => a.type === areaType);
         if(!newAreaProcessSetup) {
             throw new Error(`${areaType} area type was not defined.`)
         }
-
-        // if its not the initial area write that means the game systems were started
-        // but now need to be restarted since the client has changed areas.
-        if(!isInitial) {
-            this.runningGameProcessSetup.systems.forEach(s => {
-                this.runningGameProcess.restartSystem(this.systemConstructorNameToPrototypeName[s.name]);
-            });
-        }
-
-        //runningAreaProcessSetup
         const newAreaSystemConstructors = [...newAreaProcessSetup.systems];
-        // same area process no need to do anything
-        if(areaType === this.currentArea) return;
+        // same area process no need to do besides restart all systems
 
         const copiedStartedAreaSystems = [...this.startedAreaSystemConstructors];
         for(let i = 0; i < copiedStartedAreaSystems.length; i++) {
             const systemConstructor = copiedStartedAreaSystems[i];
+            const systemObjectName = this.systemConstructorNameToPrototypeName[systemConstructor.name];
             if(!newAreaSystemConstructors.includes(systemConstructor)) {
-                this.runningGameProcess.stopSystem(systemConstructor);
-                this.startedAreaSystemConstructors.splice(this.startedAreaSystemConstructors.indexOf(systemConstructor), 1);
+                console.log('DID NOT INCLUDE SYSTERM CONSTRUCTOR', systemConstructor);
+                console.log('should be stopping system object name... expected to be 1:', this.startedAreaSystemCount[systemObjectName]);
+                this.startedAreaSystemCount[systemObjectName]--;
+                console.log('now expected to be 0:', this.startedAreaSystemCount[systemObjectName]);
+                if(!this.startedAreaSystemCount[systemObjectName]) {
+                    console.log('STOPPING THE SYSTEM!!!!')
+                    this.runningGameProcess.stopSystem(systemObjectName)
+                    this.startedAreaSystemConstructors.splice(this.startedAreaSystemConstructors.indexOf(systemConstructor), 1);
+                }
             } else {
-                this.runningGameProcess.restartSystem(systemConstructor);
+                this.runningGameProcess.restartSystem(systemObjectName);
                 newAreaSystemConstructors.splice(newAreaSystemConstructors.indexOf(systemConstructor), 1);
             }
         }
         for(let i = 0; i < newAreaSystemConstructors.length; i++) {
             this.startedAreaSystemConstructors.push(newAreaSystemConstructors[i]);
+            const systemObjectName = this.systemConstructorNameToPrototypeName[newAreaSystemConstructors[i].name];
             this.runningGameProcess.startSystem(newAreaSystemConstructors[i]);
+            this.startedAreaSystemCount[systemObjectName]++;
         }
         this.runningGameProcess.dispatchOnAreaWrite(areaType, isInitial, areaJoinData);
     }
+     */
 
     public async changeGameProcessSetup(gameType, gameData, areaData) {
         if(this.runningGameProcess) {

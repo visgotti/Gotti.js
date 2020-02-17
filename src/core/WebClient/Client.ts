@@ -414,7 +414,6 @@ export class Client extends EventEmitter {
                 if(err) {
                     return reject(err)
                 }
-                this.runningProcess.dispatchOnAreaWrite(areaId,true,  areaOptions);
                 return resolve({ options: areaOptions, areaId });
             });
         });

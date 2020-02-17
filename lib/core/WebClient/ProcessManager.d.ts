@@ -33,7 +33,6 @@ export declare class ProcessManager {
     private validateGameProcessSetups;
     removeAreaSystems(areaId: any): void;
     startAreaSystems(areaId: any): void;
-    setAreaWriteProcess(areaType: any, isInitial: any, areaJoinData: any, areaData: any): void;
     changeGameProcessSetup(gameType: any, gameData: any, areaData: any): Promise<ClientProcess>;
     clearAllProcesses(): void;
     initializeGame(gameType: any, gameData?: any, areaData?: any): Promise<ClientProcess>;

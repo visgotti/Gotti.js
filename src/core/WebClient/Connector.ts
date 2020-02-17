@@ -277,20 +277,22 @@ export class Connector {
             this.onError.dispatch(message[1]);
         } else if (code === Protocol.SET_CLIENT_AREA_WRITE) {
             // newAreaId, options?
-            if(this.writeAreaId) {
+            if (this.writeAreaId) {
                 this.areas[this.writeAreaId].status = AreaStatus.LISTEN;
             }
-            this.areas[message[1]].status = AreaStatus.WRITE;
             const isInitial = this.writeAreaId === null;
             this.writeAreaId = message[1];
             // if we werent already listening then start the area systems
-            if(!(this.areas[message[1]].status === AreaStatus.LISTEN)) {
+            if (!(this.areas[message[1]].status === AreaStatus.LISTEN)) {
                 this.processManager.startAreaSystems(message[1]);
             }
-            if(isInitial) {
-                this.onInitialArea.dispatch({ areaId: message[1], areaOptions: message[2]})
+            this.areas[message[1]].status = AreaStatus.WRITE;
+            if (isInitial) {
+                this.onInitialArea.dispatch({areaId: message[1], areaOptions: message[2]})
             }
-        } else if (code === Protocol.ADD_CLIENT_AREA_LISTEN) {
+            this.process.dispatchOnAreaWrite(message[1], isInitial, message[2]);
+        }
+         else if (code === Protocol.ADD_CLIENT_AREA_LISTEN) {
             // areaId, options?
             this.areas[message[1]].status = AreaStatus.LISTEN;
             this.processManager.startAreaSystems(message[1]);
@@ -300,6 +302,7 @@ export class Connector {
         else if (code === Protocol.REMOVE_CLIENT_AREA_LISTEN) {
             this.areas[message[1]].status = AreaStatus.NOT_IN;
             this.process.dispatchOnRemoveAreaListen(message[1], message[2]);
+            this.processManager.removeAreaSystems(message[1]);
         } else if (code === Protocol.SYSTEM_MESSAGE) {
             this.messageQueue.addRemote(message[1], message[2], message[3], message[4]);
         } else if (code === Protocol.IMMEDIATE_SYSTEM_MESSAGE) {
