@@ -47,7 +47,7 @@ export declare class ClientProcess extends Process<ClientProcess> {
      * @param systemName
      * @param options
      */
-    onPeerConnectionRequest(peerId: any, systemName: number | string, options?: any): any;
+    onPeerConnectionRequest(peerId: any, systemName: number | string, options?: any): false | Promise<any>;
     /**
      * When a peer connection is accepted and the peers are connected
      * @param peerId

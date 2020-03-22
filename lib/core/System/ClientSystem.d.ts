@@ -58,7 +58,7 @@ declare abstract class ClientSystem extends System {
      * returns anything truthy for a succesfully connection or false to deny the connection
      * the options will get passed to onPeerConnectionAccepted for the requester.
      */
-    onPeerConnectionRequest?(peerIndex: number, options?: any): any | false;
+    onPeerConnectionRequest?(peerIndex: number, options?: any): Promise<any | false>;
     /**
      * triggers onPeerConnectionRequest on peer players computer
      * if the request went through
