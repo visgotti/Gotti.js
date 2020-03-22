@@ -111,11 +111,11 @@ export class Connector {
         })
     }
 
-    private handlePeerConnectionRequest(peerIndex, signalData, systemName, incomingRequestOptions?) {
+    private async handlePeerConnectionRequest(peerIndex, signalData, systemName, incomingRequestOptions?) {
         if(!(this.peerConnections[peerIndex])) {
             // this check may be redundant
             if(!this.pendingPeerRequests[peerIndex]) {
-                const response = this.process.onPeerConnectionRequest(peerIndex, systemName, incomingRequestOptions);
+                const response = await this.process.onPeerConnectionRequest(peerIndex, systemName, incomingRequestOptions);
                 if(!response) { // our system requester invalidated the connection.
                     this.connection.send([ Protocol.SIGNAL_FAILED, peerIndex]);
                     return;

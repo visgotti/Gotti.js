@@ -119,7 +119,7 @@ abstract class ClientSystem extends System {
      * returns anything truthy for a succesfully connection or false to deny the connection
      * the options will get passed to onPeerConnectionAccepted for the requester.
      */
-    public onPeerConnectionRequest?(peerIndex: number , options?) : any | false;
+    public async onPeerConnectionRequest?(peerIndex: number , options?) : Promise<any | false>;
 
     /**
      * triggers onPeerConnectionRequest on peer players computer
