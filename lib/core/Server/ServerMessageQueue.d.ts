@@ -3,7 +3,6 @@ export interface Message {
     type: string | number;
     data: any;
     to: Array<string | number>;
-    from?: string | number;
 }
 declare type SystemName = string | number;
 declare type ServerSystemMessageLookup = {
@@ -56,7 +55,7 @@ export declare class ServerMessageQueue {
      * used for sending a message instantly to all other systems
      * @param message
      */
-    instantDispatchAll(type: any, data: any, from: any): void;
+    instantDispatchAll(type: any, data: any): void;
     addMasterMessage(message: any): void;
     dispatch(systemName: any): void;
 }

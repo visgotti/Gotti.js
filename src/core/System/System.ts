@@ -83,7 +83,7 @@ abstract class System {
     public abstract onLocalMessage(message: Message) : void;
     public abstract initialize(...args: any[]): void;
 
-    public abstract update (delta) : void;
+    public update? (delta) : void;
     public abstract onClear() : void;
 
     //overrided in ServerSystem and ClientSystem initialize function

@@ -3,9 +3,7 @@ import {Connection} from "./Connection";
 import { PEER_TO_PEER_PROTOCOLS, Protocol} from './Protocol';
 import * as msgpack from './msgpack';
 import {Signal} from "@gamestdio/signals";
-import Timeout = NodeJS.Timeout;
 import Timer = NodeJS.Timer;
-import {clear} from "tns-core-modules/application-settings";
 
 if(typeof window !== 'undefined') {
     import('webrtc-adapter');

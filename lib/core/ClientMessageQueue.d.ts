@@ -3,7 +3,6 @@ export interface Message {
     type: string | number;
     data: any;
     to?: Array<string | number>;
-    from?: string | number;
 }
 export interface RemoteMessage {
     type: number;
@@ -49,16 +48,16 @@ export declare class ClientMessageQueue {
      * used for sending a message instantly to all other systems
      * @param message
      */
-    instantDispatchAll(type: any, data: any, from: any): void;
+    instantDispatchAll(type: any, data: any): void;
     /**
      * Queues message to be handled in either the onClientMessage handler or onServerMessage system handler
      */
-    addRemote(type: any, data: any, to: any, from: any): void;
+    addRemote(type: any, data: any, to: any): void;
     /**
      * Queues message to be handled on the onPeerMessage
      * @param systemName
      */
-    dispatchPeerMessage(fromPeer: any, type: any, data: any, to: any, from: any): void;
+    dispatchPeerMessage(fromPeer: any, type: any, data: any, to: any): void;
     dispatch(systemName: any): void;
 }
 export {};

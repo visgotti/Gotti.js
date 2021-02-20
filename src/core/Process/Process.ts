@@ -251,8 +251,9 @@ export abstract class Process<T> {
 
     protected tick(delta) {
         for (let i = 0; i < this.startedSystems.length; i++) {
-            this.messageQueue.dispatch(this.startedSystems[i].name);
-            this.startedSystems[i].update(delta);
+            const { update, name } = this.startedSystems[i];
+            this.messageQueue.dispatch(name);
+            this.startedSystems[i].update && this.startedSystems[i].update(delta);
         }
     }
 

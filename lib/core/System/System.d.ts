@@ -34,7 +34,7 @@ declare abstract class System {
     getSystemComponent(entity: Entity): any;
     abstract onLocalMessage(message: Message): void;
     abstract initialize(...args: any[]): void;
-    abstract update(delta: any): void;
+    update?(delta: any): void;
     abstract onClear(): void;
     initializeEntity(entity: Entity, data?: any): void;
     destroyEntity(entity: Entity): void;

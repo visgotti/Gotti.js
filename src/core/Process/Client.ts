@@ -56,7 +56,7 @@ export class ClientProcess extends Process<ClientProcess> {
      * @param isInitial - boolean indicating if this is the first area the client is joining
      * @param options - options sent back from area when accepting the write request.
      */
-    public dispatchOnAreaWrite(areaId, isInitial: boolean, options?) {
+    public dispatchOnAreaWrite(areaId,isInitial: boolean, options?) {
         for(let i = 0; i < this.startedSystems.length; i++) {
             const system = this.startedSystems[i] as ClientSystem;
             system.onAreaWrite && system.onAreaWrite(areaId, isInitial, options)
@@ -70,13 +70,9 @@ export class ClientProcess extends Process<ClientProcess> {
      * @param options - options sent back from area when it added the client as listener
      */
     public dispatchOnAreaListen(areaId, state: any, options?: any) {
-        const length = this.startedSystems.length;
         for(let i = 0; i < this.startedSystems.length; i++) {
             const system = this.startedSystems[i] as ClientSystem;
             system.onAreaListen && system.onAreaListen(areaId, options)
-        }
-        for(let i = 0; i < length; i++) {
-
         }
     }
 

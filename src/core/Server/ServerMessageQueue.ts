@@ -6,7 +6,6 @@ export interface Message {
     type: string | number,
     data: any,
     to: Array<string | number>
-    from?: string | number,
 }
 
 type SystemName = string | number;
@@ -79,7 +78,7 @@ export class ServerMessageQueue {
 
     public removeGameSystemMessageListener(systemName: SystemName, messageType: string | number) {
         if(!(messageType in this.engineSystemMessageGameSystemHooks)) {
-            throw new Error(`Trying to remove a message listener: ${messageType} from system: ${systemName} but the message was never listened to by any system`);
+            throw new Error(`Trying to remove a message listener: ${messageType}   but the message was never listened to by any system`);
         } else {
             let length = this.engineSystemMessageGameSystemHooks[messageType].length;
             while(length--) {
@@ -92,7 +91,7 @@ export class ServerMessageQueue {
                 }
             }
             // if it gets here it didnt find the system for the message
-            throw new Error(`Trying to remove message: ${messageType} listener from System: ${systemName} but the system never listened to it.`);
+            throw new Error(`Trying to remove message: ${messageType} listener but the system never listened to it.`);
         }
     }
 
@@ -228,9 +227,9 @@ export class ServerMessageQueue {
      * used for sending a message instantly to all other systems
      * @param message
      */
-    public instantDispatchAll(type, data, from) {
+    public instantDispatchAll(type, data) {
         for(let i = 0; i < this.systemNames.length; i++) {
-            this._systems[this.systemNames[i]].onLocalMessage({ type, data, to: [this.systemNames[i]], from});
+            this._systems[this.systemNames[i]].onLocalMessage({ type, data, to: [this.systemNames[i]]});
         }
     }
 

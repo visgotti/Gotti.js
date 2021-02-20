@@ -213,12 +213,12 @@ export class Connector {
     }
 
     public sendPeerMessage(peerIndex, message: any) {
-        this.peerConnections[peerIndex].send(msgpack.encode(message.type, message.data, message.to, message.from))
+        this.peerConnections[peerIndex].send(msgpack.encode(message.type, message.data, message.to))
     }
 
     public sendAllPeersMessage(message: any) {
         const len = this.connectedPeerIndexes.length;
-        const encoded = msgpack.encode([message.type, message.data, message.to, message.from]);
+        const encoded = msgpack.encode([message.type, message.data, message.to]);
         for(let i = 0; i < len; i++) {
             this.peerConnections[this.connectedPeerIndexes[i]].send(encoded)
         }
@@ -226,18 +226,18 @@ export class Connector {
 
     public sendPeersMessage(peerIndexes: Array<number>, message: any) {
         let len = peerIndexes.length;
-        const encoded = msgpack.encode([message.type, message.data, message.to, message.from]);
+        const encoded = msgpack.encode([message.type, message.data, message.to]);
         for(let i = 0; i < len; i++) {
             this.peerConnections[peerIndexes[i]].send(encoded)
         }
     }
 
     public sendSystemMessage(message: any): void {
-        this.connection.send([ Protocol.SYSTEM_MESSAGE, message.type, message.data, message.to, message.from]);
+        this.connection.send([ Protocol.SYSTEM_MESSAGE, message.type, message.data, message.to]);
     }
 
     public sendImmediateSystemMessage(message: any): void {
-        this.connection.send([ Protocol.IMMEDIATE_SYSTEM_MESSAGE, message.type, message.data, message.to, message.from]);
+        this.connection.send([Protocol.IMMEDIATE_SYSTEM_MESSAGE, message.type, message.data, message.to]);
     }
 
     public get hasJoined() {
