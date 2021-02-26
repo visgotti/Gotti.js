@@ -1,0 +1,45 @@
+import { PeerConnection } from "../PeerConnection";
+import { IConnectorServerConnection } from "./IConnectorServerConnection";
+export declare class WebRTCConnection implements IConnectorServerConnection {
+    private reliableSeq;
+    private nextReliableSeqToReceive;
+    private bufferedReliable;
+    private sendAckSeq;
+    private ackTimeout;
+    private lastSentAckSeq;
+    private awaitingAcks;
+    private pc;
+    private _onMessageCallback;
+    private _onOpenCallback;
+    private reliableSendCount;
+    private reliableResendTimeout;
+    private dataChannel;
+    private sentReliableAckSequences;
+    private sentOrderedAckSequences;
+    private nextSequenceNumber;
+    private nextOrderedSequenceNumber;
+    private lastAckSequenceNumber;
+    private lastAckOrderedSequenceNumber;
+    private orderedReliableBuffer;
+    private reliableBuffer;
+    private receivedOutOfOrderSeq;
+    private alreadyProcessedReliableSeqs;
+    private lowestUnorderedSeqProcessed;
+    hasAcks: boolean;
+    constructor(peerConnection: PeerConnection);
+    close(): void;
+    sendAcks(): boolean;
+    sendReliable(message: Array<any>, ordered?: boolean, opts?: {
+        retryRate?: number;
+        firstRetryRate?: number;
+    }): void;
+    private _sendReliable;
+    send(data: any, reliable?: boolean, ordered?: boolean): void;
+    private handleReceivedReliable;
+    private _messageHandler;
+    onMessage(cb: (data: Array<any>) => void): void;
+    private receivedAcks;
+    private _onOpen;
+    onOpen(cb: (data: any) => void): void;
+    private checkAck;
+}

@@ -449,7 +449,7 @@ export class Client extends EventEmitter {
 
     public close() {
         this.joinedGame = false;
-        this.connector.connection.close();
+        this.connector.serverConnection.close();
     }
 
     /**

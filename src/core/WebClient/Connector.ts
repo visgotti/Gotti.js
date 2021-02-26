@@ -5,7 +5,7 @@ import {StateContainer} from '@gamestdio/state-listener';
 import * as fossilDelta from 'fossil-delta';
 import * as msgpack from './msgpack';
 
-import {Connection} from './Connection';
+import { IConnectorServerConnection, WebSocketConnection, WebRTCConnection } from './ConnectorServerConnections';
 import {Protocol, StateProtocol} from './Protocol';
 
 import {PeerConnection} from "./PeerConnection";
@@ -45,6 +45,9 @@ export class Connector {
     // used to indicate current area id the client is writing to.
     private writeAreaId: string | number = null;
 
+    private isSwitchingGracefullyToWebRTC = false;
+    private isTryingToChangeToWebRTC = false;
+
     public gottiId: string;
     public playerIndex: number;
     public sessionId: string;
@@ -76,7 +79,7 @@ export class Connector {
 
     private areas: {[areaId: string]:  Area} = {};
 
-    public connection: Connection;
+    public serverConnection: IConnectorServerConnection;
 
     public peerConnections: {[ playerIndex: number]: PeerConnection } = {};
     // adds the system name that requested the peer connection so we call the correct handlers inside the system when we receive a response
@@ -89,11 +92,13 @@ export class Connector {
     private _previousState: any;
 
     private processManager: ProcessManager;
+
+    private serverPeerConnection?: PeerConnection;
+
     constructor() {}
 
     public async connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, areaData, options: any = {}, webSocketProtocol) {
         const { gottiId, playerIndex, connectorURL } = connectorAuth;
-
         this.gottiId = gottiId;
         this.areaData = areaData;
         this.playerIndex = playerIndex;
@@ -101,14 +106,40 @@ export class Connector {
         this.process = process;
         this.messageQueue = process.messageQueue;
         let url = this.buildEndPoint(connectorURL, options, webSocketProtocol);
-        this.connection = new Connection(url);
-        this.connection.onopen = () => {};
-        this.connection.onmessage = this.onMessageCallback.bind(this);
+        this.serverConnection = new WebSocketConnection(url);
+        this.serverConnection.onOpen(() => {});
+        this.serverConnection.onMessage(this.onMessageCallback.bind(this));
         return new Promise((resolve, reject) => {
             this.onJoinConnector.add(joinOptions => {
                 return resolve(joinOptions);
             })
         })
+    }
+
+    private handlePeerServerConnectionRequest(sdpString: string) {
+        this.isTryingToChangeToWebRTC = true;
+        this.serverPeerConnection = new PeerConnection(this, this.playerIndex, -1);
+        this.serverPeerConnection.onPeerMessage = () => {};
+        this.serverPeerConnection.onDataChannelOpen = () => {
+            this.serverPeerConnection.connected = true;
+            this.serverPeerConnection.dataChannel.onmessage = () => {};
+            this.finalizeWebSocketToWebRTCSwitch()
+        };
+        this.serverPeerConnection.acceptConnection(true);
+        this.handleSignalData(this.serverPeerConnection, { sdp: { sdp: sdpString, type: 'offer' } });
+    }
+
+    private finalizeWebSocketToWebRTCSwitch() {
+        this.isSwitchingGracefullyToWebRTC = true;
+        this.serverConnection.close();
+        const oldEnqueued = this.serverConnection.enqueuedMessages;
+        this.serverConnection = new WebRTCConnection(this.serverPeerConnection);
+        if(oldEnqueued) {
+            this.serverConnection.enqueuedMessages = oldEnqueued;
+        }
+        this.isSwitchingGracefullyToWebRTC = false;
+        this.isTryingToChangeToWebRTC = false;
+        this.serverConnection.onMessage(this.onMessageCallback.bind(this));
     }
 
     private async handlePeerConnectionRequest(peerIndex, signalData, systemName, incomingRequestOptions?) {
@@ -117,10 +148,10 @@ export class Connector {
             if(!this.pendingPeerRequests[peerIndex]) {
                 const response = await this.process.onPeerConnectionRequest(peerIndex, systemName, incomingRequestOptions);
                 if(!response) { // our system requester invalidated the connection.
-                    this.connection.send([ Protocol.SIGNAL_FAILED, peerIndex]);
+                    this.serverConnection.send([ Protocol.SIGNAL_FAILED, peerIndex], true);
                     return;
                 }
-                this.peerConnections[peerIndex] = new PeerConnection(this.connection, this.playerIndex, peerIndex);
+                this.peerConnections[peerIndex] = new PeerConnection(this, this.playerIndex, peerIndex);
                 this.setupPeerConnection(this.peerConnections[peerIndex], peerIndex);
                 this.peerConnections[peerIndex].acceptConnection(response);
             } else {
@@ -130,14 +161,13 @@ export class Connector {
         this.handleSignalData(peerIndex, signalData);
     }
 
-    private handleSignalData(peerIndex, signalData) {
-        const peerConnection = this.peerConnections[peerIndex];
+    private handleSignalData(peer : number | PeerConnection, signalData) {
+        const peerConnection = typeof peer === 'object' ? peer : this.peerConnections[peer];
 
         if(!peerConnection) {
-            console.error('Attempting to handle signal data for non existent peer:', peerIndex);
+            console.error('Attempting to handle signal data for non existent peer:', peer);
             return;
         }
-
         if(signalData.sdp) {
             peerConnection.handleSDPSignal(signalData.sdp)
         } else if (signalData.candidate) {
@@ -150,7 +180,7 @@ export class Connector {
         connectionTimeout = connectionTimeout ? connectionTimeout : 5000;
         let peerConnection = this.peerConnections[peerIndex];
         if(!(peerConnection)) {
-            peerConnection = new PeerConnection(this.connection, this.playerIndex, peerIndex);
+            peerConnection = new PeerConnection(this, this.playerIndex, peerIndex);
             this.setupPeerConnection(peerConnection, peerIndex);
             peerConnection.requestConnection(systemName, requestOptions);
             this.peerConnections[peerIndex] = peerConnection;
@@ -194,20 +224,19 @@ export class Connector {
     }
 
     public joinInitialArea(options?) {
-        if(!this.connection ) {
+        if(!this.serverConnection ) {
             throw new Error('No connection, can not join an initial area');
         }
-
         if(this.writeAreaId !== null) {
             throw new Error('Player is already writing to an area.')
         }
-        this.connection.send([Protocol.GET_INITIAL_CLIENT_AREA_WRITE, options]);
+        this.serverConnection.send([Protocol.GET_INITIAL_CLIENT_AREA_WRITE, options], true);
     }
 
     public disconnect() {
         this.removeAllListeners();
         this.stopAllPeerConnections();
-        this.connection.close();
+        this.serverConnection.close();
         this.process = null;
         this.messageQueue = null;
     }
@@ -232,12 +261,12 @@ export class Connector {
         }
     }
 
-    public sendSystemMessage(message: any): void {
-        this.connection.send([ Protocol.SYSTEM_MESSAGE, message.type, message.data, message.to]);
+    public sendSystemMessage(message: any, reliable=true): void {
+        this.serverConnection.send([ Protocol.SYSTEM_MESSAGE, message.type, message.data, message.to], reliable);
     }
 
-    public sendImmediateSystemMessage(message: any): void {
-        this.connection.send([Protocol.IMMEDIATE_SYSTEM_MESSAGE, message.type, message.data, message.to]);
+    public sendImmediateSystemMessage(message: any, reliable=true): void {
+        this.serverConnection.send([Protocol.IMMEDIATE_SYSTEM_MESSAGE, message.type, message.data, message.to], reliable);
     }
 
     public get hasJoined() {
@@ -267,8 +296,7 @@ export class Connector {
         this.onJoinConnector.dispatch(joinOptions);
     }
 
-    protected onMessageCallback(event) { // TODO: REFACTOR PROTOCOLS TO USE BITWISE OPS PLS
-        const message = msgpack.decode(new Uint8Array(event.data));
+    protected onMessageCallback(message) { // TODO: REFACTOR PROTOCOLS TO USE BITWISE OPS PLS
         const code = message[0];
         if (code === Protocol.JOIN_CONNECTOR) {
             // [joinOptions]
@@ -303,12 +331,11 @@ export class Connector {
             this.areas[message[1]].status = AreaStatus.NOT_IN;
             this.process.dispatchOnRemoveAreaListen(message[1], message[2]);
             this.processManager.removeAreaSystems(message[1]);
-        } else if (code === Protocol.SYSTEM_MESSAGE) {
+        } else if (code === Protocol.SYSTEM_MESSAGE || code === Protocol.SYSTEM_MESSAGE_RELIABLE) {
             this.messageQueue.addRemote(message[1], message[2], message[3], message[4]);
-        } else if (code === Protocol.IMMEDIATE_SYSTEM_MESSAGE) {
-            this.messageQueue.instantDispatch({ type: message[1], data: message[2], to: message[3], from: message[4] }, true);
-        }
-        else if (code === Protocol.AREA_STATE_UPDATE) {
+        } else if (code === Protocol.IMMEDIATE_SYSTEM_MESSAGE || code === Protocol.IMMEDIATE_SYSTEM_MESSAGE_RELIABLE) {
+            this.messageQueue.instantDispatch({ type: message[1], data: message[2], to: message[3] }, true);
+        } else if (code === Protocol.AREA_STATE_UPDATE) {
             const updateType = message[1];
             const areaId = message[2];
             if(updateType === StateProtocol.SET) {
@@ -329,6 +356,19 @@ export class Connector {
             this.messageQueue.dispatchPeerMessage(message[1], message[2],  message[3], message[4], message[5])
         } else if(code === Protocol.SIGNAL_FAILED) {
             this.handlePeerFailure(message[1]);
+        } else if (code === Protocol.INITIATE_CHANGE_TO_WEBRTC) {
+            this.handlePeerServerConnectionRequest(message[1]);
+        } else if (code === Protocol.SERVER_WEBRTC_CANDIDATE) {
+            const { sdp, candidate } = message[1];
+            if(sdp) {
+                this.serverPeerConnection.handleSDPSignal(sdp.sdp);
+            } else {
+                const params : RTCIceCandidateInit = {
+                    candidate: candidate.candidate,
+                    sdpMid: candidate.mid,
+                }
+                this.serverPeerConnection.handleIceCandidateSignal(params);
+            }
         }
     }
     protected setState( areaId: string, encodedState: Buffer ): void {
@@ -408,7 +448,7 @@ export class Connector {
         peerConnection.destroy();
     }
 
-    private setupPeerConnection(peerConnection, peerIndex) {
+    private setupPeerConnection(peerConnection: PeerConnection, peerIndex) {
         peerConnection.onConnected.add((options) => {
             if(!this.connectedPeerIndexes.includes(peerIndex)) {
                 if(this.pendingPeerRequests[peerIndex]) {

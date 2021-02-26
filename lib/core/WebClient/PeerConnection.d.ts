@@ -1,5 +1,5 @@
-import { Connection } from "./Connection";
 import { Signal } from "@gamestdio/signals";
+import { Connector } from "./Connector";
 export declare enum SocketType {
     UDP = 0,
     TCP = 1
@@ -12,10 +12,10 @@ export interface PeerConnectionConfig {
     retryTimeout?: number;
 }
 export declare class PeerConnection {
+    readonly doPingInterval: boolean;
     readonly peerPlayerIndex: number;
     readonly clientPlayerIndex: number;
     readonly channelId: string;
-    private connection;
     private config;
     private queuedIceCandidates;
     private last5Pings;
@@ -23,7 +23,7 @@ export declare class PeerConnection {
     private pingInterval;
     private sentPingAt;
     private peerConnection;
-    private dataChannel;
+    dataChannel: RTCDataChannel;
     onAck: Signal;
     onConnected: Signal;
     onDisconnected: Signal;
@@ -32,15 +32,18 @@ export declare class PeerConnection {
     connected: boolean;
     private ping;
     private remoteDescriptionSet;
+    private localDescriptionSet;
     private missedPings;
     private seq;
     gotAck: boolean;
-    constructor(connection: Connection, clientPlayerIndex: number, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
-    private onDataChannelOpen;
+    readonly connector: Connector;
+    constructor(connector: Connector, clientPlayerIndex: number, peerPlayerIndex: number, configOptions?: PeerConnectionConfig);
+    onDataChannelOpen(): void;
     private setupDataChannel;
     private applyQueuedIceCandidates;
     checkAck(): void;
     handleSDPSignal(sdp: any): void;
+    readonly canApplyIce: boolean;
     handleIceCandidateSignal(candidate: any): void;
     private handleLocalDescription;
     private handleInitialLocalDescription;
@@ -55,6 +58,6 @@ export declare class PeerConnection {
     private startPinging;
     send(message: any): void;
     private handlePong;
-    private onPeerMessage;
+    onPeerMessage(event: any): void;
     destroy(): void;
 }

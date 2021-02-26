@@ -2,7 +2,7 @@
 import Clock = require('@gamestdio/clock');
 import { Signal } from '@gamestdio/signals';
 import { StateContainer } from '@gamestdio/state-listener';
-import { Connection } from './Connection';
+import { IConnectorServerConnection } from './ConnectorServerConnections';
 import { PeerConnection } from "./PeerConnection";
 import { ClientProcess } from '../Process/Client';
 import { ProcessManager } from './ProcessManager';
@@ -29,6 +29,8 @@ export declare class Connector {
     private id;
     private gameId;
     private writeAreaId;
+    private isSwitchingGracefullyToWebRTC;
+    private isTryingToChangeToWebRTC;
     gottiId: string;
     playerIndex: number;
     sessionId: string;
@@ -51,7 +53,7 @@ export declare class Connector {
     onInitialArea: Signal;
     private process;
     private areas;
-    connection: Connection;
+    serverConnection: IConnectorServerConnection;
     peerConnections: {
         [playerIndex: number]: PeerConnection;
     };
@@ -61,8 +63,11 @@ export declare class Connector {
     readonly connectedPeerIndexes: Array<number>;
     private _previousState;
     private processManager;
+    private serverPeerConnection?;
     constructor();
     connect(connectorAuth: ConnectorAuth, process: ClientProcess, processManager: ProcessManager, areaData: any, options: any, webSocketProtocol: any): Promise<unknown>;
+    private handlePeerServerConnectionRequest;
+    private finalizeWebSocketToWebRTCSwitch;
     private handlePeerConnectionRequest;
     private handleSignalData;
     requestPeerConnection(peerIndex: number, systemName: string | number, requestOptions: any, systemRequestCallback: any, ackTimeout?: number, connectionTimeout?: number): void;
@@ -73,12 +78,12 @@ export declare class Connector {
     sendPeerMessage(peerIndex: any, message: any): void;
     sendAllPeersMessage(message: any): void;
     sendPeersMessage(peerIndexes: Array<number>, message: any): void;
-    sendSystemMessage(message: any): void;
-    sendImmediateSystemMessage(message: any): void;
+    sendSystemMessage(message: any, reliable?: boolean): void;
+    sendImmediateSystemMessage(message: any, reliable?: boolean): void;
     readonly hasJoined: boolean;
     removeAllListeners(): void;
     protected onJoin(joinOptions: any): void;
-    protected onMessageCallback(event: any): void;
+    protected onMessageCallback(message: any): void;
     protected setState(areaId: string, encodedState: Buffer): void;
     protected patch(areaId: any, binaryPatch: any): void;
     private buildEndPoint;
