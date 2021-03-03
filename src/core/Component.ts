@@ -11,6 +11,7 @@ export abstract class Component {
     public removeAttribute: Function = () => {};
     public entityId: string | number;
 
+    public globals : {[key: string]: any };
     public $: SystemPlug;
 
     constructor(name: string | number) {

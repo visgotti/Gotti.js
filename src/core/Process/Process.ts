@@ -75,7 +75,7 @@ export abstract class Process<T> {
         this.stoppedSystems = [];
 
         this.messageQueue = processEnv === PROCESS_ENV.SERVER ? new ServerMessageQueue() : new ClientMessageQueue();
-        this.entityManager = new EntityManager(this.systems);
+        this.entityManager = new EntityManager(this.systems, this.globals);
         this.initializerFactory = processEnv === PROCESS_ENV.SERVER ? server : client;
     }
 

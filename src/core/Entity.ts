@@ -10,6 +10,7 @@ export abstract class Entity extends EventEmitter {
     public methodsFromComponent: {[componentName: string]: any };
     public attributes: {[name: string]: any} = {};
     public attributeGetters: Array<Array<any>> = [];
+    public globals : {[key: string]: any };
 
     constructor(id, type){
         super();
@@ -38,6 +39,7 @@ export abstract class Entity extends EventEmitter {
         if(this.hasComponent(component.name)) {
             throw `Entity ${this.id} trying to add ${component.name} twice `;
         }
+        component.globals = this.globals;
         this.components[component.name] = component;
         this.methodsFromComponent[component.name] = component.componentMethods;
 
@@ -120,6 +122,7 @@ export abstract class Entity extends EventEmitter {
         const index = this.componentNames.indexOf(componentName);
         this.componentNames.splice(index, 1);
         component.onRemoved(this);
+        delete component.globals;
     }
 
     public destroy() {
@@ -128,5 +131,6 @@ export abstract class Entity extends EventEmitter {
         }
         this.removeAllListeners();
         this.componentNames = [];
+        delete this.globals;
     }
 };

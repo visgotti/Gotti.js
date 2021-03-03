@@ -10,8 +10,10 @@ export interface IEntity {
 
 export class EntityManager {
     private systemMap: SystemLookup<string | number>;
-    constructor(systemMap: SystemLookup<string | number>) {
+    readonly globals: {[key: string]: any};
+    constructor(systemMap: SystemLookup<string | number>, globals: {[key: string]: any}) {
         this.systemMap = systemMap;
+        this.globals = globals;
     }
 
     /**
@@ -20,6 +22,7 @@ export class EntityManager {
      * @param data - any additional data you may want to use to initialize the entity inside of the system hooks
      */
     public initializeEntity(entity: Entity, data?: any) {
+        entity.globals = this.globals;
         const oldAddComponent = entity.addComponent;
         entity.addComponent = (component: Component) => {
             oldAddComponent.call(entity, component);
@@ -43,6 +46,7 @@ export class EntityManager {
     }
 
     public destroyEntity(entity: Entity) {
+        delete entity.globals;
         entity.destroy();
     }
 }
