@@ -213,7 +213,7 @@ export class Connector {
     }
 
     public sendPeerMessage(peerIndex, message: any) {
-        this.peerConnections[peerIndex].send(msgpack.encode(message.type, message.data, message.to))
+        this.peerConnections[peerIndex].send(msgpack.encode([message.type, message.data, message.to]))
     }
 
     public sendAllPeersMessage(message: any) {

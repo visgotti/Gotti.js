@@ -7,6 +7,9 @@ export declare abstract class Component {
     setAttributeGetter: Function;
     removeAttribute: Function;
     entityId: string | number;
+    globals: {
+        [key: string]: any;
+    };
     $: SystemPlug;
     constructor(name: string | number);
     emit(event: string, payload: any): void;

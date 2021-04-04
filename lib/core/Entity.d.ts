@@ -12,6 +12,9 @@ export declare abstract class Entity extends EventEmitter {
         [name: string]: any;
     };
     attributeGetters: Array<Array<any>>;
+    globals: {
+        [key: string]: any;
+    };
     constructor(id: any, type: any);
     abstract initialize(data?: any): void;
     /**

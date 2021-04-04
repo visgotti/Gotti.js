@@ -5,7 +5,12 @@ export interface IEntity {
 }
 export declare class EntityManager {
     private systemMap;
-    constructor(systemMap: SystemLookup<string | number>);
+    readonly globals: {
+        [key: string]: any;
+    };
+    constructor(systemMap: SystemLookup<string | number>, globals: {
+        [key: string]: any;
+    });
     /**
      * decorates the entity with hooks for system onRemove and onAdded;
      * @param entity
