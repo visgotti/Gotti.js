@@ -26,7 +26,7 @@ declare abstract class System {
     /**
      * triggered when we call Gotti.resetGame(data) and a current game is running;
      */
-    onResetGame?: (data?: any) => Promise<void>;
+    onResetGame?: (afterAllReset: (cb: Function) => void, data?: any) => Promise<void>;
     protected addEntity: Function;
     protected removeEntity: Function;
     readonly name: string | number;
