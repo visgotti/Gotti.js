@@ -36,8 +36,6 @@ abstract class System {
     /**
      * triggered when we call Gotti.resetGame(data) and a current game is running;
      */
-    // optional system hooks
-    public onResetGame? : (afterAllReset: (cb: Function) => void, data?: any) => Promise<void>;
 
     protected addEntity: Function;
     protected removeEntity: Function;
@@ -90,6 +88,8 @@ abstract class System {
 
     public update? (delta) : void;
     public abstract onClear() : void;
+    // optional system hooks
+    public async onResetGame? (afterAllReset: (cb: Function) => void, data?: any) : Promise<void>;
 
     //overrided in ServerSystem and ClientSystem initialize function
     public initializeEntity(entity:Entity, data?: any) {};
