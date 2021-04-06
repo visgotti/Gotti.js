@@ -189,9 +189,9 @@ export class ClientMessageQueue {
      * used for sending a message instantly to all other systems
      * @param message
      */
-    public instantDispatchAll(type, data) {
+    public instantDispatchAll(message: Message) {
         for(let i = 0; i < this.systemNames.length; i++) {
-            this._systems[this.systemNames[i]].onLocalMessage({ type, data, to: [this.systemNames[i]] });
+            this._systems[this.systemNames[i]].onLocalMessage({ data: message.data, type: message.type, to: [this.systemNames[i]] });
         }
     }
 
