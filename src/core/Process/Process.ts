@@ -84,8 +84,13 @@ export abstract class Process<T> {
     }
 
     public async reset(data?: any) {
+        const afterResetCbQueue = [];
+        const onFinished = (cb: Function) => {
+            afterResetCbQueue.push(cb);
+        }
         // filter all systems with the on reset hook, and map it to resolve all the promises.
-        await Promise.all(this.startedSystems.filter(s => !!s.onResetGame).map(system => system.onResetGame(data)));
+        await Promise.all(this.startedSystems.filter(s => !!s.onResetGame).map(system => system.onResetGame(onFinished, data)));
+        afterResetCbQueue.forEach(f => f())
     }
 
     public installPlugin(iPlugin: IPlugin, systemNames?: Array<string | number>) {

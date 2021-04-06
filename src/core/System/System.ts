@@ -37,7 +37,7 @@ abstract class System {
      * triggered when we call Gotti.resetGame(data) and a current game is running;
      */
     // optional system hooks
-    public onResetGame? : (data?: any) => Promise<void>;
+    public onResetGame? : (afterAllReset: (cb: Function) => void, data?: any) => Promise<void>;
 
     protected addEntity: Function;
     protected removeEntity: Function;
