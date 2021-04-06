@@ -23,6 +23,10 @@ declare abstract class System {
     protected dispatchAllLocal: Function;
     protected dispatchLocalInstant: Function;
     protected dispatchAllLocalInstant: Function;
+    /**
+     * triggered when we call Gotti.resetGame(data) and a current game is running;
+     */
+    onResetGame?: (data?: any) => Promise<void>;
     protected addEntity: Function;
     protected removeEntity: Function;
     readonly name: string | number;

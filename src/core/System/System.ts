@@ -33,6 +33,11 @@ abstract class System {
     protected dispatchAllLocal: Function;
     protected dispatchLocalInstant: Function;
     protected dispatchAllLocalInstant: Function;
+    /**
+     * triggered when we call Gotti.resetGame(data) and a current game is running;
+     */
+    // optional system hooks
+    public onResetGame? : (data?: any) => Promise<void>;
 
     protected addEntity: Function;
     protected removeEntity: Function;
@@ -91,6 +96,7 @@ abstract class System {
     public destroyEntity(entity:Entity) {};
 
     // optional
+
     /**
      * triggered when we remove a component from an entity
      * also triggered on destroyEntity MUST destroy entity with this.destroyEntity

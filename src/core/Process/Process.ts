@@ -83,6 +83,11 @@ export abstract class Process<T> {
         this.globals[key] = value;
     }
 
+    public async reset(data?: any) {
+        // filter all systems with the on reset hook, and map it to resolve all the promises.
+        await Promise.all(this.startedSystems.filter(s => !!s.onResetGame).map(system => system.onResetGame(data)));
+    }
+
     public installPlugin(iPlugin: IPlugin, systemNames?: Array<string | number>) {
         let foundPlugin = this.pluginInit.find(p => iPlugin.name === p.plugin.name);
 

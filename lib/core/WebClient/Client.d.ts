@@ -14,6 +14,7 @@ export declare type ServerGameOptions = {
 };
 import * as EventEmitter from "eventemitter3";
 export declare type PublicApi = {
+    resetGame?: (resetData?: any) => void;
     clearGame?: () => void;
     register?: (requestPayload?: any) => Promise<any>;
     getGames?: (requestPayload?: any) => Promise<any>;
@@ -65,7 +66,7 @@ export declare class Client extends EventEmitter {
     private port;
     private baseHttpUrl;
     private token;
-    readonly publicApi: any;
+    readonly publicApi: PublicApi;
     private auth;
     private gate;
     private api;
@@ -79,6 +80,7 @@ export declare class Client extends EventEmitter {
     private setAuthValues;
     addGateRoutes(names: any): void;
     addApiRoutes(names: any): void;
+    resetGame(data?: any): Promise<void>;
     clearGame(): void;
     private validateServerOpts;
     updateServerGameData(data: any): void;

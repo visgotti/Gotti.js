@@ -33,6 +33,7 @@ export type ServerGameOptions = {
 import * as EventEmitter from "eventemitter3";
 
 export type PublicApi = {
+    resetGame?: (resetData?: any) => void,
     clearGame?: () => void,
     register?: (requestPayload?: any) => Promise<any>,
     getGames?: (requestPayload?: any) => Promise<any>,
@@ -94,7 +95,7 @@ export class Client extends EventEmitter {
 
     private token: string;
 
-    readonly publicApi: any;
+    readonly publicApi: PublicApi;
 
     private auth: HttpRequests = {};
     private gate: HttpRequests = {};
@@ -147,6 +148,7 @@ export class Client extends EventEmitter {
         };
         this.connector = new Connector();
         this.publicApi = {
+            resetGame: this.resetGame.bind(this),
             clearGame: this.clearGame.bind(this),
             register: this.register.bind(this),
             getGames: this.getGames.bind(this),
@@ -267,7 +269,13 @@ export class Client extends EventEmitter {
             this.api[name] = this.api[name].bind(this);
         });
     }
-
+    public async resetGame(data?: any) {
+        if(this.runningProcess) {
+            await this.processManager.resetProcesses(data);
+        } else {
+            console.warn('Called reset game but no running process was found.')
+        }
+    }
     public clearGame() {
         if(this.runningProcess) {
             this.processManager.clearAllProcesses();
@@ -276,7 +284,7 @@ export class Client extends EventEmitter {
             this.connector = new Connector();
             this.onJoinGame.removeAll();
         } else {
-            throw new Error('no game has started to clear');
+            console.warn('Tried to clear game but no running process was found.')
         }
     }
 

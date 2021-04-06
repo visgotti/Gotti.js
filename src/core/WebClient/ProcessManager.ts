@@ -159,6 +159,14 @@ export class ProcessManager {
         return await this.initializeGame(gameType, gameData, areaData);
     }
 
+    public async resetProcesses(data?: any) {
+        if(!this.runningGameProcess) {
+            console.warn('No running game process to reset');
+            return;
+        }
+        await this.runningGameProcess.reset(data);
+    }
+
     public clearAllProcesses() {
         this.runningGameProcess.clearGame();
         this.systemNamesByArea = {};

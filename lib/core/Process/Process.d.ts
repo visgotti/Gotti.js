@@ -42,6 +42,7 @@ export declare abstract class Process<T> {
     private pluginInit;
     constructor(processEnv: PROCESS_ENV, globals?: {}, plugins?: any[]);
     addGlobal(key: string, value: any): void;
+    reset(data?: any): Promise<void>;
     installPlugin(iPlugin: IPlugin, systemNames?: Array<string | number>): void;
     serverGameData: any;
     addSystem(SystemConstructor: ISystem, ...args: Array<any>): ServerSystem | ClientSystem;

@@ -55,7 +55,7 @@ export declare class ServerMessageQueue {
      * used for sending a message instantly to all other systems
      * @param message
      */
-    instantDispatchAll(type: any, data: any): void;
+    instantDispatchAll(message: Message): void;
     addMasterMessage(message: any): void;
     dispatch(systemName: any): void;
 }

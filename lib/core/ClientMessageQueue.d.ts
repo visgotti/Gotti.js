@@ -48,7 +48,7 @@ export declare class ClientMessageQueue {
      * used for sending a message instantly to all other systems
      * @param message
      */
-    instantDispatchAll(type: any, data: any): void;
+    instantDispatchAll(message: Message): void;
     /**
      * Queues message to be handled in either the onClientMessage handler or onServerMessage system handler
      */
