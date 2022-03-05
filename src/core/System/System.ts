@@ -29,16 +29,22 @@ abstract class System {
 
     protected messageQueue: ClientMessageQueue | ServerMessageQueue;
 
-    protected dispatchLocal: Function;
-    protected dispatchAllLocal: Function;
-    protected dispatchLocalInstant: Function;
-    protected dispatchAllLocalInstant: Function;
+    public dispatchLocal: Function;
+    public dispatchAllLocal: Function;
+    public dispatchLocalInstant: Function;
+    public dispatchAllLocalInstant: Function;
     /**
      * triggered when we call Gotti.resetGame(data) and a current game is running;
      */
 
     protected addEntity: Function;
     protected removeEntity: Function;
+
+    private entityEventHandlers: {[entityId: string]: { 
+        entity: Entity,
+        listeners: {
+        [eventName: string]: Function
+    }}} = {};
 
     readonly name: string | number;
     constructor(name: string | number) {
@@ -79,6 +85,45 @@ abstract class System {
     public getSystemComponent(entity: Entity) {
         if(!entity) return null;
         return entity.getComponent(this.name);
+    }
+
+    public _onEntityRemovedComponent(entity: Entity, component: Component) {
+        if(this.entityEventHandlers[entity.id]) {
+            const eventNameKeys = Object.keys(this.entityEventHandlers[entity.id].listeners);
+            eventNameKeys.forEach(k => this.offEntityEvent(entity, k));
+        }
+        this.onEntityRemovedComponent(entity, component);
+    }
+
+
+    // helper function for systems that will store callback references per entity to track and remove when entity removes component.
+    public onEntityEvent(entity: Entity, eventName: string, callback: (eventData: any) => void) {
+        if(!(entity.id in this.entityEventHandlers)) {
+            this.entityEventHandlers[entity.id] = { entity, listeners: {} };
+        }
+        if(this.entityEventHandlers[entity.id].entity !== entity) {
+            throw new Error(`Trying to listen on entity event with same id ${entity.id} but different entity was already registered.. this means you probably have two entities with the same id which is BAD.`)
+        }
+        if(this.entityEventHandlers[entity.id].listeners[eventName]) {
+            throw new Error(`Already have a registered event for event: ${eventName} on entity: ${entity.id} for system: ${this.name}. Systems can only have 1 callback per entity event.`)
+        }
+        this.entityEventHandlers[entity.id].listeners[eventName] = callback;
+        entity.on(eventName, callback);
+    }
+
+    public offEntityEvent(entity, eventName: string) : boolean {
+        if(!(entity.id in this.entityEventHandlers)) return false;
+        if(this.entityEventHandlers[entity.id].entity !== entity) {
+            throw new Error(`Trying to listen on entity event with same id ${entity.id} but different entity was already registered.. this means you probably have two entities with the same id which is BAD.`)
+        }
+        const callback = this.entityEventHandlers[entity.id].listeners[eventName];
+        if(!callback) return false;
+        entity.off(eventName, callback);
+        delete this.entityEventHandlers[entity.id].listeners[eventName];
+        if(!(Object.keys(this.entityEventHandlers[entity.id].listeners).length)) {
+            delete this.entityEventHandlers[entity.id];
+        }
+        return true;
     }
 
     // if its a local message on server side it triggers onLocalServerMessage, if its a local

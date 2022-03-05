@@ -138,6 +138,9 @@ export class ServerMessageQueue {
     }
 
     public addSystem(system: ServerSystem) {
+        if(system.name in this._systems) {
+            throw new Error(`Already added system ${system.name} to message queue.`);
+        }
         this._systems[system.name] = system;
         this._messages[system.name] = [];
         this._clientMessages[system.name] = [];
@@ -148,7 +151,7 @@ export class ServerMessageQueue {
     public add(message: Message) {
         for (let i = 0; i < message.to.length; i++) {
             if(!(message.to[i] in this._systems)) {
-                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                console.warn('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
                 continue;
             }
             this._messages[message.to[i]].push(message);
@@ -157,19 +160,21 @@ export class ServerMessageQueue {
     }
 
     public addClientMessage(clientId, message: Message) {
-        for(let i = 0; i < message.to.length; i++) {
-            if(!(message.to[i] in this._systems)) {
-                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
-                continue;
+        if(Array.isArray(message?.to)) {
+            for(let i = 0; i < message.to.length; i++) {
+                if(!(message.to[i] in this._systems)) {
+                    console.warn('trying to dispatch client message:', message.type, 'to a nonexistent system name', message.to[i]);
+                    continue;
+                }
+                this._clientMessages[message.to[i]].push([clientId, message]);
             }
-            this._clientMessages[message.to[i]].push([clientId, message]);
         }
     };
 
     public addAreaMessage(areaId, message: Message) {
         for(let i = 0; i < message.to.length; i++) {
             if(!(message.to[i] in this._systems)) {
-                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                console.warn('received area message from area:', areaId, 'which is trying to dispatch message:', message.type, 'to a nonexistent system:', message.to[i]);
                 continue;
             }
             this._areaMessages[message.to[i]].push([areaId, message]);
@@ -187,13 +192,15 @@ export class ServerMessageQueue {
     };
 
     public instantClientDispatch(clientId, message: Message) {
-        const messageToLength = message.to.length;
-        for(let i = 0; i < messageToLength; i++) {
-            if(!(message.to[i] in this._systems)) {
-                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
-                continue;
-            }
-            this._systems[message.to[i]].onClientMessage(clientId, message);
+        if(Array.isArray(message?.to)) {
+            const messageToLength = message.to.length;
+            for(let i = 0; i < messageToLength; i++) {
+                if(!(message.to[i] in this._systems)) {
+                    console.error('trying to dispatch client message', message.type, 'to a nonexistent system name', message.to[i]);
+                    continue;
+                }
+                this._systems[message.to[i]].onClientMessage(clientId, message);
+            }   
         }
     }
 
@@ -201,7 +208,7 @@ export class ServerMessageQueue {
         const messageToLength = message.to.length;
         for(let i = 0; i < messageToLength; i++) {
             if(!(message.to[i] in this._systems)) {
-                console.error('trying to dispatch message', message.type, 'to a nonexistent system name', message.to[i]);
+                console.warn('received area message from area:', areaId, 'which is trying to dispatch message:', message.type, 'to a nonexistent system:', message.to[i]);
                 continue;
             }
             this._systems[message.to[i]].onAreaMessage(areaId, message);

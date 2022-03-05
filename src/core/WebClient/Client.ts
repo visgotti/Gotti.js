@@ -113,14 +113,14 @@ export class Client extends EventEmitter {
         }
         if(hostname) {
             this.hostname = hostname;
-        } else if(window) {
+        } else if(typeof window !== "undefined" && !!window) {
             this.hostname = window['location'].hostname
         } else {
             throw new Error('No hostname provided or no window reference');
         }
         if(port) {
             this.port = port;
-        } else if(window && window['location'] && window['location']['port']) {
+        } else if(typeof window !== "undefined" && !!window && window['location'] && window['location']['port']) {
             this.port = window['location'].port
         } else {
             this.port = 80;
@@ -135,7 +135,7 @@ export class Client extends EventEmitter {
                 throw new Error('Web protocol must be http or https');
             }
             this.webProtocol = webProtocol + ':';
-        } else if(window) {
+        } else if(typeof window !== "undefined" && !!window) {
             this.webProtocol = window['location'].protocol
         }
         if(this.webProtocol === 'https:') {

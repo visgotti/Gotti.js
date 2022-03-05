@@ -19,27 +19,32 @@ declare abstract class System {
     };
     private _serverGameData;
     protected messageQueue: ClientMessageQueue | ServerMessageQueue;
-    protected dispatchLocal: Function;
-    protected dispatchAllLocal: Function;
-    protected dispatchLocalInstant: Function;
-    protected dispatchAllLocalInstant: Function;
+    dispatchLocal: Function;
+    dispatchAllLocal: Function;
+    dispatchLocalInstant: Function;
+    dispatchAllLocalInstant: Function;
     /**
      * triggered when we call Gotti.resetGame(data) and a current game is running;
      */
-    onResetGame?: (afterAllReset: (cb: Function) => void, data?: any) => Promise<void>;
     protected addEntity: Function;
     protected removeEntity: Function;
+    private entityEventHandlers;
     readonly name: string | number;
     constructor(name: string | number);
-    serverGameData: any;
+    set serverGameData(newData: any);
+    get serverGameData(): any;
     protected _onInit(): void;
     addMessageListener(messageName: string | number): void;
     removeMessageListener(messageName: string | number): void;
     getSystemComponent(entity: Entity): any;
+    _onEntityRemovedComponent(entity: Entity, component: Component): void;
+    onEntityEvent(entity: Entity, eventName: string, callback: (eventData: any) => void): void;
+    offEntityEvent(entity: any, eventName: string): boolean;
     abstract onLocalMessage(message: Message): void;
     abstract initialize(...args: any[]): void;
     update?(delta: any): void;
     abstract onClear(): void;
+    onResetGame?(afterAllReset: (cb: Function) => void, data?: any): Promise<void>;
     initializeEntity(entity: Entity, data?: any): void;
     destroyEntity(entity: Entity): void;
     /**

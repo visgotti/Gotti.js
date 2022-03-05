@@ -321,12 +321,13 @@ export class Connector {
             this.handlePeerConnectionRequest(message[1], message[2], message[3], message[4]);
         } else if (code === Protocol.SIGNAL_SUCCESS) {
             // fromPeerIndex, signalData
-            console.warn('Connector, GOT SIGNAL SUCCESS FROM PLAYER', message[1], 'the signalData was', message[2]);
+            console.log('Connector, GOT SIGNAL SUCCESS FROM PLAYER', message[1], 'the signalData was', message[2]);
             this.peerConnections[message[1]] && this.peerConnections[message[1]].checkAck();
             this.handleSignalData(message[1], message[2]);
         } else if (code === Protocol.PEER_REMOTE_SYSTEM_MESSAGE) { // in case were using a dispatch peer message without a p2p connection itll go through the web server
             // [protocol, fromPeerPlayerIndex, msgType, msgData, msgTo, msgFrom]
-            this.messageQueue.dispatchPeerMessage(message[1], message[2],  message[3], message[4], message[5])
+            const toSystems = message[4];
+            toSystems && this.messageQueue.dispatchPeerMessage(message[1], message[2],  message[3], to, message[5])
         } else if(code === Protocol.SIGNAL_FAILED) {
             this.handlePeerFailure(message[1]);
         }
@@ -436,7 +437,8 @@ export class Connector {
         });
 
         peerConnection.onMessage.add((data) => {
-            this.messageQueue.dispatchPeerMessage(peerIndex, data[0], data[1], data[2], data[3])
+            let toSystems = data[2];
+            toSystems && this.messageQueue.dispatchPeerMessage(peerIndex, data[0], data[1], data[2], data[3])
         });
 
         peerConnection.onMissedPing.add((concurrentMissedPings: number) => {

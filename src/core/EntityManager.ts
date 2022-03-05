@@ -37,7 +37,7 @@ export class EntityManager {
         entity.removeComponent = (componentName: string) => {
             const system = this.systemMap[componentName];
             if(system) {
-                system.onEntityRemovedComponent(entity, entity.getComponent(componentName));
+                system._onEntityRemovedComponent(entity, entity.getComponent(componentName));
             }
             oldRemoveComponent.call(entity, componentName);
         };

@@ -22,10 +22,10 @@ export declare class ServerMessageQueue {
     private _clientMessages;
     private _areaMessages;
     constructor();
-    readonly systems: SystemLookup;
-    readonly messages: SystemMessageLookup;
-    readonly clientMessages: ServerSystemMessageLookup;
-    readonly areaMessages: ServerSystemMessageLookup;
+    get systems(): SystemLookup;
+    get messages(): SystemMessageLookup;
+    get clientMessages(): ServerSystemMessageLookup;
+    get areaMessages(): ServerSystemMessageLookup;
     /**
      * dispatches message to systems if there were any passed in.
      * @param type

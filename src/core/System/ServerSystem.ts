@@ -30,7 +30,6 @@ abstract class ServerSystem extends System {
 
         //  this.dispatchToClient = room.send;
         this.messageQueue = messageQueue;
-        this.messageQueue.addSystem(this);
         this.dispatchLocal = messageQueue.add;
 
         //     this.dispatchRemote = room.relayMessageQueue;

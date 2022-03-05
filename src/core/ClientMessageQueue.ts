@@ -136,6 +136,9 @@ export class ClientMessageQueue {
     }
 
     public addSystem(system: ClientSystem) {
+        if(system.name in this._systems) {
+            throw new Error(`Already added system ${system.name} to message queue.`);
+        }
         this._systems[system.name] = system;
         this._messages[system.name] = [];
         this._remoteMessages[system.name] = [];

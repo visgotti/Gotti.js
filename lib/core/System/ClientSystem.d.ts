@@ -68,7 +68,7 @@ declare abstract class ClientSystem extends System {
      * @param requestTimeout - amount of time in ms to wait for the accepted request to actually connect, defdults to 5000
      */
     requestPeer(peerIndex: number, options?: any, ackTimeout?: number, requestTimeout?: number): Promise<unknown>;
-    readonly peers: any[];
+    get peers(): any[];
     isPeer(playerIndex: any): boolean;
     getPeerPing(playerIndex: any): any;
     private _requestPeer;

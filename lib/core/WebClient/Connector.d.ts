@@ -75,7 +75,7 @@ export declare class Connector {
     sendPeersMessage(peerIndexes: Array<number>, message: any): void;
     sendSystemMessage(message: any): void;
     sendImmediateSystemMessage(message: any): void;
-    readonly hasJoined: boolean;
+    get hasJoined(): boolean;
     removeAllListeners(): void;
     protected onJoin(joinOptions: any): void;
     protected onMessageCallback(event: any): void;

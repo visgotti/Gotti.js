@@ -23,9 +23,9 @@ export declare class ClientMessageQueue {
     private _messages;
     private _remoteMessages?;
     constructor();
-    readonly systems: SystemLookup;
-    readonly messages: SystemMessageLookup;
-    readonly remoteMessages: SystemMessageLookup;
+    get systems(): SystemLookup;
+    get messages(): SystemMessageLookup;
+    get remoteMessages(): SystemMessageLookup;
     /**
      * dispatches message to systems if there were any passed in.
      * @param type

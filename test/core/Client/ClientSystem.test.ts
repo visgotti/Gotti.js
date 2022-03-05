@@ -22,7 +22,7 @@ describe('ClientSystem', function() {
 
     beforeEach('Creates dummy systems and inits a web client', (done) => {
         messageQueue = new ClientMessageQueue();
-        entityManager = new EntityManager({});
+        entityManager = new EntityManager({}, {});
         client = new WebClient( [], '/');
 
         mockSystem1 = createDummyClientSystem(system_names[0]);
