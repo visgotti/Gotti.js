@@ -327,7 +327,7 @@ export class Connector {
         } else if (code === Protocol.PEER_REMOTE_SYSTEM_MESSAGE) { // in case were using a dispatch peer message without a p2p connection itll go through the web server
             // [protocol, fromPeerPlayerIndex, msgType, msgData, msgTo, msgFrom]
             const toSystems = message[4];
-            toSystems && this.messageQueue.dispatchPeerMessage(message[1], message[2],  message[3], to, message[5])
+            (toSystems || toSystems === 0 || toSystems === '0') && this.messageQueue.dispatchPeerMessage(message[1], message[2],  message[3], toSystems, message[5])
         } else if(code === Protocol.SIGNAL_FAILED) {
             this.handlePeerFailure(message[1]);
         }

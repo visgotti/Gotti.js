@@ -150,7 +150,10 @@ abstract class ClientSystem extends System {
     }
 
     public isPeer(playerIndex) {
-        return this._peers.indexOf(playerIndex) > -1;
+        for(let i = 0; i < this._peers.length; i++) {
+            if(this._peers[i] == playerIndex) return true;
+        }
+        return false;
     }
 
     public getPeerPing(playerIndex) {
